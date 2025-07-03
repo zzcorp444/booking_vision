@@ -8,9 +8,11 @@ from .views import dashboard, properties, bookings, analytics, ai_views
 app_name = 'booking_vision_APP'
 
 urlpatterns = [
+    # Home redirect
+    path('', dashboard.home_redirect, name='home'),
+
     # Dashboard URLs
-    path('', dashboard.DashboardView.as_view(), name='dashboard'),
-    path('dashboard/', dashboard.DashboardView.as_view(), name='dashboard_home'),
+    path('dashboard/', dashboard.DashboardView.as_view(), name='dashboard'),
 
     # Property URLs
     path('properties/', properties.PropertyListView.as_view(), name='property_list'),
@@ -32,7 +34,4 @@ urlpatterns = [
     path('ai/maintenance/', ai_views.PredictiveMaintenanceView.as_view(), name='predictive_maintenance'),
     path('ai/guest-experience/', ai_views.GuestExperienceView.as_view(), name='guest_experience'),
     path('ai/business-intelligence/', ai_views.BusinessIntelligenceView.as_view(), name='business_intelligence'),
-
-    # Authentication URLs
-    path('accounts/', include('django.contrib.auth.urls')),
 ]

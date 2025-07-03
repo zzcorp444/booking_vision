@@ -17,6 +17,14 @@ from ..models.channels import Channel, ChannelConnection
 from ..ai.pricing_engine import PricingEngine
 from ..ai.maintenance_predictor import MaintenancePredictor
 
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def home_redirect(request):
+    """Redirect to dashboard"""
+    return redirect('booking_vision_APP:dashboard')
+
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     """Main dashboard view with comprehensive analytics"""
