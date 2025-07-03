@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 
 class PricingRule(models.Model):
     """Model for dynamic pricing rules"""
-    property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='pricing_rules')
+    rental_property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='pricing_rules')
     name = models.CharField(max_length=100)
 
     # Rule conditions
@@ -29,7 +29,12 @@ class PricingRule(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.property.name if self.property else 'Unknown'} - {self.name}"
+        return f"{self.rental_property.name if self.rental_property else 'Unknown'} - {self.name}"
+
+    @property
+    def property(self):
+        """Backward compatibility property"""
+        return self.rental_property
 
 class MaintenanceTask(models.Model):
     """Model for maintenance tasks and predictions"""
@@ -48,7 +53,7 @@ class MaintenanceTask(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
-    property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='maintenance_tasks')
+    rental_property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='maintenance_tasks')
     title = models.CharField(max_length=200)
     description = models.TextField()
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
@@ -75,7 +80,12 @@ class MaintenanceTask(models.Model):
         ordering = ['-priority', '-created_at']
 
     def __str__(self):
-        return f"{self.property.name if self.property else 'Unknown'} - {self.title}"
+        return f"{self.rental_property.name if self.rental_property else 'Unknown'} - {self.title}"
+
+    @property
+    def property(self):
+        """Backward compatibility property"""
+        return self.rental_property
 
 class GuestPreference(models.Model):
     """Model for storing guest preferences and AI insights"""

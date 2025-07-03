@@ -32,8 +32,8 @@ class Booking(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
-    # Foreign Keys - using string references to avoid circular imports
-    property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='bookings')
+    # Foreign Keys - renamed 'property' to 'rental_property' to avoid conflict
+    rental_property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='bookings')
     guest = models.ForeignKey(Guest, on_delete=models.CASCADE, related_name='bookings')
     channel = models.ForeignKey('channels.Channel', on_delete=models.CASCADE, related_name='bookings')
 
@@ -62,7 +62,7 @@ class Booking(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Booking {self.id} - {self.property.name if self.property else 'Unknown Property'}"
+        return f"Booking {self.id} - {self.rental_property.name if self.rental_property else 'Unknown Property'}"
 
     @property
     def nights(self):
@@ -70,6 +70,11 @@ class Booking(models.Model):
         if self.check_in_date and self.check_out_date:
             return (self.check_out_date - self.check_in_date).days
         return 0
+
+    @property
+    def property(self):
+        """Backward compatibility property"""
+        return self.rental_property
 
 class BookingMessage(models.Model):
     """Model for booking-related messages"""

@@ -49,7 +49,7 @@ class ChannelConnection(models.Model):
 
 class PropertyChannel(models.Model):
     """Model linking properties to channels"""
-    property = models.ForeignKey('properties.Property', on_delete=models.CASCADE)
+    rental_property = models.ForeignKey('properties.Property', on_delete=models.CASCADE)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     channel_connection = models.ForeignKey(ChannelConnection, on_delete=models.CASCADE)
 
@@ -69,7 +69,12 @@ class PropertyChannel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['property', 'channel']
+        unique_together = ['rental_property', 'channel']
 
     def __str__(self):
-        return f"{self.property.name if self.property else 'Unknown'} - {self.channel.name}"
+        return f"{self.rental_property.name if self.rental_property else 'Unknown'} - {self.channel.name}"
+
+    @property
+    def property(self):
+        """Backward compatibility property"""
+        return self.rental_property

@@ -23,9 +23,9 @@ class AmenityAdmin(admin.ModelAdmin):
 # Booking Admin
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['id', 'property', 'guest', 'check_in_date', 'check_out_date', 'status', 'total_price']
+    list_display = ['id', 'rental_property', 'guest', 'check_in_date', 'check_out_date', 'status', 'total_price']
     list_filter = ['status', 'channel']
-    search_fields = ['guest__first_name', 'guest__last_name', 'property__name']
+    search_fields = ['guest__first_name', 'guest__last_name', 'rental_property__name']
 
 @admin.register(Guest)
 class GuestAdmin(admin.ModelAdmin):
@@ -41,7 +41,7 @@ class ChannelAdmin(admin.ModelAdmin):
 # AI Models Admin
 @admin.register(MaintenanceTask)
 class MaintenanceTaskAdmin(admin.ModelAdmin):
-    list_display = ['title', 'property', 'priority', 'status', 'predicted_by_ai']
+    list_display = ['title', 'rental_property', 'priority', 'status', 'predicted_by_ai']
     list_filter = ['priority', 'status', 'predicted_by_ai']
 
 # User Profile Admin
