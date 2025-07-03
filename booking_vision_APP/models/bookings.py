@@ -7,7 +7,6 @@ from django.contrib.auth.models import User
 from .properties import Property
 from .channels import Channel
 
-
 class Guest(models.Model):
     """Model representing a guest"""
     first_name = models.CharField(max_length=100)
@@ -24,7 +23,6 @@ class Guest(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
-
 
 class Booking(models.Model):
     """Model representing a booking"""
@@ -67,11 +65,12 @@ class Booking(models.Model):
     def __str__(self):
         return f"Booking {self.id} - {self.property.name}"
 
-    @property
-    def nights(self):
+    def get_nights(self):
         """Calculate number of nights"""
         return (self.check_out_date - self.check_in_date).days
 
+    # Use property decorator correctly
+    nights = property(get_nights)
 
 class BookingMessage(models.Model):
     """Model for booking-related messages"""
