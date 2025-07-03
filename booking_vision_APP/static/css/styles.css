@@ -29,7 +29,6 @@ body {
 .navbar {
     background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue)) !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: fixed;
 }
 
 .navbar-brand {
