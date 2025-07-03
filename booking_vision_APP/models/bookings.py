@@ -4,8 +4,6 @@ This file defines all booking-related database models.
 """
 from django.db import models
 from django.contrib.auth.models import User
-from .properties import Property
-from .channels import Channel
 
 class Guest(models.Model):
     """Model representing a guest"""
@@ -34,9 +32,10 @@ class Booking(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
-    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='bookings')
+    # Foreign Keys - using string references to avoid circular imports
+    property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='bookings')
     guest = models.ForeignKey(Guest, on_delete=models.CASCADE, related_name='bookings')
-    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, related_name='bookings')
+    channel = models.ForeignKey('channels.Channel', on_delete=models.CASCADE, related_name='bookings')
 
     # Booking details
     external_booking_id = models.CharField(max_length=100, blank=True)
@@ -63,14 +62,14 @@ class Booking(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Booking {self.id} - {self.property.name}"
+        return f"Booking {self.id} - {self.property.name if self.property else 'Unknown Property'}"
 
-    def get_nights(self):
+    @property
+    def nights(self):
         """Calculate number of nights"""
-        return (self.check_out_date - self.check_in_date).days
-
-    # Use property decorator correctly
-    nights = property(get_nights)
+        if self.check_in_date and self.check_out_date:
+            return (self.check_out_date - self.check_in_date).days
+        return 0
 
 class BookingMessage(models.Model):
     """Model for booking-related messages"""

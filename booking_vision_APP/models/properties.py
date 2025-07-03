@@ -6,7 +6,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-
 class Property(models.Model):
     """Model representing a rental property"""
     PROPERTY_TYPES = [
@@ -38,6 +37,9 @@ class Property(models.Model):
 
     # AI-related fields
     ai_pricing_enabled = models.BooleanField(default=False)
+    ai_maintenance_enabled = models.BooleanField(default=False)
+    ai_guest_enabled = models.BooleanField(default=False)
+    ai_analytics_enabled = models.BooleanField(default=False)
     last_pricing_update = models.DateTimeField(null=True, blank=True)
 
     # Timestamps
@@ -51,7 +53,6 @@ class Property(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class PropertyImage(models.Model):
     """Model for property images"""
@@ -67,7 +68,6 @@ class PropertyImage(models.Model):
     def __str__(self):
         return f"{self.property.name} - Image {self.order}"
 
-
 class Amenity(models.Model):
     """Model for property amenities"""
     name = models.CharField(max_length=100, unique=True)
@@ -80,7 +80,6 @@ class Amenity(models.Model):
     def __str__(self):
         return self.name
 
-
 class PropertyAmenity(models.Model):
     """Through model for property amenities"""
     property = models.ForeignKey(Property, on_delete=models.CASCADE)
@@ -88,3 +87,7 @@ class PropertyAmenity(models.Model):
 
     class Meta:
         unique_together = ['property', 'amenity']
+        verbose_name_plural = "Property Amenities"
+
+    def __str__(self):
+        return f"{self.property.name} - {self.amenity.name}"

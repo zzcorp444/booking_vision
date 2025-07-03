@@ -5,7 +5,6 @@ This file defines all channel integration models.
 from django.db import models
 from django.contrib.auth.models import User
 
-
 class Channel(models.Model):
     """Model representing a booking channel (OTA)"""
     name = models.CharField(max_length=100)
@@ -22,7 +21,6 @@ class Channel(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class ChannelConnection(models.Model):
     """Model for user-specific channel connections"""
@@ -49,7 +47,6 @@ class ChannelConnection(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.channel.name}"
 
-
 class PropertyChannel(models.Model):
     """Model linking properties to channels"""
     property = models.ForeignKey('properties.Property', on_delete=models.CASCADE)
@@ -75,4 +72,4 @@ class PropertyChannel(models.Model):
         unique_together = ['property', 'channel']
 
     def __str__(self):
-        return f"{self.property.name} - {self.channel.name}"
+        return f"{self.property.name if self.property else 'Unknown'} - {self.channel.name}"

@@ -4,12 +4,10 @@ This file defines models for AI features and machine learning data.
 """
 from django.db import models
 from django.contrib.auth.models import User
-from .properties import Property
-
 
 class PricingRule(models.Model):
     """Model for dynamic pricing rules"""
-    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='pricing_rules')
+    property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='pricing_rules')
     name = models.CharField(max_length=100)
 
     # Rule conditions
@@ -31,8 +29,7 @@ class PricingRule(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.property.name} - {self.name}"
-
+        return f"{self.property.name if self.property else 'Unknown'} - {self.name}"
 
 class MaintenanceTask(models.Model):
     """Model for maintenance tasks and predictions"""
@@ -51,7 +48,7 @@ class MaintenanceTask(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
-    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='maintenance_tasks')
+    property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='maintenance_tasks')
     title = models.CharField(max_length=200)
     description = models.TextField()
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
@@ -78,8 +75,7 @@ class MaintenanceTask(models.Model):
         ordering = ['-priority', '-created_at']
 
     def __str__(self):
-        return f"{self.property.name} - {self.title}"
-
+        return f"{self.property.name if self.property else 'Unknown'} - {self.title}"
 
 class GuestPreference(models.Model):
     """Model for storing guest preferences and AI insights"""
@@ -107,8 +103,7 @@ class GuestPreference(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Preferences for {self.guest.first_name} {self.guest.last_name}"
-
+        return f"Preferences for {self.guest.first_name if self.guest else 'Unknown'} {self.guest.last_name if self.guest else ''}"
 
 class MarketData(models.Model):
     """Model for storing market intelligence data"""
@@ -133,6 +128,7 @@ class MarketData(models.Model):
     class Meta:
         unique_together = ['location', 'date']
         ordering = ['-date']
+        verbose_name_plural = "Market Data"
 
     def __str__(self):
         return f"{self.location} - {self.date}"
