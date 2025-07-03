@@ -4,6 +4,7 @@ This command creates the superuser and loads initial data.
 """
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.db import transaction
 import os
 
 
@@ -13,10 +14,22 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.stdout.write('Initializing Booking Vision data...')
 
-        # Create superuser
-        username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
-        email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@bookingvision.com')
-        password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'admin123')
+        try:
+            with transaction.atomic():
+                # Create superuser
+                self.create_superuser()
+
+                # Load initial data
+                self.load_initial_data()
+
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"Error during initialization: {str(e)}"))
+
+    def create_superuser(self):
+        """Create superuser if it doesn't exist"""
+        username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'bv_admin')
+        email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'zz.corp.hd@gmail.com')
+        password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'Alibaba2021!')
 
         try:
             if not User.objects.filter(username=username).exists():
@@ -27,8 +40,10 @@ class Command(BaseCommand):
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Error creating superuser: {str(e)}"))
 
-        # Import models
+    def load_initial_data(self):
+        """Load initial channels and amenities"""
         try:
+            # Import models here to ensure they're available
             from booking_vision_APP.models.channels import Channel
             from booking_vision_APP.models.properties import Amenity
 
