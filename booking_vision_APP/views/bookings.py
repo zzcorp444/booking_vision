@@ -26,8 +26,8 @@ class BookingListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Booking.objects.filter(
-            property__owner=self.request.user
-        ).select_related('property', 'guest', 'channel').order_by('-created_at')
+            rental_property__owner=self.request.user
+        ).select_related('rental_property', 'guest', 'channel').order_by('-created_at')
 
         # Filter by status
         status = self.request.GET.get('status')
@@ -37,7 +37,7 @@ class BookingListView(LoginRequiredMixin, ListView):
         # Filter by property
         property_id = self.request.GET.get('property')
         if property_id:
-            queryset = queryset.filter(property_id=property_id)
+            queryset = queryset.filter(rental_property_id=property_id)
 
         # Search functionality
         search = self.request.GET.get('search')
@@ -46,7 +46,7 @@ class BookingListView(LoginRequiredMixin, ListView):
                 Q(guest__first_name__icontains=search) |
                 Q(guest__last_name__icontains=search) |
                 Q(guest__email__icontains=search) |
-                Q(property__name__icontains=search)
+                Q(rental_property__name__icontains=search)
             )
 
         return queryset
@@ -67,7 +67,7 @@ class BookingListView(LoginRequiredMixin, ListView):
         context['current_search'] = self.request.GET.get('search', '')
 
         # Booking statistics
-        user_bookings = Booking.objects.filter(property__owner=self.request.user)
+        user_bookings = Booking.objects.filter(rental_property__owner=self.request.user)
         context['booking_stats'] = {
             'total': user_bookings.count(),
             'pending': user_bookings.filter(status='pending').count(),
@@ -86,8 +86,8 @@ class BookingDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         return Booking.objects.filter(
-            property__owner=self.request.user
-        ).select_related('property', 'guest', 'channel')
+            rental_property__owner=self.request.user
+        ).select_related('rental_property', 'guest', 'channel')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -113,7 +113,7 @@ class BookingDetailView(LoginRequiredMixin, DetailView):
         # Guest history
         context['guest_bookings'] = Booking.objects.filter(
             guest=booking.guest,
-            property__owner=self.request.user
+            rental_property__owner=self.request.user
         ).exclude(id=booking.id).order_by('-created_at')[:5]
 
         # Timeline events
@@ -161,11 +161,11 @@ class CalendarView(LoginRequiredMixin, TemplateView):
             end_date = datetime(year, month + 1, 1).date() - timedelta(days=1)
 
         bookings = Booking.objects.filter(
-            property__owner=self.request.user,
+            rental_property__owner=self.request.user,
             check_in_date__lte=end_date,
             check_out_date__gte=start_date,
             status__in=['confirmed', 'checked_in', 'checked_out']
-        ).select_related('property', 'guest')
+        ).select_related('rental_property', 'guest')
 
         # Organize bookings by date
         bookings_by_date = {}
@@ -205,7 +205,7 @@ def booking_api(request):
         end_date = request.GET.get('end_date')
 
         bookings = Booking.objects.filter(
-            property__owner=request.user
+            rental_property__owner=request.user
         )
 
         if start_date:
@@ -220,7 +220,7 @@ def booking_api(request):
                 'title': f"{booking.guest.first_name} {booking.guest.last_name}",
                 'start': booking.check_in_date.isoformat(),
                 'end': booking.check_out_date.isoformat(),
-                'property': booking.property.name,
+                'property': booking.rental_property.name,
                 'status': booking.status,
                 'total_price': float(booking.total_price)
             })

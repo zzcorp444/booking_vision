@@ -9,6 +9,7 @@ from decimal import Decimal
 import logging
 from typing import Dict, List, Any
 import random
+from django.utils import timezone
 
 from ..models.properties import Property
 from ..models.bookings import Booking
@@ -111,7 +112,7 @@ class BusinessIntelligenceEngine:
                 base_occupancy = random.uniform(0.6, 0.85)
 
                 for days_ahead in range(90):
-                    date = datetime.now().date() + timedelta(days=days_ahead)
+                    date = timezone.now().date() + timedelta(days=days_ahead)
 
                     # Apply seasonality
                     seasonality = self.get_seasonality_factor(date)
@@ -161,7 +162,7 @@ class BusinessIntelligenceEngine:
 
             # Calculate revenue
             total_revenue = sum(float(b.total_price) for b in bookings)
-            months_active = max(1, (datetime.now().date() - property.created_at.date()).days / 30)
+            months_active = max(1, (timezone.now().date() - property.created_at.date()).days / 30)
             monthly_revenue = total_revenue / months_active
             annual_revenue = monthly_revenue * 12
 
