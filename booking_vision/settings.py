@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = ['*']
 
@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'channels',
     'corsheaders',
     'crispy_forms',
     'crispy_bootstrap5',
@@ -68,7 +69,7 @@ ASGI_APPLICATION = 'booking_vision.asgi.application'
 # Database
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL', default='postgresql://zz_corp:uVnFmxxZRbWb5arbmuvJ4bPI02cbAQcS@dpg-d1fs8nmmcj7s73c1sgc0-a/asia_immo_db_00_ov8u'),
+        default=config('DATABASE_URL', default=f'sqlite:///{BASE_DIR}/db.sqlite3'),
         conn_max_age=600,
         conn_health_checks=True,
     )
@@ -99,9 +100,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [
-    BASE_DIR / 'booking_vision_APP' / 'static',
-]
+
+# Don't include STATICFILES_DIRS in production
+if DEBUG:
+    STATICFILES_DIRS = [
+        BASE_DIR / 'booking_vision_APP' / 'static',
+    ]
 
 # Media files
 MEDIA_URL = '/media/'
@@ -117,6 +121,16 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 # Celery Configuration
 CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379')
 CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379')
+
+# Channel Layers
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [config('REDIS_URL', default='redis://localhost:6379')],
+        },
+    },
+}
 
 # REST Framework
 REST_FRAMEWORK = {
