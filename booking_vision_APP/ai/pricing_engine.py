@@ -11,6 +11,7 @@ import joblib
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 import logging
+from django.utils import timezone
 
 from ..models.properties import Property
 from ..models.bookings import Booking
@@ -140,7 +141,7 @@ class PricingEngine:
     def extract_features(self, property):
         """Extract features for pricing prediction"""
         # Calculate occupancy rate (last 30 days)
-        today = datetime.now().date()
+        today = timezone.now().date()
         thirty_days_ago = today - timedelta(days=30)
 
         bookings = Booking.objects.filter(
@@ -180,7 +181,7 @@ class PricingEngine:
 
     def get_next_available_date(self, property):
         """Get the next available date for a property"""
-        today = datetime.now().date()
+        today = timezone.now().date()
 
         # Get all future bookings
         future_bookings = Booking.objects.filter(
@@ -229,7 +230,7 @@ class PricingEngine:
             final_price *= float(rule.base_multiplier)
 
             # Apply weekend multiplier if applicable
-            if datetime.now().weekday() in [5, 6]:
+            if timezone.now().weekday() in [5, 6]:
                 final_price *= float(rule.weekend_multiplier)
 
         # Ensure price is within reasonable bounds

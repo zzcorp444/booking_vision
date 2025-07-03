@@ -68,6 +68,21 @@ Location: booking_vision_APP/templates/base.html
                             <i class="fas fa-chart-bar"></i> Analytics
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'booking_vision_APP:messages_list' %}">
+                            <i class="fas fa-comments"></i> Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'booking_vision_APP:notifications_list' %}">
+                            <i class="fas fa-bell"></i> Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'booking_vision_APP:payments_list' %}">
+                            <i class="fas fa-dollar-sign"></i> Payments
+                        </a>
+                    </li>
                 </ul>
                 
                 <ul class="navbar-nav">

@@ -8,3 +8,5 @@ from .bookings import *
 from .channels import *
 from .ai_models import *
 from .users import *
+from .notifications import *
+from .payments import *

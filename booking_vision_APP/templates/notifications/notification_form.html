@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Notification Rule - Booking Vision{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:notifications_list' %}">Notifications</a></li>
+    <li class="breadcrumb-item active">{% if object %}Edit Rule{% else %}Create Rule{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
+                        {% if object %}Edit Notification Rule{% else %}Create Notification Rule{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.trigger|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                {{ form.channel|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.days_before|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.time_of_day|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        {{ form.subject|as_crispy_field }}
+                        
+                        <div class="mb-3">
+                            {{ form.message_template|as_crispy_field }}
+                            <small class="text-muted">
+                                Available variables: {guest_name}, {property_name}, {check_in_date}, {check_out_date}, 
+                                {booking_id}, {total_price}, {num_guests}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.apply_to_all_properties }}
+                                <label class="form-check-label" for="{{ form.apply_to_all_properties.id_for_label }}">
+                                    Apply to all properties
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3" id="properties-select" style="display: none;">
+                            {{ form.properties|as_crispy_field }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Rule is active
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'booking_vision_APP:notifications_list' %}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if object %}Update Rule{% else %}Create Rule{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const applyToAll = document.getElementById('{{ form.apply_to_all_properties.id_for_label }}');
+    const propertiesSelect = document.getElementById('properties-select');
+    
+    function toggleProperties() {
+        propertiesSelect.style.display = applyToAll.checked ? 'none' : 'block';
+    }
+    
+    applyToAll.addEventListener('change', toggleProperties);
+    toggleProperties(); // Initial state
+    
+    // Preview message
+    const messageTemplate = document.getElementById('{{ form.message_template.id_for_label }}');
+    const previewBtn = document.createElement('button');
+    previewBtn.className = 'btn btn-sm btn-outline-secondary mt-2';
+    previewBtn.innerHTML = '<i class="fas fa-eye me-1"></i>Preview Message';
+    previewBtn.type = 'button';
+    previewBtn.onclick = function() {
+        let preview = messageTemplate.value;
+        preview = preview.replace('{guest_name}', 'John Doe');
+        preview = preview.replace('{property_name}', 'Beautiful Beach House');
+        preview = preview.replace('{check_in_date}', '2024-08-15');
+        preview = preview.replace('{check_out_date}', '2024-08-20');
+        preview = preview.replace('{booking_id}', '#12345');
+        preview = preview.replace('{total_price}', '$1,250');
+        preview = preview.replace('{num_guests}', '4');
+        
+        alert('Message Preview:\n\n' + preview);
+    };
+    messageTemplate.parentNode.appendChild(previewBtn);
+});
+</script>
+{% endblock %}
