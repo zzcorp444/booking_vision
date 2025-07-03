@@ -10,7 +10,6 @@ from django.contrib import messages
 from django import forms
 
 from ..models.notifications import NotificationRule, NotificationLog
-from ..models.properties import Property
 
 
 class NotificationRuleForm(forms.ModelForm):
@@ -29,6 +28,7 @@ class NotificationRuleForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user:
+            from ..models.properties import Property
             self.fields['properties'].queryset = Property.objects.filter(owner=user)
 
 

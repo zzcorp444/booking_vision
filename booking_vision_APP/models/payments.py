@@ -27,7 +27,7 @@ class Payment(models.Model):
         ('other', 'Other'),
     ]
 
-    booking = models.ForeignKey('bookings.Booking', on_delete=models.CASCADE, related_name='payments')
+    booking = models.ForeignKey('booking_vision_APP.Booking', on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -50,7 +50,7 @@ class Payment(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Payment {self.id} - {self.booking.rental_property.name} - {self.amount}"
+        return f"Payment {self.id} - {self.booking.rental_property.name if self.booking else 'No Booking'} - {self.amount}"
 
     @property
     def net_amount(self):

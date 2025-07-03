@@ -3,7 +3,6 @@ Notification models for automated actions and alerts.
 """
 from django.db import models
 from django.contrib.auth.models import User
-from ..models.properties import Property
 
 
 class NotificationRule(models.Model):
@@ -40,7 +39,7 @@ class NotificationRule(models.Model):
     message_template = models.TextField(help_text="Use {guest_name}, {property_name}, {check_in_date}, etc.")
 
     # Conditions
-    properties = models.ManyToManyField(Property, blank=True)
+    properties = models.ManyToManyField('booking_vision_APP.Property', blank=True)
     apply_to_all_properties = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
 
@@ -54,7 +53,7 @@ class NotificationRule(models.Model):
 class NotificationLog(models.Model):
     """Log of sent notifications"""
     rule = models.ForeignKey(NotificationRule, on_delete=models.CASCADE, related_name='logs')
-    booking = models.ForeignKey('bookings.Booking', on_delete=models.CASCADE, null=True, blank=True)
+    booking = models.ForeignKey('booking_vision_APP.Booking', on_delete=models.CASCADE, null=True, blank=True)
     recipient = models.EmailField()
     channel = models.CharField(max_length=20)
     subject = models.CharField(max_length=200)
