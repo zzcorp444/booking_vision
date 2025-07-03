@@ -61,7 +61,7 @@ class SmartPricingView(LoginRequiredMixin, TemplateView):
 
         # Get pricing rules
         context['pricing_rules'] = PricingRule.objects.filter(
-            property__owner=user,
+            rental_property__owner=user,
             is_active=True
         )
 
@@ -118,22 +118,22 @@ class PredictiveMaintenanceView(LoginRequiredMixin, TemplateView):
 
         # Get existing maintenance tasks
         context['maintenance_tasks'] = MaintenanceTask.objects.filter(
-            property__owner=user
-        ).select_related('property').order_by('-priority', '-created_at')[:20]
+            rental_property__owner=user
+        ).select_related('rental_property').order_by('-priority', '-created_at')[:20]
 
         # Get maintenance statistics
         context['maintenance_stats'] = {
-            'total_tasks': MaintenanceTask.objects.filter(property__owner=user).count(),
+            'total_tasks': MaintenanceTask.objects.filter(rental_property__owner=user).count(),
             'pending_tasks': MaintenanceTask.objects.filter(
-                property__owner=user,
+                rental_property__owner=user,
                 status='pending'
             ).count(),
             'ai_predicted': MaintenanceTask.objects.filter(
-                property__owner=user,
+                rental_property__owner=user,
                 predicted_by_ai=True
             ).count(),
             'completed_this_month': MaintenanceTask.objects.filter(
-                property__owner=user,
+                rental_property__owner=user,
                 status='completed',
                 completed_date__gte=timezone.now().date().replace(day=1)
             ).count()
@@ -154,7 +154,7 @@ class PredictiveMaintenanceView(LoginRequiredMixin, TemplateView):
 
             # Create maintenance task
             task = MaintenanceTask.objects.create(
-                property=property,
+                rental_property=property,
                 title=f"AI Predicted: {task_type}",
                 description=data.get('description', ''),
                 priority=priority,
@@ -188,9 +188,9 @@ class GuestExperienceView(LoginRequiredMixin, TemplateView):
 
         # Get recent guests
         recent_bookings = Booking.objects.filter(
-            property__owner=user,
+            rental_property__owner=user,
             status__in=['confirmed', 'checked_in', 'checked_out']
-        ).select_related('guest', 'property').order_by('-created_at')[:20]
+        ).select_related('guest', 'rental_property').order_by('-created_at')[:20]
 
         # Analyze guest satisfaction
         guest_insights = []
@@ -226,9 +226,9 @@ class GuestExperienceView(LoginRequiredMixin, TemplateView):
         context['response_templates'] = experience_engine.get_response_templates()
 
         # Guest statistics
-        total_guests = Guest.objects.filter(bookings__property__owner=user).distinct().count()
+        total_guests = Guest.objects.filter(bookings__rental_property__owner=user).distinct().count()
         satisfied_guests = Guest.objects.filter(
-            bookings__property__owner=user,
+            bookings__rental_property__owner=user,
             ai_preferences__satisfaction_score__gte=4.0
         ).distinct().count()
 
@@ -280,9 +280,9 @@ class BusinessIntelligenceView(LoginRequiredMixin, TemplateView):
             roi = bi_engine.calculate_roi(property)
             roi_analysis.append({
                 'property': property,
-                'roi': roi['annual_roi'],
-                'payback_period': roi['payback_period'],
-                'net_income': roi['net_income']
+                'roi': roi['annual_revenue'],
+                'payback_period': roi.get('payback_period', 0),
+                'net_income': roi.get('net_income', 0)
             })
 
         context['roi_analysis'] = sorted(roi_analysis, key=lambda x: x['roi'], reverse=True)

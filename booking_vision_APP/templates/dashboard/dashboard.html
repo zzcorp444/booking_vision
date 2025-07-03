@@ -14,28 +14,48 @@
     <!-- Stats Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="stats-card">
-                <h4 id="total-properties">{{ total_properties|default:"0" }}</h4>
-                <p>Total Properties</p>
-            </div>
+            <a href="{% url 'booking_vision_APP:property_list' %}" class="text-decoration-none">
+                <div class="stats-card stats-card-hover">
+                    <h4 id="total-properties" class="text-primary">{{ total_properties|default:"0" }}</h4>
+                    <p>Total Properties</p>
+                    <div class="hover-icon">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="stats-card">
-                <h4 id="total-bookings">{{ total_bookings|default:"0" }}</h4>
-                <p>Total Bookings</p>
-            </div>
+            <a href="{% url 'booking_vision_APP:booking_list' %}" class="text-decoration-none">
+                <div class="stats-card stats-card-hover">
+                    <h4 id="total-bookings" class="text-success">{{ total_bookings|default:"0" }}</h4>
+                    <p>Total Bookings</p>
+                    <div class="hover-icon">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="stats-card">
-                <h4 id="total-revenue">${{ total_revenue|default:"0"|floatformat:2 }}</h4>
-                <p>Total Revenue</p>
-            </div>
+            <a href="{% url 'booking_vision_APP:payments_list' %}" class="text-decoration-none">
+                <div class="stats-card stats-card-hover">
+                    <h4 id="total-revenue" class="text-info">${{ total_revenue|default:"0"|floatformat:2 }}</h4>
+                    <p>Total Revenue</p>
+                    <div class="hover-icon">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="stats-card">
-                <h4 id="occupancy-rate">{{ occupancy_rate|default:"0" }}%</h4>
-                <p>Occupancy Rate</p>
-            </div>
+            <a href="{% url 'booking_vision_APP:analytics' %}" class="text-decoration-none">
+                <div class="stats-card stats-card-hover">
+                    <h4 id="occupancy-rate" class="text-warning">{{ occupancy_rate|default:"0" }}%</h4>
+                    <p>Occupancy Rate</p>
+                    <div class="hover-icon">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
     
@@ -64,7 +84,7 @@
                                     {% for booking in recent_bookings %}
                                     <tr>
                                         <td>{{ booking.guest.first_name }} {{ booking.guest.last_name }}</td>
-                                        <td>{{ booking.property.name }}</td>
+                                        <td>{{ booking.rental_property.name }}</td>
                                         <td>{{ booking.check_in_date }}</td>
                                         <td>{{ booking.check_out_date }}</td>
                                         <td>
@@ -84,4 +104,40 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Add hover effects for stats cards */
+.stats-card-hover {
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stats-card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #f8fafc 0%, #e7f3ff 100%);
+}
+
+.stats-card-hover .hover-icon {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+    color: var(--primary-blue);
+}
+
+.stats-card-hover:hover .hover-icon {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+a.text-decoration-none:hover {
+    text-decoration: none !important;
+}
+</style>
 {% endblock %}

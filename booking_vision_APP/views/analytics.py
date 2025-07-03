@@ -14,7 +14,6 @@ from ..models.properties import Property
 from ..models.bookings import Booking
 from ..models.channels import Channel
 
-
 class AnalyticsView(LoginRequiredMixin, TemplateView):
     """Main analytics dashboard"""
     template_name = 'analytics/analytics.html'
@@ -25,7 +24,7 @@ class AnalyticsView(LoginRequiredMixin, TemplateView):
 
         # Get user properties and bookings
         properties = Property.objects.filter(owner=user, is_active=True)
-        bookings = Booking.objects.filter(property__owner=user)
+        bookings = Booking.objects.filter(rental_property__owner=user)
 
         # Revenue analytics
         context['revenue_stats'] = self.get_revenue_stats(bookings)
@@ -75,7 +74,7 @@ class AnalyticsView(LoginRequiredMixin, TemplateView):
         booked_days = 0
         for property in properties:
             property_bookings = bookings.filter(
-                property=property,
+                rental_property=property,
                 status__in=['confirmed', 'checked_in', 'checked_out'],
                 check_in_date__lte=today,
                 check_out_date__gte=thirty_days_ago
@@ -102,7 +101,7 @@ class AnalyticsView(LoginRequiredMixin, TemplateView):
 
         for channel in channels:
             channel_bookings = Booking.objects.filter(
-                property__owner=user,
+                rental_property__owner=user,
                 channel=channel
             )
 
@@ -138,7 +137,6 @@ class AnalyticsView(LoginRequiredMixin, TemplateView):
 
         return sorted(performance, key=lambda x: x['revenue'], reverse=True)
 
-
 class RevenueAnalyticsView(LoginRequiredMixin, TemplateView):
     """Revenue analytics API endpoint"""
 
@@ -147,7 +145,7 @@ class RevenueAnalyticsView(LoginRequiredMixin, TemplateView):
         period = request.GET.get('period', '12months')
 
         bookings = Booking.objects.filter(
-            property__owner=user,
+            rental_property__owner=user,
             status__in=['confirmed', 'checked_out']
         )
 
