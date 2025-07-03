@@ -144,7 +144,7 @@ class PricingEngine:
         thirty_days_ago = today - timedelta(days=30)
 
         bookings = Booking.objects.filter(
-            property=property,
+            rental_property=property,
             check_in_date__lte=today,
             check_out_date__gte=thirty_days_ago,
             status__in=['confirmed', 'checked_in', 'checked_out']
@@ -184,7 +184,7 @@ class PricingEngine:
 
         # Get all future bookings
         future_bookings = Booking.objects.filter(
-            property=property,
+            rental_property=property,
             check_out_date__gte=today,
             status__in=['confirmed', 'checked_in']
         ).order_by('check_in_date')
@@ -220,7 +220,7 @@ class PricingEngine:
 
         # Get active pricing rules for the property
         rules = PricingRule.objects.filter(
-            property=property,
+            rental_property=property,
             is_active=True
         )
 
@@ -250,13 +250,13 @@ class PricingEngine:
             factors.append({
                 'name': 'High Demand',
                 'impact': 'positive',
-                'description': f'Property has {occupancy_rate * 100:.0f}% occupancy'
+                'description': f'Property has {occupancy_rate*100:.0f}% occupancy'
             })
         elif occupancy_rate < 0.5:
             factors.append({
                 'name': 'Low Demand',
                 'impact': 'negative',
-                'description': f'Property has {occupancy_rate * 100:.0f}% occupancy'
+                'description': f'Property has {occupancy_rate*100:.0f}% occupancy'
             })
 
         # Timing factor

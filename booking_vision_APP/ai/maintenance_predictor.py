@@ -43,7 +43,7 @@ class MaintenancePredictor:
         return {
             'high_usage': {
                 'threshold': 20,  # bookings per month
-                'impact': 1.5,  # accelerates maintenance needs
+                'impact': 1.5,    # accelerates maintenance needs
                 'affected_items': ['Deep Cleaning', 'HVAC Filter', 'Appliance Service']
             },
             'seasonal': {
@@ -53,9 +53,9 @@ class MaintenancePredictor:
                 'fall': ['HVAC Filter', 'Smoke Detector Test']
             },
             'age_factor': {
-                'new': 0.8,  # 0-2 years
+                'new': 0.8,      # 0-2 years
                 'moderate': 1.0,  # 2-5 years
-                'old': 1.3  # 5+ years
+                'old': 1.3       # 5+ years
             }
         }
 
@@ -125,7 +125,7 @@ class MaintenancePredictor:
 
         # Get recent bookings
         recent_bookings = Booking.objects.filter(
-            property=property,
+            rental_property=property,
             check_in_date__gte=ninety_days_ago,
             status__in=['confirmed', 'checked_in', 'checked_out']
         )
@@ -160,7 +160,7 @@ class MaintenancePredictor:
 
         # Get completed maintenance tasks
         tasks = MaintenanceTask.objects.filter(
-            property=property,
+            rental_property=property,
             status='completed'
         ).order_by('-completed_date')
 
@@ -282,7 +282,7 @@ class MaintenancePredictor:
         schedule = self.MAINTENANCE_SCHEDULES.get(maintenance_type, {})
 
         task = MaintenanceTask.objects.create(
-            property=property,
+            rental_property=property,
             title=maintenance_type,
             description=f"Scheduled maintenance for {maintenance_type}",
             priority=schedule.get('priority', 'medium'),
