@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Booking Vision{% endblock %}
+
+{% block content %}
+<div class="container-fluid" id="dashboard-container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4 text-primary-blue">Dashboard</h1>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 id="total-properties">{{ total_properties|default:"0" }}</h4>
+                <p>Total Properties</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 id="total-bookings">{{ total_bookings|default:"0" }}</h4>
+                <p>Total Bookings</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 id="total-revenue">${{ total_revenue|default:"0"|floatformat:2 }}</h4>
+                <p>Total Revenue</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 id="occupancy-rate">{{ occupancy_rate|default:"0" }}%</h4>
+                <p>Occupancy Rate</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Bookings -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Bookings</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_bookings %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Guest</th>
+                                        <th>Property</th>
+                                        <th>Check-in</th>
+                                        <th>Check-out</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in recent_bookings %}
+                                    <tr>
+                                        <td>{{ booking.guest.first_name }} {{ booking.guest.last_name }}</td>
+                                        <td>{{ booking.property.name }}</td>
+                                        <td>{{ booking.check_in_date }}</td>
+                                        <td>{{ booking.check_out_date }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ booking.get_status_display }}</span>
+                                        </td>
+                                        <td>${{ booking.total_price }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No bookings yet. Start by adding your first property!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
