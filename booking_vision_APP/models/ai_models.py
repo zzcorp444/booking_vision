@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 
 class PricingRule(models.Model):
     """Model for dynamic pricing rules"""
-    rental_property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='pricing_rules')
+    rental_property = models.ForeignKey('booking_vision_APP.Property', on_delete=models.CASCADE, related_name='pricing_rules')
     name = models.CharField(max_length=100)
 
     # Rule conditions
@@ -53,7 +53,7 @@ class MaintenanceTask(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
-    rental_property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='maintenance_tasks')
+    rental_property = models.ForeignKey('booking_vision_APP.Property', on_delete=models.CASCADE, related_name='maintenance_tasks')
     title = models.CharField(max_length=200)
     description = models.TextField()
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
@@ -89,7 +89,7 @@ class MaintenanceTask(models.Model):
 
 class GuestPreference(models.Model):
     """Model for storing guest preferences and AI insights"""
-    guest = models.OneToOneField('bookings.Guest', on_delete=models.CASCADE, related_name='ai_preferences')
+    guest = models.OneToOneField('booking_vision_APP.Guest', on_delete=models.CASCADE, related_name='ai_preferences')
 
     # Preference categories
     room_temperature = models.IntegerField(null=True, blank=True)

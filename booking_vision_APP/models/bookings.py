@@ -32,10 +32,10 @@ class Booking(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
-    # Foreign Keys - renamed 'property' to 'rental_property' to avoid conflict
-    rental_property = models.ForeignKey('properties.Property', on_delete=models.CASCADE, related_name='bookings')
+    # Foreign Keys - use app label booking_vision_APP
+    rental_property = models.ForeignKey('booking_vision_APP.Property', on_delete=models.CASCADE, related_name='bookings')
     guest = models.ForeignKey(Guest, on_delete=models.CASCADE, related_name='bookings')
-    channel = models.ForeignKey('channels.Channel', on_delete=models.CASCADE, related_name='bookings')
+    channel = models.ForeignKey('booking_vision_APP.Channel', on_delete=models.CASCADE, related_name='bookings')
 
     # Booking details
     external_booking_id = models.CharField(max_length=100, blank=True)

@@ -38,7 +38,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['properties'] = properties[:5]  # Recent 5 properties
 
         # Booking statistics
-        bookings = Booking.objects.filter(property__owner=user)
+        bookings = Booking.objects.filter(rental_property__owner=user)
         context['total_bookings'] = bookings.count()
         context['active_bookings'] = bookings.filter(
             status='confirmed',
@@ -59,12 +59,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         # Occupancy rate calculation
         total_property_days = properties.count() * 30  # Last 30 days
         booked_days = self._calculate_booked_days(properties, today - timedelta(days=30), today)
-        context['occupancy_rate'] = round((booked_days / total_property_days * 100) if total_property_days > 0 else 0,
-                                          1)
+        context['occupancy_rate'] = round((booked_days / total_property_days * 100) if total_property_days > 0 else 0, 1)
 
         # Recent bookings
-        context['recent_bookings'] = bookings.select_related('property', 'guest', 'channel').order_by('-created_at')[
-                                     :10]
+        context['recent_bookings'] = bookings.select_related('rental_property', 'guest', 'channel').order_by('-created_at')[:10]
 
         # Channel performance
         context['channel_stats'] = self._get_channel_stats(user)
@@ -92,7 +90,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         booked_days = 0
         for property in properties:
             bookings = Booking.objects.filter(
-                property=property,
+                rental_property=property,
                 status__in=['confirmed', 'checked_in', 'checked_out'],
                 check_in_date__lte=end_date,
                 check_out_date__gte=start_date
@@ -114,7 +112,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         stats = []
         for channel in channels:
             channel_bookings = Booking.objects.filter(
-                property__owner=user,
+                rental_property__owner=user,
                 channel=channel
             )
             stats.append({
@@ -176,7 +174,7 @@ class DashboardAPIView(LoginRequiredMixin, TemplateView):
         today = timezone.now().date()
 
         properties = Property.objects.filter(owner=user, is_active=True)
-        bookings = Booking.objects.filter(property__owner=user)
+        bookings = Booking.objects.filter(rental_property__owner=user)
 
         total_revenue = bookings.filter(
             status__in=['confirmed', 'checked_out']
@@ -201,7 +199,7 @@ class DashboardAPIView(LoginRequiredMixin, TemplateView):
 
         # Group bookings by month
         bookings = Booking.objects.filter(
-            property__owner=user,
+            rental_property__owner=user,
             status__in=['confirmed', 'checked_out'],
             created_at__gte=start_date
         )
@@ -226,7 +224,7 @@ class DashboardAPIView(LoginRequiredMixin, TemplateView):
         booked_days = 0
         for property in properties:
             bookings = Booking.objects.filter(
-                property=property,
+                rental_property=property,
                 status__in=['confirmed', 'checked_in', 'checked_out'],
                 check_in_date__lte=end_date,
                 check_out_date__gte=start_date

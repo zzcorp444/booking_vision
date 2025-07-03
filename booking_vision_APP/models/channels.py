@@ -49,7 +49,7 @@ class ChannelConnection(models.Model):
 
 class PropertyChannel(models.Model):
     """Model linking properties to channels"""
-    rental_property = models.ForeignKey('properties.Property', on_delete=models.CASCADE)
+    rental_property = models.ForeignKey('booking_vision_APP.Property', on_delete=models.CASCADE)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     channel_connection = models.ForeignKey(ChannelConnection, on_delete=models.CASCADE)
 
