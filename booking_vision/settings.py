@@ -10,7 +10,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-production')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-$9sajv17ek!6!%4gbbxp$(e+e(qkgty_ueg)2+%&qc)e!8x$dw')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
@@ -69,7 +69,7 @@ ASGI_APPLICATION = 'booking_vision.asgi.application'
 # Database
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL', default=f'sqlite:///{BASE_DIR}/db.sqlite3'),
+        default=config('DATABASE_URL', default='postgresql://zz_corp:uVnFmxxZRbWb5arbmuvJ4bPI02cbAQcS@dpg-d1fs8nmmcj7s73c1sgc0-a/asia_immo_db_00_ov8u'),
         conn_max_age=600,
         conn_health_checks=True,
     )

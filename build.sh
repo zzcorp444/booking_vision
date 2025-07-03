@@ -11,13 +11,20 @@ pip install -r requirements.txt
 echo "2. Collecting static files..."
 python manage.py collectstatic --no-input
 
-echo "3. Making migrations..."
-python manage.py makemigrations --noinput
+echo "3. Making fresh migrations..."
+python manage.py makemigrations booking_vision_APP --noinput
 
-echo "4. Running migrations..."
-python manage.py migrate --noinput
+echo "4. Running ALL migrations..."
+python manage.py migrate auth
+python manage.py migrate contenttypes
+python manage.py migrate sessions
+python manage.py migrate admin
+python manage.py migrate booking_vision_APP
 
-echo "5. Loading initial data..."
+echo "5. Verifying database..."
+python manage.py showmigrations
+
+echo "6. Loading initial data..."
 python manage.py init_data
 
 echo "=== Build completed successfully! ==="
