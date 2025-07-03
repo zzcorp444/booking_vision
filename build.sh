@@ -6,10 +6,19 @@ set -o errexit  # exit on error
 echo "Installing dependencies..."
 pip install -r requirements.txt
 
+echo "Creating migrations..."
+python manage.py makemigrations --noinput
+
 echo "Collecting static files..."
 python manage.py collectstatic --no-input
 
 echo "Running migrations..."
+python manage.py migrate
+
+echo "Creating migrations for booking_vision_APP if needed..."
+python manage.py makemigrations booking_vision_APP --noinput
+
+echo "Applying app migrations..."
 python manage.py migrate
 
 echo "Creating superuser if it doesn't exist..."
