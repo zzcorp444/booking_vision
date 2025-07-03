@@ -11,25 +11,20 @@ pip install -r requirements.txt
 echo "2. Collecting static files..."
 python manage.py collectstatic --no-input
 
-echo "3. Resetting database and creating fresh migrations..."
-# Reset migration tracking
-python manage.py migrate --fake booking_vision_APP zero || true
-python manage.py migrate --fake-initial || true
+echo "3. Creating all migrations..."
+python manage.py makemigrations
 
-# Create fresh migrations
-echo "4. Creating new migrations..."
-python manage.py makemigrations booking_vision_APP --empty --name reset_migration
-python manage.py makemigrations booking_vision_APP
-
-echo "5. Running migrations..."
-python manage.py migrate --run-syncdb
-
-echo "6. Creating Django tables..."
-python manage.py migrate auth
+echo "4. Running core Django migrations first..."
 python manage.py migrate contenttypes
+python manage.py migrate auth
 python manage.py migrate sessions
 python manage.py migrate admin
+
+echo "5. Running app migrations..."
 python manage.py migrate booking_vision_APP
+
+echo "6. Running any remaining migrations..."
+python manage.py migrate
 
 echo "7. Loading initial data..."
 python manage.py init_data
