@@ -61,4 +61,8 @@ urlpatterns = [
     path('channels/connect/', channels.connect_channel, name='connect_channel'),
     path('channels/sync/', channels.sync_bookings, name='sync_bookings'),
     path('channels/link-property/', channels.link_property_to_channel, name='link_property_to_channel'),
+
+    # Profile URLs
+    path('profile/', profile.ProfileView.as_view(), name='profile'),
+    path('settings/', profile.SettingsView.as_view(), name='settings'),
 ]

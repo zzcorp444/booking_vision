@@ -110,20 +110,14 @@ Location: booking_vision_APP/templates/base.html
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i> {{ user.username }}
+                                <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}
                             </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Settings</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-user-edit"></i> Profile</a></li>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'booking_vision_APP:profile' %}"><i class="fas fa-user-circle"></i> My Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'booking_vision_APP:settings' %}"><i class="fas fa-cog"></i> Settings</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                             </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">
-                                <i class="fas fa-sign-in-alt"></i> Login
-                            </a>
                         </li>
                     {% endif %}
                 </ul>
