@@ -14,7 +14,7 @@ python manage.py collectstatic --no-input
 echo "3. Making migrations..."
 python manage.py makemigrations
 
-echo "4. Running ALL migrations on fresh database..."
+echo "4. Running ALL migrations..."
 python manage.py migrate
 
 echo "5. Loading initial data..."

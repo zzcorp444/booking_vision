@@ -71,7 +71,7 @@ ASGI_APPLICATION = 'booking_vision.asgi.application'
 # Database
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL', default='postgresql://zz_corp:obPSTO2ClWOEgVmhH0bMaZEz9hQZC4Sw@dpg-d1jb3ffdiees73cssc9g-a/asia_immo_db_00_63oi'),
+        default=config('DATABASE_URL', default='postgresql://zz_corp:pafkFj6ejm5teBEGLF5w0PJcSRHyqfpo@dpg-d1k5amadbo4c73f2as0g-a/asia_immo_db_00_0od1'),
         conn_max_age=600,
         conn_health_checks=True,
     )
