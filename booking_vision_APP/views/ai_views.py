@@ -225,12 +225,20 @@ class GuestExperienceView(LoginRequiredMixin, TemplateView):
         # Get automated response templates
         context['response_templates'] = experience_engine.get_response_templates()
 
-        # Guest statistics
+        # Guest statistics - Fixed query
         total_guests = Guest.objects.filter(bookings__rental_property__owner=user).distinct().count()
-        satisfied_guests = Guest.objects.filter(
-            bookings__rental_property__owner=user,
-            ai_preferences__satisfaction_score__gte=4.0
-        ).distinct().count()
+
+        # Count satisfied guests differently to avoid the OneToOneRel issue
+        satisfied_guests = 0
+        guests_with_bookings = Guest.objects.filter(bookings__rental_property__owner=user).distinct()
+
+        for guest in guests_with_bookings:
+            try:
+                if hasattr(guest, 'ai_preferences') and guest.ai_preferences.satisfaction_score:
+                    if guest.ai_preferences.satisfaction_score >= 4.0:
+                        satisfied_guests += 1
+            except GuestPreference.DoesNotExist:
+                pass
 
         context['guest_stats'] = {
             'total_guests': total_guests,
