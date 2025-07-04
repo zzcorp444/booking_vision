@@ -5,7 +5,7 @@ This file defines all application-specific URLs.
 from django.urls import path, include
 from .views import dashboard, properties, bookings, analytics, ai_views, messages, notifications, payments
 from . import api_views
-from .views import channels
+from .views import channels, profile
 
 app_name = 'booking_vision_APP'
 
