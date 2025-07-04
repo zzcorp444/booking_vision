@@ -19,8 +19,29 @@ Location: booking_vision_APP/templates/base.html
     
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/bv_logo_3.png' %}" style="border-radius: 20%;">
     
     {% block extra_css %}{% endblock %}
+    <style>
+        /* Fixed navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Add padding to body to account for fixed navbar */
+        body {
+            padding-top: 70px;
+        }
+        
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Booking Vision</title>
+    <link rel="icon" type="image/png" href="{% static 'images/bv_logo_3.png' %}" style="border-radius: 20%;">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     {% load static %}
@@ -11,15 +12,17 @@
         :root {
             --primary-blue: #1e3a8a;
             --secondary-blue: #3b82f6;
-            --light-blue: #dbeafe;
-            --accent-blue: #60a5fa;
+            --light-blue: #60a5fa;
+            --bright-blue: #93c5fd;
         }
         
         body {
-            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 50%, var(--light-blue) 75%, var(--bright-blue) 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
+            position: relative;
+            overflow: hidden;
         }
         
         .login-container {
@@ -27,6 +30,11 @@
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            transition: all 0.6s ease;
+        }
+        
+        .login-container.success {
+            transform: translateX(-50%);
         }
         
         .login-header {
@@ -69,6 +77,7 @@
         .logo {
             height: 60px;
             margin-bottom: 1rem;
+            border-radius: 20%;
         }
         
         .feature-list {
@@ -77,13 +86,75 @@
         }
         
         .feature-list li {
-            margin-bottom: 0.5rem;
-            color: #6b7280;
+            margin-bottom: 0.75rem;
+            color: #4b5563;
+            display: flex;
+            align-items: center;
         }
         
         .feature-list i {
             color: var(--secondary-blue);
-            margin-right: 0.5rem;
+            margin-right: 0.75rem;
+            width: 20px;
+        }
+        
+        /* Loading animation */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+        
+        .loading-screen.active {
+            display: flex;
+        }
+        
+        .loading-logo {
+            height: 120px;
+            margin-bottom: 2rem;
+            animation: pulse 1.5s ease-in-out infinite;
+            border-radius: 20%;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-blue), var(--light-blue));
+            animation: loading 2s ease-in-out infinite;
+        }
+        
+        @keyframes loading {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+        
+        .loading-text {
+            margin-top: 1rem;
+            color: var(--primary-blue);
+            font-weight: 600;
         }
     </style>
 </head>
@@ -91,12 +162,12 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-10 col-xl-8">
-                <div class="login-container">
+                <div class="login-container" id="loginContainer">
                     <div class="row g-0">
                         <!-- Left side - Login Form -->
                         <div class="col-md-6">
                             <div class="login-header">
-                                <img src="{% static 'images/bv_logo.png' %}" alt="Booking Vision" class="logo" onerror="this.style.display='none'">
+                                <img src="{% static 'images/bv_logo_3.png' %}" alt="Booking Vision" class="logo" onerror="this.style.display='none'">
                                 <h2 class="fw-bold mb-1">Booking Vision</h2>
                                 <p class="mb-0">AI-Powered Channel Manager</p>
                             </div>
@@ -113,7 +184,7 @@
                                     </div>
                                 {% endif %}
                                 
-                                <form method="post">
+                                <form method="post" id="loginForm">
                                     {% csrf_token %}
                                     <div class="mb-3">
                                         <label for="{{ form.username.id_for_label }}" class="form-label fw-semibold">
@@ -151,21 +222,17 @@
                                     <i class="fas fa-rocket me-2"></i>Powerful Features
                                 </h5>
                                 <ul class="feature-list">
-                                    <li><i class="fas fa-brain"></i>AI-Powered Smart Pricing</li>
-                                    <li><i class="fas fa-sync"></i>Multi-Channel Synchronization</li>
-                                    <li><i class="fas fa-chart-line"></i>Advanced Analytics & Reports</li>
+                                    <li><i class="fas fa-sync-alt"></i>Multi-Channel Synchronization (Airbnb, Booking.com, VRBO)</li>
+                                    <li><i class="fas fa-brain"></i>AI-Powered Dynamic Pricing Optimization</li>
+                                    <li><i class="fas fa-chart-line"></i>Real-time Analytics & Performance Tracking</li>
                                     <li><i class="fas fa-robot"></i>Automated Guest Communication</li>
-                                    <li><i class="fas fa-tools"></i>Predictive Maintenance</li>
-                                    <li><i class="fas fa-shield-alt"></i>Enterprise-Grade Security</li>
+                                    <li><i class="fas fa-tools"></i>Predictive Maintenance Scheduling</li>
+                                    <li><i class="fas fa-calendar-check"></i>Smart Calendar Management</li>
+                                    <li><i class="fas fa-wallet"></i>Integrated Payment Processing</li>
+                                    <li><i class="fas fa-bell"></i>Customizable Notification Rules</li>
+                                    <li><i class="fas fa-globe"></i>Market Intelligence & Competitor Analysis</li>
+                                    <li><i class="fas fa-shield-alt"></i>Enterprise-Grade Security & Data Protection</li>
                                 </ul>
-                                
-                                <div class="mt-4 p-3 rounded" style="background-color: var(--light-blue);">
-                                    <h6 class="fw-bold mb-2" style="color: var(--primary-blue);">
-                                        <i class="fas fa-star me-2"></i>Demo Credentials
-                                    </h6>
-                                    <p class="mb-1"><strong>Username:</strong> admin</p>
-                                    <p class="mb-0"><strong>Password:</strong> admin123</p>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -174,6 +241,52 @@
         </div>
     </div>
     
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <img src="{% static 'images/bv_logo_3.png' %}" alt="Booking Vision" class="loading-logo">
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+        <p class="loading-text">Preparing your dashboard...</p>
+    </div>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Submit form via AJAX
+            const formData = new FormData(this);
+            fetch(this.action || window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json().catch(() => ({ success: response.ok })))
+            .then(data => {
+                if (data.success !== false) {
+                    // Login successful - start animation
+                    document.getElementById('loginContainer').classList.add('success');
+                    
+                    setTimeout(() => {
+                        document.getElementById('loadingScreen').classList.add('active');
+                    }, 600);
+                    
+                    setTimeout(() => {
+                        window.location.href = '{% url "booking_vision_APP:dashboard" %}';
+                    }, 3000);
+                } else {
+                    // Handle login error
+                    this.submit(); // Fall back to regular form submission to show errors
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.submit(); // Fall back to regular form submission
+            });
+        });
+    </script>
 </body>
 </html>

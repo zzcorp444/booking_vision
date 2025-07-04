@@ -5,6 +5,7 @@ This file defines all application-specific URLs.
 from django.urls import path, include
 from .views import dashboard, properties, bookings, analytics, ai_views, messages, notifications, payments
 from . import api_views
+from .views import channels
 
 app_name = 'booking_vision_APP'
 
@@ -54,4 +55,10 @@ urlpatterns = [
     path('api/dashboard/stats/', api_views.dashboard_stats_api, name='api_dashboard_stats'),
     path('api/analytics/revenue/', api_views.revenue_analytics_api, name='api_revenue_analytics'),
     path('api/ai/toggle/<str:feature>/', api_views.toggle_ai_feature, name='api_toggle_ai_feature'),
+
+    # Channel Management URLs
+    path('channels/', channels.ChannelManagementView.as_view(), name='channel_management'),
+    path('channels/connect/', channels.connect_channel, name='connect_channel'),
+    path('channels/sync/', channels.sync_bookings, name='sync_bookings'),
+    path('channels/link-property/', channels.link_property_to_channel, name='link_property_to_channel'),
 ]
