@@ -91,7 +91,110 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             check_out_date__lte=today + timedelta(days=7)
         ).order_by('check_out_date')[:5]
 
+        # Add to DashboardView.get_context_data():
+
+        # Today's check-ins/outs
+        today = timezone.now().date()
+        context['todays_checkins'] = bookings.filter(
+            check_in_date=today,
+            status='confirmed'
+        ).count()
+
+        context['todays_checkouts'] = bookings.filter(
+            check_out_date=today,
+            status='checked_in'
+        ).count()
+
+        # Recent activities
+        context['recent_activities'] = self._get_recent_activities(user)
+
+        # Upcoming tasks
+        context['upcoming_tasks'] = self._get_upcoming_tasks(user)
+
         return context
+
+    def _get_recent_activities(self, user):
+        """Get recent activities for activity feed"""
+        activities = []
+
+        # Recent bookings
+        recent_bookings = Booking.objects.filter(
+            rental_property__owner=user
+        ).order_by('-created_at')[:5]
+
+        for booking in recent_bookings:
+            activities.append({
+                'type': 'booking',
+                'icon': 'calendar-check',
+                'title': f'New booking from {booking.guest.first_name}',
+                'description': f'{booking.rental_property.name} - {booking.check_in_date}',
+                'time_ago': self._time_ago(booking.created_at),
+                'timestamp': booking.created_at
+            })
+
+        # Recent messages
+        from ..models.bookings import BookingMessage
+        recent_messages = BookingMessage.objects.filter(
+            booking__rental_property__owner=user,
+            sender='guest'
+        ).order_by('-created_at')[:3]
+
+        for message in recent_messages:
+            activities.append({
+                'type': 'message',
+                'icon': 'comment',
+                'title': f'Message from {message.booking.guest.first_name}',
+                'description': message.message[:50] + '...',
+                'time_ago': self._time_ago(message.created_at),
+                'timestamp': message.created_at
+            })
+
+        # Sort by timestamp
+        activities.sort(key=lambda x: x['timestamp'], reverse=True)
+        return activities[:10]
+
+    def _get_upcoming_tasks(self, user):
+        """Get upcoming tasks"""
+        tasks = []
+
+        # Upcoming check-ins
+        upcoming_checkins = Booking.objects.filter(
+            rental_property__owner=user,
+            status='confirmed',
+            check_in_date__gte=timezone.now().date(),
+            check_in_date__lte=timezone.now().date() + timedelta(days=7)
+        ).order_by('check_in_date')[:3]
+
+        for booking in upcoming_checkins:
+            tasks.append({
+                'title': f'Prepare for {booking.guest.first_name} check-in',
+                'property': booking.rental_property.name,
+                'due_date': booking.check_in_date,
+                'priority': 'high' if booking.check_in_date == timezone.now().date() else 'medium'
+            })
+
+        # Maintenance tasks
+        from ..models.ai_models import MaintenanceTask
+        maintenance_tasks = MaintenanceTask.objects.filter(
+            rental_property__owner=user,
+            status='pending'
+        ).order_by('priority', 'created_at')[:2]
+
+        for task in maintenance_tasks:
+            tasks.append({
+                'title': task.title,
+                'property': task.rental_property.name,
+                'due_date': task.scheduled_date or 'ASAP',
+                'priority': task.priority
+            })
+
+        return tasks
+
+    def _time_ago(self, timestamp):
+        """Convert timestamp to human-readable time ago"""
+        from django.utils import timezone
+        from django.contrib.humanize.templatetags.humanize import naturaltime
+        return naturaltime(timestamp)
 
     def _calculate_booked_days(self, properties, start_date, end_date):
         """Calculate total booked days for properties in date range"""

@@ -6,6 +6,7 @@ from django.urls import path, include
 from .views import dashboard, properties, bookings, analytics, ai_views, messages, notifications, payments
 from . import api_views
 from .views import channels, profile
+from .views import activities
 
 app_name = 'booking_vision_APP'
 
@@ -61,6 +62,10 @@ urlpatterns = [
     path('channels/connect/', channels.connect_channel, name='connect_channel'),
     path('channels/sync/', channels.sync_bookings, name='sync_bookings'),
     path('channels/link-property/', channels.link_property_to_channel, name='link_property_to_channel'),
+
+    # Activity URLs
+    path('activities/', activities.ActivityView.as_view(), name='activity'),
+    path('api/activities/', activities.ActivityAPIView.as_view(), name='activity_api'),
 
     # Profile URLs
     path('profile/', profile.ProfileView.as_view(), name='profile'),
