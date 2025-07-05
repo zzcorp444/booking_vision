@@ -3,17 +3,21 @@ Booking management views for Booking Vision application.
 This file contains all booking-related views and calendar functionality.
 Location: booking_vision_APP/views/bookings.py
 """
-from django.shortcuts import render, get_object_or_404
+
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView, TemplateView
+from django.views.generic import ListView, DetailView, TemplateView, CreateView  # Add CreateView here
 from django.http import JsonResponse
-from django.db.models import Q, Count, Sum
+from django.db.models import Q, Count, Sum, Avg
 from datetime import datetime, timedelta
 import calendar
 import json
+from django.urls import reverse_lazy
+from django.contrib import messages
 
 from ..models.bookings import Booking, Guest, BookingMessage
 from ..models.properties import Property
+from ..models.channels import Channel
 from ..ai.sentiment_analysis import SentimentAnalyzer
 
 
@@ -228,3 +232,60 @@ def booking_api(request):
         return JsonResponse({'bookings': booking_data})
 
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+class BookingCreateView(LoginRequiredMixin, CreateView):
+    """Create a manual booking"""
+    model = Booking
+    template_name = 'bookings/booking_form.html'
+    fields = ['rental_property', 'channel', 'check_in_date',
+              'check_out_date', 'num_guests', 'base_price', 'cleaning_fee',
+              'service_fee', 'total_price', 'status']
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+
+        # Filter properties to only show user's properties
+        form.fields['rental_property'].queryset = Property.objects.filter(
+            owner=self.request.user,
+            is_active=True
+        )
+
+        # You might want to add help text or customize widgets
+        form.fields['check_in_date'].widget.attrs.update({'type': 'date'})
+        form.fields['check_out_date'].widget.attrs.update({'type': 'date'})
+
+        return form
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add any additional context if needed
+        context['guests'] = Guest.objects.all().order_by('first_name', 'last_name')
+        return context
+
+    def form_valid(self, form):
+        # You can add additional logic here before saving
+        booking = form.save(commit=False)
+
+        # Auto-calculate nights if not set
+        if booking.check_in_date and booking.check_out_date:
+            # The nights property is already calculated in the model
+            pass
+
+        # Create a new guest if needed (you might want to add guest creation to the form)
+        if not hasattr(booking, 'guest') or not booking.guest:
+            # For now, create a default guest or handle this differently
+            guest, created = Guest.objects.get_or_create(
+                email='manual@booking.com',
+                defaults={
+                    'first_name': 'Manual',
+                    'last_name': 'Booking'
+                }
+            )
+            booking.guest = guest
+
+        messages.success(self.request, f'Booking created successfully!')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('booking_vision_APP:booking_detail', kwargs={'pk': self.object.pk})
