@@ -31,8 +31,6 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'booking_vision_APP',
-    'django_celery_beat',
-    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -71,7 +69,7 @@ ASGI_APPLICATION = 'booking_vision.asgi.application'
 # Database
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL', default='postgresql://zz_corp:pafkFj6ejm5teBEGLF5w0PJcSRHyqfpo@dpg-d1k5amadbo4c73f2as0g-a/asia_immo_db_00_0od1'),
+        default=config('DATABASE_URL', default='postgresql://zz_corp:obPSTO2ClWOEgVmhH0bMaZEz9hQZC4Sw@dpg-d1jb3ffdiees73cssc9g-a/asia_immo_db_00_63oi'),
         conn_max_age=600,
         conn_health_checks=True,
     )
@@ -123,10 +121,10 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 # Celery Configuration
 CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379')
 CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379')
+CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
-
 
 # Channel Layers
 CHANNEL_LAYERS = {
@@ -161,17 +159,58 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 
+# CSRF Settings - Important for production
+CSRF_TRUSTED_ORIGINS = [
+    'https://booking-vision.onrender.com',
+    'https://*.onrender.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
+# Security settings for production
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "https://booking-vision.onrender.com",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
 # Logging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'booking_vision_APP': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }
