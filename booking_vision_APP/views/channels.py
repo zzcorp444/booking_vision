@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 import json
 
 from ..models.channels import Channel, ChannelConnection, PropertyChannel
@@ -37,6 +38,7 @@ class ChannelManagementView(LoginRequiredMixin, TemplateView):
         return context
 
 
+@login_required
 @require_http_methods(["POST"])
 def connect_channel(request):
     """Connect to a channel"""
@@ -74,6 +76,7 @@ def connect_channel(request):
         }, status=400)
 
 
+@login_required
 @require_http_methods(["POST"])
 def sync_bookings(request):
     """Manually trigger booking sync"""
@@ -93,6 +96,7 @@ def sync_bookings(request):
         }, status=400)
 
 
+@login_required
 @require_http_methods(["POST"])
 def link_property_to_channel(request):
     """Link a property to a channel"""
@@ -128,3 +132,4 @@ def link_property_to_channel(request):
             'success': False,
             'error': str(e)
         }, status=400)
+

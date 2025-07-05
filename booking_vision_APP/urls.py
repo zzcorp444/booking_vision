@@ -3,7 +3,11 @@ URL configuration for booking_vision_APP.
 This file defines all application-specific URLs.
 """
 from django.urls import path, include
-from .views import dashboard, properties, bookings, analytics, ai_views, messages, notifications, payments, profile, activities, documentation
+from .views import (
+    dashboard, properties, bookings, analytics, ai_views,
+    messages, notifications, payments, profile, activities,
+    documentation, channels  # Add channels import
+)
 from . import api_views
 
 app_name = 'booking_vision_APP'
@@ -23,9 +27,14 @@ urlpatterns = [
 
     # Booking URLs
     path('bookings/', bookings.BookingListView.as_view(), name='booking_list'),
+    path('bookings/create/', bookings.BookingCreateView.as_view(), name='booking_create'),  # Add this
     path('bookings/<int:pk>/', bookings.BookingDetailView.as_view(), name='booking_detail'),
     path('bookings/calendar/', bookings.CalendarView.as_view(), name='booking_calendar'),
-    path('bookings/create/', bookings.BookingCreateView.as_view(), name='booking_create'),
+
+    # Channel Management URLs (Add this section)
+    path('channels/', channels.ChannelManagementView.as_view(), name='channel_management'),
+    path('channels/connect/', channels.connect_channel, name='connect_channel'),
+    path('channels/sync/', channels.sync_bookings, name='sync_bookings'),
 
     # Messages URLs
     path('messages/', messages.MessagesListView.as_view(), name='messages_list'),
