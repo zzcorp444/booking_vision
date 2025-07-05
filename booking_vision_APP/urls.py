@@ -3,7 +3,7 @@ URL configuration for booking_vision_APP.
 This file defines all application-specific URLs.
 """
 from django.urls import path, include
-from .views import dashboard, properties, bookings, analytics, ai_views, messages, notifications, payments, profile, activities
+from .views import dashboard, properties, bookings, analytics, ai_views, messages, notifications, payments, profile, activities, documentation
 from . import api_views
 
 app_name = 'booking_vision_APP'
@@ -57,6 +57,10 @@ urlpatterns = [
     # Activity URLs
     path('activities/', activities.ActivityView.as_view(), name='activity'),
     path('api/activities/', activities.ActivityAPIView.as_view(), name='activity_api'),
+
+    # Documentation URLs
+    path('documentation/', documentation.DocumentationView.as_view(), name='documentation'),
+    path('documentation/<str:article_id>/', documentation.DocumentationArticleView.as_view(), name='documentation_article'),
 
     # API URLs
     path('api/dashboard/stats/', api_views.dashboard_stats_api, name='api_dashboard_stats'),
