@@ -10,14 +10,13 @@ from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 
 from ..models.properties import Property
-from ..models.bookings import Booking, Guest
+from ..models.bookings import Booking, Guest, BookingMessage
 from ..models.channels import Channel, ChannelConnection
 from ..ai.pricing_engine import PricingEngine
 from ..ai.maintenance_predictor import MaintenancePredictor
-
-from django.contrib.auth.decorators import login_required
 
 
 @login_required
@@ -28,7 +27,7 @@ def home_redirect(request):
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     """Main dashboard view with comprehensive analytics"""
-    template_name = 'dashboard/dashboard.html'
+    template_name = 'dashboard/dashboard_enhanced.html'  # Changed to use enhanced template
     login_url = '/accounts/login/'
 
     def get_context_data(self, **kwargs):
@@ -62,7 +61,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             monthly_revenue=Sum('total_price', filter=Q(created_at__gte=month_start)),
             yearly_revenue=Sum('total_price', filter=Q(created_at__gte=year_start))
         )
-        context.update(revenue_data)
+
+        # Ensure values are not None
+        context['total_revenue'] = revenue_data.get('total_revenue') or 0
+        context['monthly_revenue'] = revenue_data.get('monthly_revenue') or 0
+        context['yearly_revenue'] = revenue_data.get('yearly_revenue') or 0
 
         # Occupancy rate calculation
         total_property_days = properties.count() * 30  # Last 30 days
@@ -91,10 +94,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             check_out_date__lte=today + timedelta(days=7)
         ).order_by('check_out_date')[:5]
 
-        # Add to DashboardView.get_context_data():
-
         # Today's check-ins/outs
-        today = timezone.now().date()
         context['todays_checkins'] = bookings.filter(
             check_in_date=today,
             status='confirmed'
@@ -112,89 +112,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['upcoming_tasks'] = self._get_upcoming_tasks(user)
 
         return context
-
-    def _get_recent_activities(self, user):
-        """Get recent activities for activity feed"""
-        activities = []
-
-        # Recent bookings
-        recent_bookings = Booking.objects.filter(
-            rental_property__owner=user
-        ).order_by('-created_at')[:5]
-
-        for booking in recent_bookings:
-            activities.append({
-                'type': 'booking',
-                'icon': 'calendar-check',
-                'title': f'New booking from {booking.guest.first_name}',
-                'description': f'{booking.rental_property.name} - {booking.check_in_date}',
-                'time_ago': self._time_ago(booking.created_at),
-                'timestamp': booking.created_at
-            })
-
-        # Recent messages
-        from ..models.bookings import BookingMessage
-        recent_messages = BookingMessage.objects.filter(
-            booking__rental_property__owner=user,
-            sender='guest'
-        ).order_by('-created_at')[:3]
-
-        for message in recent_messages:
-            activities.append({
-                'type': 'message',
-                'icon': 'comment',
-                'title': f'Message from {message.booking.guest.first_name}',
-                'description': message.message[:50] + '...',
-                'time_ago': self._time_ago(message.created_at),
-                'timestamp': message.created_at
-            })
-
-        # Sort by timestamp
-        activities.sort(key=lambda x: x['timestamp'], reverse=True)
-        return activities[:10]
-
-    def _get_upcoming_tasks(self, user):
-        """Get upcoming tasks"""
-        tasks = []
-
-        # Upcoming check-ins
-        upcoming_checkins = Booking.objects.filter(
-            rental_property__owner=user,
-            status='confirmed',
-            check_in_date__gte=timezone.now().date(),
-            check_in_date__lte=timezone.now().date() + timedelta(days=7)
-        ).order_by('check_in_date')[:3]
-
-        for booking in upcoming_checkins:
-            tasks.append({
-                'title': f'Prepare for {booking.guest.first_name} check-in',
-                'property': booking.rental_property.name,
-                'due_date': booking.check_in_date,
-                'priority': 'high' if booking.check_in_date == timezone.now().date() else 'medium'
-            })
-
-        # Maintenance tasks
-        from ..models.ai_models import MaintenanceTask
-        maintenance_tasks = MaintenanceTask.objects.filter(
-            rental_property__owner=user,
-            status='pending'
-        ).order_by('priority', 'created_at')[:2]
-
-        for task in maintenance_tasks:
-            tasks.append({
-                'title': task.title,
-                'property': task.rental_property.name,
-                'due_date': task.scheduled_date or 'ASAP',
-                'priority': task.priority
-            })
-
-        return tasks
-
-    def _time_ago(self, timestamp):
-        """Convert timestamp to human-readable time ago"""
-        from django.utils import timezone
-        from django.contrib.humanize.templatetags.humanize import naturaltime
-        return naturaltime(timestamp)
 
     def _calculate_booked_days(self, properties, start_date, end_date):
         """Calculate total booked days for properties in date range"""
@@ -239,110 +156,117 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         insights = []
 
         # Pricing insights
-        pricing_engine = PricingEngine()
-        for property in properties[:3]:  # Top 3 properties
-            recommendation = pricing_engine.get_pricing_recommendation(property)
-            if recommendation:
-                insights.append({
-                    'type': 'pricing',
-                    'property': property,
-                    'message': f"Consider adjusting {property.name} price to ${recommendation['suggested_price']:.2f} (potential {recommendation['revenue_increase']:.1f}% revenue increase)",
-                    'priority': 'high' if recommendation['revenue_increase'] > 10 else 'medium'
-                })
+        try:
+            pricing_engine = PricingEngine()
+            for property in properties[:3]:  # Top 3 properties
+                recommendation = pricing_engine.get_pricing_recommendation(property)
+                if recommendation and recommendation.get('revenue_increase', 0) > 5:
+                    insights.append({
+                        'type': 'pricing',
+                        'property': property,
+                        'message': f"Consider adjusting {property.name} price to ${recommendation['suggested_price']:.2f} (potential {recommendation['revenue_increase']:.1f}% revenue increase)",
+                        'priority': 'high' if recommendation['revenue_increase'] > 10 else 'medium'
+                    })
+        except Exception as e:
+            print(f"Error getting pricing insights: {e}")
 
         # Maintenance insights
-        maintenance_predictor = MaintenancePredictor()
-        maintenance_alerts = maintenance_predictor.get_upcoming_maintenance(properties)
-        for alert in maintenance_alerts[:2]:  # Top 2 alerts
-            insights.append({
-                'type': 'maintenance',
-                'property': alert['property'],
-                'message': alert['message'],
-                'priority': alert['priority']
-            })
+        try:
+            maintenance_predictor = MaintenancePredictor()
+            maintenance_alerts = maintenance_predictor.get_upcoming_maintenance(properties)
+            for alert in maintenance_alerts[:2]:  # Top 2 alerts
+                insights.append({
+                    'type': 'maintenance',
+                    'property': alert['property'],
+                    'message': alert['message'],
+                    'priority': alert['priority']
+                })
+        except Exception as e:
+            print(f"Error getting maintenance insights: {e}")
 
         return insights
 
+    def _get_recent_activities(self, user):
+        """Get recent activities for activity feed"""
+        activities = []
 
-class DashboardAPIView(LoginRequiredMixin, TemplateView):
-    """API endpoint for dashboard data"""
+        # Recent bookings
+        recent_bookings = Booking.objects.filter(
+            rental_property__owner=user
+        ).order_by('-created_at')[:5]
 
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        data_type = request.GET.get('type', 'stats')
+        for booking in recent_bookings:
+            activities.append({
+                'type': 'booking',
+                'icon': 'calendar-check',
+                'title': f'New booking from {booking.guest.first_name}',
+                'description': f'{booking.rental_property.name} - {booking.check_in_date}',
+                'time_ago': self._time_ago(booking.created_at),
+                'timestamp': booking.created_at
+            })
 
-        if data_type == 'stats':
-            return self.get_stats(user)
-        elif data_type == 'revenue':
-            return self.get_revenue_data(user)
-        elif data_type == 'occupancy':
-            return self.get_occupancy_data(user)
+        # Recent messages
+        recent_messages = BookingMessage.objects.filter(
+            booking__rental_property__owner=user,
+            sender='guest'
+        ).order_by('-created_at')[:3]
 
-        return JsonResponse({'error': 'Invalid data type'}, status=400)
+        for message in recent_messages:
+            activities.append({
+                'type': 'message',
+                'icon': 'comment',
+                'title': f'Message from {message.booking.guest.first_name}',
+                'description': message.message[:50] + '...' if len(message.message) > 50 else message.message,
+                'time_ago': self._time_ago(message.created_at),
+                'timestamp': message.created_at
+            })
 
-    def get_stats(self, user):
-        """Get dashboard statistics"""
-        today = timezone.now().date()
+        # Sort by timestamp
+        activities.sort(key=lambda x: x['timestamp'], reverse=True)
+        return activities[:10]
 
-        properties = Property.objects.filter(owner=user, is_active=True)
-        bookings = Booking.objects.filter(rental_property__owner=user)
+    def _get_upcoming_tasks(self, user):
+        """Get upcoming tasks"""
+        tasks = []
 
-        total_revenue = bookings.filter(
-            status__in=['confirmed', 'checked_out']
-        ).aggregate(Sum('total_price'))['total_price__sum'] or 0
-
-        # Calculate occupancy rate
-        total_property_days = properties.count() * 30
-        booked_days = self._calculate_booked_days(properties, today - timedelta(days=30), today)
-        occupancy_rate = round((booked_days / total_property_days * 100) if total_property_days > 0 else 0, 1)
-
-        return JsonResponse({
-            'total_properties': properties.count(),
-            'total_bookings': bookings.count(),
-            'total_revenue': float(total_revenue),
-            'occupancy_rate': occupancy_rate
-        })
-
-    def get_revenue_data(self, user):
-        """Get revenue chart data"""
-        end_date = timezone.now().date()
-        start_date = end_date - timedelta(days=365)
-
-        # Group bookings by month
-        bookings = Booking.objects.filter(
+        # Upcoming check-ins
+        upcoming_checkins = Booking.objects.filter(
             rental_property__owner=user,
-            status__in=['confirmed', 'checked_out'],
-            created_at__gte=start_date
-        )
+            status='confirmed',
+            check_in_date__gte=timezone.now().date(),
+            check_in_date__lte=timezone.now().date() + timedelta(days=7)
+        ).order_by('check_in_date')[:3]
 
-        monthly_revenue = {}
-        for booking in bookings:
-            month_key = booking.created_at.strftime('%Y-%m')
-            if month_key not in monthly_revenue:
-                monthly_revenue[month_key] = 0
-            monthly_revenue[month_key] += float(booking.total_price)
+        for booking in upcoming_checkins:
+            tasks.append({
+                'title': f'Prepare for {booking.guest.first_name} check-in',
+                'property': booking.rental_property.name,
+                'due_date': booking.check_in_date,
+                'priority': 'high' if booking.check_in_date == timezone.now().date() else 'medium'
+            })
 
-        # Sort by date
-        sorted_months = sorted(monthly_revenue.keys())
+        # Maintenance tasks
+        try:
+            from ..models.ai_models import MaintenanceTask
+            maintenance_tasks = MaintenanceTask.objects.filter(
+                rental_property__owner=user,
+                status='pending'
+            ).order_by('priority', 'created_at')[:2]
 
-        return JsonResponse({
-            'labels': [datetime.strptime(m, '%Y-%m').strftime('%b %Y') for m in sorted_months],
-            'revenue': [monthly_revenue[m] for m in sorted_months]
-        })
+            for task in maintenance_tasks:
+                tasks.append({
+                    'title': task.title,
+                    'property': task.rental_property.name,
+                    'due_date': task.scheduled_date or 'ASAP',
+                    'priority': task.priority
+                })
+        except:
+            pass
 
-    def _calculate_booked_days(self, properties, start_date, end_date):
-        """Calculate total booked days for properties in date range"""
-        booked_days = 0
-        for property in properties:
-            bookings = Booking.objects.filter(
-                rental_property=property,
-                status__in=['confirmed', 'checked_in', 'checked_out'],
-                check_in_date__lte=end_date,
-                check_out_date__gte=start_date
-            )
-            for booking in bookings:
-                overlap_start = max(booking.check_in_date, start_date)
-                overlap_end = min(booking.check_out_date, end_date)
-                if overlap_start <= overlap_end:
-                    booked_days += (overlap_end - overlap_start).days + 1
-        return booked_days
+        return tasks
+
+    def _time_ago(self, timestamp):
+        """Convert timestamp to human-readable time ago"""
+        from django.utils import timezone
+        from django.utils.timesince import timesince
+        return timesince(timestamp, timezone.now())
