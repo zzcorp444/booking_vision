@@ -25,6 +25,7 @@ urlpatterns = [
     path('bookings/', bookings.BookingListView.as_view(), name='booking_list'),
     path('bookings/<int:pk>/', bookings.BookingDetailView.as_view(), name='booking_detail'),
     path('bookings/calendar/', bookings.CalendarView.as_view(), name='booking_calendar'),
+    path('bookings/create/', bookings.BookingCreateView.as_view(), name='booking_create'),
 
     # Messages URLs
     path('messages/', messages.MessagesListView.as_view(), name='messages_list'),
