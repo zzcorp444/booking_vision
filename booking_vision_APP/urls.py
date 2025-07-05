@@ -3,10 +3,8 @@ URL configuration for booking_vision_APP.
 This file defines all application-specific URLs.
 """
 from django.urls import path, include
-from .views import dashboard, properties, bookings, analytics, ai_views, messages, notifications, payments
+from .views import dashboard, properties, bookings, analytics, ai_views, messages, notifications, payments, profile, activities
 from . import api_views
-from .views import channels, profile
-from .views import activities
 
 app_name = 'booking_vision_APP'
 
@@ -52,22 +50,16 @@ urlpatterns = [
     path('ai/guest-experience/', ai_views.GuestExperienceView.as_view(), name='guest_experience'),
     path('ai/business-intelligence/', ai_views.BusinessIntelligenceView.as_view(), name='business_intelligence'),
 
-    # API URLs
-    path('api/dashboard/stats/', api_views.dashboard_stats_api, name='api_dashboard_stats'),
-    path('api/analytics/revenue/', api_views.revenue_analytics_api, name='api_revenue_analytics'),
-    path('api/ai/toggle/<str:feature>/', api_views.toggle_ai_feature, name='api_toggle_ai_feature'),
-
-    # Channel Management URLs
-    path('channels/', channels.ChannelManagementView.as_view(), name='channel_management'),
-    path('channels/connect/', channels.connect_channel, name='connect_channel'),
-    path('channels/sync/', channels.sync_bookings, name='sync_bookings'),
-    path('channels/link-property/', channels.link_property_to_channel, name='link_property_to_channel'),
+    # Profile URLs
+    path('profile/', profile.ProfileView.as_view(), name='profile'),
+    path('settings/', profile.SettingsView.as_view(), name='settings'),
 
     # Activity URLs
     path('activities/', activities.ActivityView.as_view(), name='activity'),
     path('api/activities/', activities.ActivityAPIView.as_view(), name='activity_api'),
 
-    # Profile URLs
-    path('profile/', profile.ProfileView.as_view(), name='profile'),
-    path('settings/', profile.SettingsView.as_view(), name='settings'),
+    # API URLs
+    path('api/dashboard/stats/', api_views.dashboard_stats_api, name='api_dashboard_stats'),
+    path('api/analytics/revenue/', api_views.revenue_analytics_api, name='api_revenue_analytics'),
+    path('api/ai/toggle/<str:feature>/', api_views.toggle_ai_feature, name='api_toggle_ai_feature'),
 ]
