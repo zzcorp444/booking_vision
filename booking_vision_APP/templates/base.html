@@ -10,6 +10,10 @@ Location: booking_vision_APP/templates/base.html
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Booking Vision - Channel Manager{% endblock %}</title>
     
+    <!-- Favicon with border radius -->
+    {% load static %}
+    <link rel="icon" type="image/png" href="{% static 'images/bv_logo_3.png' %}" style="border-radius: 20%;">
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -17,11 +21,8 @@ Location: booking_vision_APP/templates/base.html
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    {% load static %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <link rel="icon" type="image/png" href="{% static 'images/bv_logo_3.png' %}" style="border-radius: 20%;">
     
-    {% block extra_css %}{% endblock %}
     <style>
         /* Fixed navbar */
         .navbar {
@@ -41,7 +42,8 @@ Location: booking_vision_APP/templates/base.html
         html {
             scroll-behavior: smooth;
         }
-
+        
+        /* Activity popup styles */
         .activity-popup {
             position: fixed;
             top: 80px;
@@ -81,6 +83,12 @@ Location: booking_vision_APP/templates/base.html
             color: white;
             font-size: 1.5rem;
             cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .activity-popup-close:hover {
+            opacity: 1;
         }
 
         .activity-popup-body {
@@ -99,15 +107,42 @@ Location: booking_vision_APP/templates/base.html
             justify-content: center;
             margin-right: 1rem;
             color: var(--primary-blue);
+            flex-shrink: 0;
+        }
+
+        .activity-popup-content {
+            flex-grow: 1;
+        }
+
+        .activity-popup-heading {
+            margin: 0 0 0.25rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .activity-popup-text {
+            margin: 0;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        /* Activity badge styles */
+        #activityBadge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            min-width: 1.5rem;
         }
     </style>
+    
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="{% url 'booking_vision_APP:dashboard' %}">
-                <img src="{% static 'images/bv_logo.png' %}" alt="Booking Vision" height="40" class="me-2">
+                <img src="{% static 'images/bv_logo.png' %}" alt="Booking Vision" height="40" class="me-2" onerror="this.style.display='none'">
                 <span class="fw-bold">Booking Vision</span>
             </a>
             
@@ -166,34 +201,19 @@ Location: booking_vision_APP/templates/base.html
                 </ul>
                 
                 <ul class="navbar-nav">
-                    <!-- Add this before the user dropdown -->
-                    <li class="nav-item">
-                        <a class="nav-link position-relative" href="{% url 'booking_vision_APP:activity' %}" id="activityLink">
-                            <i class="fas fa-bell"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
-                                id="activityBadge" style="display: none;">
-                                <span id="activityCount">0</span>
-                            </span>
-                        </a>
-                    </li>
-
-                    <!-- Add activity popup container -->
-                    <div id="activityPopup" class="activity-popup" style="display: none;">
-                        <div class="activity-popup-header">
-                            <span class="activity-popup-title">New Activity</span>
-                            <button class="activity-popup-close" onclick="closeActivityPopup()">×</button>
-                        </div>
-                        <div class="activity-popup-body">
-                            <div class="activity-popup-icon">
-                                <i class="fas fa-bell"></i>
-                            </div>
-                            <div class="activity-popup-content">
-                                <h6 class="activity-popup-heading"></h6>
-                                <p class="activity-popup-text"></p>
-                            </div>
-                        </div>
-                    </div>
                     {% if user.is_authenticated %}
+                        <!-- Activity Bell -->
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{% url 'booking_vision_APP:activity' %}" id="activityLink">
+                                <i class="fas fa-bell"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                                      id="activityBadge" style="display: none;">
+                                    <span id="activityCount">0</span>
+                                </span>
+                            </a>
+                        </li>
+                        
+                        <!-- User Dropdown -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}
@@ -204,6 +224,12 @@ Location: booking_vision_APP/templates/base.html
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                             </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -279,89 +305,143 @@ Location: booking_vision_APP/templates/base.html
         </div>
     </footer>
 
+    <!-- Activity Popup Container -->
+    <div id="activityPopup" class="activity-popup" style="display: none;">
+        <div class="activity-popup-header">
+            <span class="activity-popup-title">New Activity</span>
+            <button class="activity-popup-close" onclick="closeActivityPopup()">×</button>
+        </div>
+        <div class="activity-popup-body">
+            <div class="activity-popup-icon">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="activity-popup-content">
+                <h6 class="activity-popup-heading"></h6>
+                <p class="activity-popup-text"></p>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
-    {% load static %}
     <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
     
-    {% block extra_js %}
     <script>
-        // Global WebSocket for activities
-        let activitySocket;
+    // Global WebSocket for activities
+    let activitySocket;
+    let activityPreferences = {
+        show_popup: true,
+        play_sound: true,
+        popup_duration: 5000
+    };
 
-        document.addEventListener('DOMContentLoaded', function() {
-            if ('{{ user.is_authenticated }}' === 'True') {
-                connectActivityWebSocket();
-            }
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if user.is_authenticated %}
+            connectActivityWebSocket();
+        {% endif %}
+    });
 
-        function connectActivityWebSocket() {
-            activitySocket = new WebSocket(
-                'ws://' + window.location.host + '/ws/activities/'
-            );
+    function connectActivityWebSocket() {
+        const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        activitySocket = new WebSocket(
+            wsScheme + '://' + window.location.host + '/ws/activities/'
+        );
+        
+        activitySocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
             
-            activitySocket.onmessage = function(e) {
-                const data = JSON.parse(e.data);
-                
-                if (data.type === 'initial') {
-                    updateActivityBadge(data.unread_count);
-                } else if (data.type === 'notification') {
-                    updateActivityBadge(data.unread_count);
+            if (data.type === 'initial') {
+                updateActivityBadge(data.unread_count);
+                if (data.preferences) {
+                    activityPreferences = data.preferences;
+                }
+            } else if (data.type === 'notification') {
+                updateActivityBadge(data.unread_count);
+                if (activityPreferences.show_popup) {
                     showActivityPopup(data.activity);
                 }
-            };
-        }
-
-        function updateActivityBadge(count) {
-            const badge = document.getElementById('activityBadge');
-            const countElem = document.getElementById('activityCount');
-            
-            if (count > 0) {
-                countElem.textContent = count > 99 ? '99+' : count;
-                badge.style.display = 'inline-block';
-            } else {
-                badge.style.display = 'none';
             }
-        }
+        };
+        
+        activitySocket.onclose = function(e) {
+            console.error('Activity socket closed unexpectedly');
+            // Reconnect after 3 seconds
+            setTimeout(function() {
+                connectActivityWebSocket();
+            }, 3000);
+        };
+    }
 
-        function showActivityPopup(activity) {
-            const popup = document.getElementById('activityPopup');
-            const icon = popup.querySelector('.activity-popup-icon i');
-            const heading = popup.querySelector('.activity-popup-heading');
-            const text = popup.querySelector('.activity-popup-text');
-            
-            // Update content
-            icon.className = `fas fa-${activity.icon}`;
-            heading.textContent = activity.title;
-            text.textContent = activity.description;
-            
-            // Show popup
-            popup.style.display = 'block';
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                closeActivityPopup();
-            }, {{ preferences.popup_duration|default:5000 }});
-            
-            // Play sound if enabled
-            if ({{ preferences.play_sound|yesno:"true,false" }}) {
-                playNotificationSound();
-            }
+    function updateActivityBadge(count) {
+        const badge = document.getElementById('activityBadge');
+        const countElem = document.getElementById('activityCount');
+        
+        if (count > 0) {
+            countElem.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
         }
+    }
 
-        function closeActivityPopup() {
-            const popup = document.getElementById('activityPopup');
-            popup.style.display = 'none';
+    function showActivityPopup(activity) {
+        const popup = document.getElementById('activityPopup');
+        const icon = popup.querySelector('.activity-popup-icon i');
+        const heading = popup.querySelector('.activity-popup-heading');
+        const text = popup.querySelector('.activity-popup-text');
+        
+        // Update content
+        icon.className = `fas fa-${activity.icon}`;
+        heading.textContent = activity.title;
+        text.textContent = activity.description;
+        
+        // Show popup
+        popup.style.display = 'block';
+        
+        // Auto-hide after duration
+        setTimeout(() => {
+            closeActivityPopup();
+        }, activityPreferences.popup_duration || 5000);
+        
+        // Play sound if enabled
+        if (activityPreferences.play_sound) {
+            playNotificationSound();
         }
+    }
 
-        function playNotificationSound() {
-            const audio = new Audio("{% static 'sounds/notification.mp3' %}");
-            audio.play().catch(() => {});
+    function closeActivityPopup() {
+        const popup = document.getElementById('activityPopup');
+        popup.style.display = 'none';
+    }
+
+    function playNotificationSound() {
+        // Use Web Audio API to create a notification sound
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        } catch (e) {
+            console.log('Could not play notification sound:', e);
         }
-        </script>
-    {% endblock %}
+    }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
