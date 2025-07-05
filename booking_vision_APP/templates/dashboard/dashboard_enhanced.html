@@ -95,7 +95,29 @@
     
     .chart-container {
         position: relative;
-        height: 300px;
+        height: 300px !important;
+        max-height: 300px !important;
+        overflow: hidden;
+    }
+    
+    .chart-container canvas {
+        max-height: 100% !important;
+        height: 100% !important;
+    }
+    
+    #revenueSparkline {
+        height: 50px !important;
+        max-height: 50px !important;
+    }
+    
+    .metric-card {
+        max-height: 200px;
+        overflow: hidden;
+    }
+    
+    #dashboard-container {
+        max-width: 100%;
+        overflow-x: hidden;
     }
     
     .activity-feed {
@@ -404,12 +426,29 @@
 </div>
 
 <script>
-// Initialize charts
+// Initialize charts with proper cleanup
 document.addEventListener('DOMContentLoaded', function() {
-    // Revenue Sparkline
+    // Store chart instances globally to prevent memory leaks
+    window.dashboardCharts = window.dashboardCharts || {};
+    
+    // Destroy existing charts before creating new ones
+    function destroyChart(chartName) {
+        if (window.dashboardCharts[chartName]) {
+            window.dashboardCharts[chartName].destroy();
+            delete window.dashboardCharts[chartName];
+        }
+    }
+    
+    // Revenue Sparkline with fixed dimensions
     const sparklineCtx = document.getElementById('revenueSparkline');
     if (sparklineCtx) {
-        new Chart(sparklineCtx, {
+        // Set explicit dimensions
+        sparklineCtx.style.height = '50px';
+        sparklineCtx.style.maxHeight = '50px';
+        
+        destroyChart('sparkline');
+        
+        window.dashboardCharts.sparkline = new Chart(sparklineCtx, {
             type: 'line',
             data: {
                 labels: ['', '', '', '', '', '', ''],
@@ -436,34 +475,68 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Revenue Chart
+    // Revenue Chart with proper container constraints
     const revenueCtx = document.getElementById('revenueChart');
     if (revenueCtx) {
-        BookingVisionAPI.getRevenueAnalytics('30days').then(data => {
-            new Chart(revenueCtx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Revenue',
-                        data: data.revenue,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
+        // Ensure the parent container has fixed height
+        const chartContainer = revenueCtx.parentElement;
+        chartContainer.style.height = '300px';
+        chartContainer.style.position = 'relative';
+        
+        destroyChart('revenue');
+        
+        // Only fetch data and create chart once
+        if (window.BookingVisionAPI) {
+            BookingVisionAPI.getRevenueAnalytics('30days').then(data => {
+                window.dashboardCharts.revenue = new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [{
+                            label: 'Revenue',
+                            data: data.revenue || [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }).catch(error => {
+                console.error('Error loading revenue data:', error);
             });
-        });
+        }
     }
     
-    // Booking Sources Chart
+    // Booking Sources Chart with fixed dimensions
     const sourcesCtx = document.getElementById('sourcesChart');
     if (sourcesCtx) {
-        new Chart(sourcesCtx, {
+        const chartContainer = sourcesCtx.parentElement;
+        chartContainer.style.height = '300px';
+        chartContainer.style.position = 'relative';
+        
+        destroyChart('sources');
+        
+        window.dashboardCharts.sources = new Chart(sourcesCtx, {
             type: 'doughnut',
             data: {
                 labels: ['Airbnb', 'Booking.com', 'VRBO', 'Direct'],
@@ -474,52 +547,66 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
             }
         });
     }
+    
+    // Prevent chart reinitialization on window resize
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            // Charts will handle resize automatically with responsive: true
+            // No need to recreate them
+        }, 250);
+    });
 });
 
-// Interactive Tour
+// Update the tour function to prevent issues
 function startTour() {
-    const tour = new Shepherd.Tour({
-        useModalOverlay: true,
-        defaultStepOptions: {
-            cancelIcon: { enabled: true },
-            scrollTo: { behavior: 'smooth', block: 'center' }
-        }
-    });
-    
-    tour.addStep({
-        title: 'Welcome to Booking Vision!',
-        text: 'Let me show you around your dashboard.',
-        buttons: [{
-            text: 'Next',
-            action: tour.next
-        }]
-    });
-    
-    tour.addStep({
-        title: 'Key Metrics',
-        text: 'Here you can see your most important metrics at a glance.',
-        attachTo: {
-            element: '#metrics-section',
-            on: 'bottom'
-        },
-        buttons: [{
-            text: 'Back',
-            action: tour.back
-        }, {
-            text: 'Next',
-            action: tour.next
-        }]
-    });
-    
-    tour.start();
+    // Tour implementation
+    if (typeof Shepherd !== 'undefined') {
+        const tour = new Shepherd.Tour({
+            useModalOverlay: true,
+            defaultStepOptions: {
+                cancelIcon: { enabled: true },
+                scrollTo: { behavior: 'smooth', block: 'center' }
+            }
+        });
+        
+        tour.addStep({
+            title: 'Welcome to Booking Vision!',
+            text: 'Let me show you around your dashboard.',
+            buttons: [{
+                text: 'Next',
+                action: tour.next
+            }]
+        });
+        
+        tour.start();
+    } else {
+        console.log('Shepherd.js not loaded. Please include the library for tours.');
+    }
 }
 
-// Sync all channels
+// Prevent multiple sync calls
+let syncInProgress = false;
 function syncAllChannels() {
+    if (syncInProgress) return;
+    
+    syncInProgress = true;
     BookingVision.showNotification('Syncing all channels...', 'info');
     
     fetch('{% url "booking_vision_APP:sync_bookings" %}', {
@@ -532,8 +619,12 @@ function syncAllChannels() {
     .then(data => {
         if (data.success) {
             BookingVision.showNotification('Sync completed successfully!', 'success');
-            location.reload();
+            // Don't reload the page to prevent chart issues
+            // location.reload();
         }
+    })
+    .finally(() => {
+        syncInProgress = false;
     });
 }
 </script>
