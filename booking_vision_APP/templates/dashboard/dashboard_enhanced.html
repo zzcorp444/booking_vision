@@ -154,6 +154,25 @@
         box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
         border-radius: 0.5rem;
     }
+
+    .metric-card-hover {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    }
+
+    .metric-card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .channel-card {
+        transition: all 0.3s ease;
+    }
+
+    .channel-card:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+    }
 </style>
 {% endblock %}
 
@@ -181,42 +200,62 @@
 
     <!-- Key Metrics -->
     <div class="dashboard-grid" id="metrics-section">
-        <div class="metric-card" data-tour="revenue">
-            <div class="metric-label">Total Revenue</div>
-            <div class="metric-value">${{ total_revenue|floatformat:2 }}</div>
-            <div class="metric-change positive">
-                <i class="fas fa-arrow-up"></i> 12.5% from last month
+        <a href="{% url 'booking_vision_APP:analytics' %}" class="text-decoration-none">
+            <div class="metric-card metric-card-hover" data-tour="revenue">
+                <div class="metric-label">Total Revenue</div>
+                <div class="metric-value">${{ total_revenue|floatformat:2 }}</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i> 12.5% from last month
+                </div>
+                <canvas id="revenueSparkline" height="50"></canvas>
+                <div class="text-end mt-2">
+                    <small class="text-primary">View all <i class="fas fa-arrow-right"></i></small>
+                </div>
             </div>
-            <canvas id="revenueSparkline" height="50"></canvas>
-        </div>
+        </a>
         
-        <div class="metric-card" data-tour="occupancy">
-            <div class="metric-label">Occupancy Rate</div>
-            <div class="metric-value">{{ occupancy_rate }}%</div>
-            <div class="metric-change negative">
-                <i class="fas fa-arrow-down"></i> 2.3% from last week
+        <a href="{% url 'booking_vision_APP:analytics' %}" class="text-decoration-none">
+            <div class="metric-card metric-card-hover" data-tour="occupancy">
+                <div class="metric-label">Occupancy Rate</div>
+                <div class="metric-value">{{ occupancy_rate }}%</div>
+                <div class="metric-change negative">
+                    <i class="fas fa-arrow-down"></i> 2.3% from last week
+                </div>
+                <div class="progress mt-3">
+                    <div class="progress-bar bg-primary" style="width: {{ occupancy_rate }}%"></div>
+                </div>
+                <div class="text-end mt-2">
+                    <small class="text-primary">View all <i class="fas fa-arrow-right"></i></small>
+                </div>
             </div>
-            <div class="progress mt-3">
-                <div class="progress-bar bg-primary" style="width: {{ occupancy_rate }}%"></div>
-            </div>
-        </div>
+        </a>
         
-        <div class="metric-card" data-tour="bookings">
-            <div class="metric-label">Active Bookings</div>
-            <div class="metric-value">{{ active_bookings }}</div>
-            <div class="d-flex justify-content-between mt-3">
-                <small>Check-ins today: <strong>{{ todays_checkins }}</strong></small>
-                <small>Check-outs today: <strong>{{ todays_checkouts }}</strong></small>
+        <a href="{% url 'booking_vision_APP:booking_list' %}?status=confirmed" class="text-decoration-none">
+            <div class="metric-card metric-card-hover" data-tour="bookings">
+                <div class="metric-label">Active Bookings</div>
+                <div class="metric-value">{{ active_bookings }}</div>
+                <div class="d-flex justify-content-between mt-3">
+                    <small>Check-ins today: <strong>{{ todays_checkins }}</strong></small>
+                    <small>Check-outs today: <strong>{{ todays_checkouts }}</strong></small>
+                </div>
+                <div class="text-end mt-2">
+                    <small class="text-primary">View all <i class="fas fa-arrow-right"></i></small>
+                </div>
             </div>
-        </div>
+        </a>
         
-        <div class="metric-card" data-tour="response">
-            <div class="metric-label">Response Time</div>
-            <div class="metric-value">< 1hr</div>
-            <div class="metric-change positive">
-                <i class="fas fa-check"></i> Excellent response rate
+        <a href="{% url 'booking_vision_APP:messages_list' %}" class="text-decoration-none">
+            <div class="metric-card metric-card-hover" data-tour="response">
+                <div class="metric-label">Response Time</div>
+                <div class="metric-value">< 1hr</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-check"></i> Excellent response rate
+                </div>
+                <div class="text-end mt-2">
+                    <small class="text-primary">View all <i class="fas fa-arrow-right"></i></small>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
 
     <!-- AI Insights & Quick Actions -->
@@ -307,6 +346,44 @@
                 <div class="card-body">
                     <div class="chart-container">
                         <canvas id="sourcesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Channels card -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-link me-2"></i>Connected Channels
+                    </h5>
+                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-sm btn-outline-primary">
+                        Manage Channels
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for connection in connected_channels %}
+                        <div class="col-md-3 mb-3">
+                            <div class="channel-card p-3 border rounded text-center">
+                                <h6>{{ connection.channel.name }}</h6>
+                                <span class="badge bg-success">Connected</span>
+                                <p class="mt-2 mb-0">
+                                    <small>Last sync: {{ connection.last_sync|timesince }} ago</small>
+                                </p>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center">
+                            <p class="text-muted">No channels connected yet</p>
+                            <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Connect Your First Channel
+                            </a>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
