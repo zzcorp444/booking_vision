@@ -16,8 +16,12 @@
     <div class="row">
         {% for channel in channels %}
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card">
-                <div class="card-header">
+            <div class="card channel-card">
+                <div class="card-header d-flex align-items-center">
+                    <img src="{% static 'images/channel_logos/'|add:channel.name|lower|add:'_logo.png' %}" 
+                        alt="{{ channel.name }}" 
+                        class="channel-logo me-3"
+                        onerror="this.style.display='none'">
                     <h5 class="mb-0">{{ channel.name }}</h5>
                 </div>
                 <div class="card-body">
@@ -25,20 +29,27 @@
                         <div class="text-center">
                             <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
                             <p class="text-success">Connected</p>
-                            <button class="btn btn-sm btn-outline-primary" onclick="syncChannel({{ channel.id }})">
-                                <i class="fas fa-sync"></i> Sync Now
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="disconnectChannel({{ channel.id }})">
-                                <i class="fas fa-unlink"></i> Disconnect
-                            </button>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="syncChannel({{ channel.id }})">
+                                    <i class="fas fa-sync me-2"></i>Sync Now
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="disconnectChannel({{ channel.id }})">
+                                    <i class="fas fa-unlink me-2"></i>Disconnect
+                                </button>
+                            </div>
                         </div>
                     {% else %}
                         <div class="text-center">
                             <i class="fas fa-times-circle text-muted fa-3x mb-3"></i>
                             <p class="text-muted">Not Connected</p>
-                            <button class="btn btn-primary" onclick="connectChannel({{ channel.id }}, '{{ channel.name }}')">
-                                <i class="fas fa-link"></i> Connect
-                            </button>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" onclick="connectChannel({{ channel.id }}, '{{ channel.name }}')">
+                                    <i class="fas fa-link me-2"></i>Connect via iCal
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="showEmailSetup({{ channel.id }})">
+                                    <i class="fas fa-envelope me-2"></i>Email Sync
+                                </button>
+                            </div>
                         </div>
                     {% endif %}
                 </div>
@@ -46,7 +57,6 @@
         </div>
         {% endfor %}
     </div>
-</div>
 
 <!-- Connection Modal -->
 <div class="modal fade" id="connectionModal" tabindex="-1">
