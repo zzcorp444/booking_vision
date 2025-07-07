@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %}Booking Calendar - Booking Vision{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:booking_list' %}">Bookings</a></li>
+    <li class="breadcrumb-item active">Calendar</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 text-primary-blue">
+                    <i class="fas fa-calendar-alt me-2"></i>Booking Calendar
+                </h1>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'booking_vision_APP:booking_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-2"></i>List View
+                    </a>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#blockDateModal">
+                        <i class="fas fa-ban me-2"></i>Block Dates
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">{{ month_name }} {{ year }}</h4>
+                        <div class="d-flex gap-2">
+                            <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-outline-primary">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                            <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-outline-primary">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Legend -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex gap-3 align-items-center">
+                <span class="d-flex align-items-center">
+                    <span class="calendar-legend available"></span>
+                    <small class="ms-2">Available</small>
+                </span>
+                <span class="d-flex align-items-center">
+                    <span class="calendar-legend booked"></span>
+                    <small class="ms-2">Booked</small>
+                </span>
+                <span class="d-flex align-items-center">
+                    <span class="calendar-legend blocked"></span>
+                    <small class="ms-2">Blocked</small>
+                </span>
+                <span class="d-flex align-items-center">
+                    <span class="calendar-legend checkout"></span>
+                    <small class="ms-2">Check-out</small>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="calendar-container">
+                        <div class="calendar-grid">
+                            <!-- Weekday Headers -->
+                            <div class="calendar-header">Mon</div>
+                            <div class="calendar-header">Tue</div>
+                            <div class="calendar-header">Wed</div>
+                            <div class="calendar-header">Thu</div>
+                            <div class="calendar-header">Fri</div>
+                            <div class="calendar-header">Sat</div>
+                            <div class="calendar-header">Sun</div>
+
+                            <!-- Calendar Days -->
+                            {% for week in calendar %}
+                                {% for day in week %}
+                                    {% if day == 0 %}
+                                        <div class="calendar-day empty"></div>
+                                    {% else %}
+                                        {% with day|date:"Y-m-d" as day_str %}
+                                        <div class="calendar-day {% if day_str in bookings_by_date %}booked{% else %}available{% endif %}" 
+                                             data-date="{{ day_str }}" 
+                                             data-bs-toggle="tooltip" 
+                                             title="{% if day_str in bookings_by_date %}{{ bookings_by_date|lookup:day_str|length }} booking(s){% else %}Available{% endif %}">
+                                            <div class="day-number">{{ day }}</div>
+                                            {% if day_str in bookings_by_date %}
+                                                <div class="booking-indicators">
+                                                    {% for booking in bookings_by_date|lookup:day_str %}
+                                                        <div class="booking-indicator" style="background-color: #{{ booking.id|stringformat:"06d"|slice:":6" }};">
+                                                            <small>{{ booking.guest.first_name|truncatechars:8 }}</small>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endwith %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Block Date Modal -->
+<div class="modal fade" id="blockDateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Block Dates</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Reason</label>
+                        <select class="form-select" id="reason">
+                            <option value="maintenance">Maintenance</option>
+                            <option value="personal">Personal Use</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Block Dates</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.calendar-container {
+    overflow-x: auto;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    min-width: 700px;
+}
+
+.calendar-header {
+    background-color: var(--primary-blue);
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    border: 1px solid var(--border-gray);
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 100px;
+}
+
+.calendar-day:hover {
+    background-color: var(--light-blue);
+}
+
+.calendar-day.empty {
+    background-color: #f8f9fa;
+    cursor: default;
+}
+
+.calendar-day.available {
+    background-color: #f0f9ff;
+}
+
+.calendar-day.booked {
+    background-color: #ddd6fe;
+}
+
+.calendar-day.blocked {
+    background-color: #fecaca;
+}
+
+.day-number {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #3b82f6;
+}
+
+.booking-indicators {
+    position: absolute;
+    bottom: 0.25rem;
+    left: 0.25rem;
+    right: 0.25rem;
+}
+
+.booking-indicator {
+    background-color: var(--secondary-blue);
+    color: white;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    margin-bottom: 0.125rem;
+    font-size: 0.75rem;
+}
+
+.calendar-legend {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.calendar-legend.available {
+    background-color: #f0f9ff;
+    border: 1px solid #3b82f6;
+}
+
+.calendar-legend.booked {
+    background-color: #ddd6fe;
+    border: 1px solid #8b5cf6;
+}
+
+.calendar-legend.blocked {
+    background-color: #fecaca;
+    border: 1px solid #ef4444;
+}
+
+.calendar-legend.checkout {
+    background-color: #fed7aa;
+    border: 1px solid #f59e0b;
+}
+</style>
+
+<script>
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

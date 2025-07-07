@@ -1,0 +1,740 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Booking Vision{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .metric-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--primary-blue);
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin: 0.5rem 0;
+    }
+    
+    .metric-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .metric-change {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+    
+    .metric-change.positive {
+        color: #10b981;
+    }
+    
+    .metric-change.negative {
+        color: #ef4444;
+    }
+    
+    .quick-action-card {
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        color: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .quick-action-card:hover {
+        transform: scale(1.05);
+    }
+    
+    .insight-card {
+        background: #f3f4f6;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--secondary-blue);
+    }
+    
+    .help-section {
+        background: #fef3c7;
+        border: 1px solid #fbbf24;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px !important;
+        max-height: 300px !important;
+        overflow: hidden;
+    }
+    
+    .chart-container canvas {
+        max-height: 100% !important;
+        height: 100% !important;
+    }
+    
+    #revenueSparkline {
+        height: 50px !important;
+        max-height: 50px !important;
+    }
+    
+    .metric-card {
+        max-height: 200px;
+        overflow: hidden;
+        min-height: 200px;
+        padding: 2rem;
+    }
+    
+    #dashboard-container {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .activity-feed {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: start;
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        transition: background 0.2s;
+    }
+    
+    .activity-item:hover {
+        background: #f9fafb;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .tour-highlight {
+        position: relative;
+        z-index: 1000;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
+        border-radius: 0.5rem;
+    }
+
+    .metric-card-hover {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        padding-bottom: 3rem;
+        min-height: 180px;
+    }
+
+    .metric-card-hover .view-link {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        opacity: 0;
+        transform: translateX(-10px);
+        transition: all 0.3s ease;
+        color: var(--primary-blue);
+        text-decoration: none;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .metric-card-hover:hover .view-link {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .metric-card-hover .view-link i {
+        transition: transform 0.3s ease;
+    }
+
+    .metric-card-hover:hover .view-link i {
+        transform: translateX(5px);
+    }
+
+    .metric-card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .channel-card {
+        transition: all 0.3s ease;
+    }
+
+    .channel-card:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+    }
+
+    .channel-logo {
+        height: 40px;
+        width: auto;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" id="dashboard-container">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">Welcome back, {{ user.first_name|default:user.username }}! 👋</h1>
+                    <p class="text-muted">Here's what's happening with your properties today.</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary me-2" onclick="startTour()">
+                        <i class="fas fa-question-circle me-2"></i>Take a Tour
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#quickActionModal">
+                        <i class="fas fa-plus me-2"></i>Quick Actions
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="dashboard-grid" id="metrics-section">
+        <a href="{% url 'booking_vision_APP:analytics' %}" class="text-decoration-none">
+            <div class="metric-card metric-card-hover" data-tour="revenue">
+                <div class="metric-label">Total Revenue</div>
+                <div class="metric-value">${{ total_revenue|floatformat:2 }}</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i> 12.5% from last month
+                </div>
+                <canvas id="revenueSparkline" height="50"></canvas>
+                <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
+            </div>
+        </a>
+        
+        <a href="{% url 'booking_vision_APP:analytics' %}" class="text-decoration-none">
+            <div class="metric-card metric-card-hover" data-tour="occupancy">
+                <div class="metric-label">Occupancy Rate</div>
+                <div class="metric-value">{{ occupancy_rate }}%</div>
+                <div class="metric-change negative">
+                    <i class="fas fa-arrow-down"></i> 2.3% from last week
+                </div>
+                <div class="progress mt-3">
+                    <div class="progress-bar bg-primary" style="width: {{ occupancy_rate }}%"></div>
+                </div>
+                <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
+            </div>
+        </a>
+        
+        <a href="{% url 'booking_vision_APP:booking_list' %}?status=confirmed" class="text-decoration-none">
+            <div class="metric-card metric-card-hover" data-tour="bookings">
+                <div class="metric-label">Active Bookings</div>
+                <div class="metric-value">{{ active_bookings }}</div>
+                <div class="d-flex justify-content-between mt-3">
+                    <small>Check-ins today: <strong>{{ todays_checkins }}</strong></small>
+                    <small>Check-outs today: <strong>{{ todays_checkouts }}</strong></small>
+                </div>
+                <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
+            </div>
+        </a>
+        
+        <a href="{% url 'booking_vision_APP:messages_list' %}" class="text-decoration-none">
+            <div class="metric-card metric-card-hover" data-tour="response">
+                <div class="metric-label">Response Time</div>
+                <div class="metric-value">< 1hr</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-check"></i> Excellent response rate
+                </div>
+                <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
+            </div>
+        </a>
+    </div>
+
+    <!-- AI Insights & Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-brain me-2"></i>AI Insights & Recommendations
+                    </h5>
+                    <span class="badge bg-primary">{{ ai_insights|length }} new</span>
+                </div>
+                <div class="card-body">
+                    {% for insight in ai_insights %}
+                    <div class="insight-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">
+                                    <i class="fas fa-{{ insight.type|yesno:'dollar-sign,tools,lightbulb' }} me-2 text-primary"></i>
+                                    {{ insight.property.name }}
+                                </h6>
+                                <p class="mb-2">{{ insight.message }}</p>
+                                <button class="btn btn-sm btn-primary">Take Action</button>
+                            </div>
+                            <span class="badge bg-{{ insight.priority|yesno:'danger,warning,info' }}">
+                                {{ insight.priority|title }}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center py-3">No new insights at the moment.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <h5 class="mb-3">Quick Actions</h5>
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="quick-action-card text-center" onclick="location.href='{% url 'booking_vision_APP:property_create' %}'">
+                        <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                        <div>Add Property</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="quick-action-card text-center" onclick="location.href='{% url 'booking_vision_APP:booking_calendar' %}'">
+                        <i class="fas fa-calendar fa-2x mb-2"></i>
+                        <div>View Calendar</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="quick-action-card text-center" onclick="location.href='{% url 'booking_vision_APP:messages_list' %}'">
+                        <i class="fas fa-envelope fa-2x mb-2"></i>
+                        <div>Messages</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="quick-action-card text-center" onclick="location.href='{% url 'booking_vision_APP:analytics' %}'">
+                        <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                        <div>Analytics</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Charts -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Revenue Trends</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Booking Sources</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="sourcesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Channels card -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-link me-2"></i>Connected Channels
+                    </h5>
+                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-sm btn-outline-primary">
+                        Manage Channels
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for connection in connected_channels %}
+                        <div class="col-md-2 mb-3">
+                            <div class="channel-card p-3 border rounded text-center">
+                                <img src="{% static 'images/channel_logos/'|add:connection.channel.name|lower|add:'_logo.png' %}" 
+                                    alt="{{ connection.channel.name }}" 
+                                    class="channel-logo mb-2"
+                                    onerror="this.style.display='none'">
+                                <h6>{{ connection.channel.name }}</h6>
+                                <span class="badge bg-success">Connected</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center">
+                            <p class="text-muted">No channels connected yet</p>
+                            <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Connect Your First Channel
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity & Upcoming Tasks -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Activity</h5>
+                    <a href="{% url 'booking_vision_APP:activity' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="activity-feed">
+                        {% for activity in recent_activities %}
+                        <div class="activity-item">
+                            <div class="activity-icon bg-{{ activity.type|yesno:'success,warning,info' }} text-white">
+                                <i class="fas fa-{{ activity.icon }}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ activity.title }}</h6>
+                                <p class="mb-0 text-muted">{{ activity.description }}</p>
+                                <small class="text-muted">{{ activity.time_ago }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Upcoming Tasks</h5>
+                </div>
+                <div class="card-body">
+                    {% for task in upcoming_tasks %}
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                        <div class="form-check me-3">
+                            <input class="form-check-input" type="checkbox" id="task{{ forloop.counter }}">
+                        </div>
+                        <div class="flex-grow-1">
+                            <label for="task{{ forloop.counter }}" class="form-check-label">
+                                <h6 class="mb-0">{{ task.title }}</h6>
+                                <small class="text-muted">{{ task.property }} - {{ task.due_date }}</small>
+                            </label>
+                        </div>
+                        <span class="badge bg-{{ task.priority|yesno:'danger,warning,info' }}">
+                            {{ task.priority|title }}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No pending tasks!</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="help-section">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h5 class="mb-2">
+                            <i class="fas fa-info-circle me-2"></i>Need Help Getting Started?
+                        </h5>
+                        <p class="mb-0">Check out our documentation and video tutorials to make the most of Booking Vision.</p>
+                    </div>
+                    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                        <a href="{% url 'booking_vision_APP:documentation' %}" class="btn btn-warning me-2">
+                            <i class="fas fa-book me-2"></i>Documentation
+                        </a>
+                        <button class="btn btn-outline-warning" onclick="startTour()">
+                            <i class="fas fa-play me-2"></i>Video Tour
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Action Modal -->
+<div class="modal fade" id="quickActionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Actions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-home me-2"></i>Add New Property
+                    </a>
+                    <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-calendar-plus me-2"></i>Create Manual Booking
+                    </a>
+                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-link me-2"></i>Connect New Channel
+                    </a>
+                    <a href="{% url 'booking_vision_APP:notification_create' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-bell me-2"></i>Create Automation Rule
+                    </a>
+                    <button class="btn btn-outline-primary" onclick="syncAllChannels()">
+                        <i class="fas fa-sync me-2"></i>Sync All Channels
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize charts with proper cleanup
+document.addEventListener('DOMContentLoaded', function() {
+    // Store chart instances globally to prevent memory leaks
+    window.dashboardCharts = window.dashboardCharts || {};
+    
+    // Destroy existing charts before creating new ones
+    function destroyChart(chartName) {
+        if (window.dashboardCharts[chartName]) {
+            window.dashboardCharts[chartName].destroy();
+            delete window.dashboardCharts[chartName];
+        }
+    }
+    
+    // Revenue Sparkline with fixed dimensions
+    const sparklineCtx = document.getElementById('revenueSparkline');
+    if (sparklineCtx) {
+        // Set explicit dimensions
+        sparklineCtx.style.height = '50px';
+        sparklineCtx.style.maxHeight = '50px';
+        
+        destroyChart('sparkline');
+        
+        window.dashboardCharts.sparkline = new Chart(sparklineCtx, {
+            type: 'line',
+            data: {
+                labels: ['', '', '', '', '', '', ''],
+                datasets: [{
+                    data: [65, 78, 72, 85, 82, 90, 95],
+                    borderColor: '#3b82f6',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { display: false },
+                    y: { display: false }
+                }
+            }
+        });
+    }
+    
+    // Revenue Chart with proper container constraints
+    const revenueCtx = document.getElementById('revenueChart');
+    if (revenueCtx) {
+        // Ensure the parent container has fixed height
+        const chartContainer = revenueCtx.parentElement;
+        chartContainer.style.height = '300px';
+        chartContainer.style.position = 'relative';
+        
+        destroyChart('revenue');
+        
+        // Only fetch data and create chart once
+        if (window.BookingVisionAPI) {
+            BookingVisionAPI.getRevenueAnalytics('30days').then(data => {
+                window.dashboardCharts.revenue = new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [{
+                            label: 'Revenue',
+                            data: data.revenue || [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }).catch(error => {
+                console.error('Error loading revenue data:', error);
+            });
+        }
+    }
+    
+    // Booking Sources Chart with fixed dimensions
+    const sourcesCtx = document.getElementById('sourcesChart');
+    if (sourcesCtx) {
+        const chartContainer = sourcesCtx.parentElement;
+        chartContainer.style.height = '300px';
+        chartContainer.style.position = 'relative';
+        
+        destroyChart('sources');
+        
+        window.dashboardCharts.sources = new Chart(sourcesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Airbnb', 'Booking.com', 'VRBO', 'Direct'],
+                datasets: [{
+                    data: [45, 30, 15, 10],
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Prevent chart reinitialization on window resize
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            // Charts will handle resize automatically with responsive: true
+            // No need to recreate them
+        }, 250);
+    });
+});
+
+// Update the tour function to prevent issues
+function startTour() {
+    // Tour implementation
+    if (typeof Shepherd !== 'undefined') {
+        const tour = new Shepherd.Tour({
+            useModalOverlay: true,
+            defaultStepOptions: {
+                cancelIcon: { enabled: true },
+                scrollTo: { behavior: 'smooth', block: 'center' }
+            }
+        });
+        
+        tour.addStep({
+            title: 'Welcome to Booking Vision!',
+            text: 'Let me show you around your dashboard.',
+            buttons: [{
+                text: 'Next',
+                action: tour.next
+            }]
+        });
+        
+        tour.start();
+    } else {
+        console.log('Shepherd.js not loaded. Please include the library for tours.');
+    }
+}
+
+// Prevent multiple sync calls
+let syncInProgress = false;
+function syncAllChannels() {
+    if (syncInProgress) return;
+    
+    syncInProgress = true;
+    BookingVision.showNotification('Syncing all channels...', 'info');
+    
+    fetch('{% url "booking_vision_APP:sync_bookings" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            BookingVision.showNotification('Sync completed successfully!', 'success');
+            // Don't reload the page to prevent chart issues
+            // location.reload();
+        }
+    })
+    .finally(() => {
+        syncInProgress = false;
+    });
+}
+</script>
+{% endblock %}

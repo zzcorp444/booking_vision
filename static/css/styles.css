@@ -1,0 +1,483 @@
+/*
+Main stylesheet for Booking Vision application.
+This file contains all custom styles and theme colors.
+Location: booking_vision_APP/static/css/styles.css
+*/
+
+/* Color Scheme: Blue and White */
+:root {
+    --primary-blue: #1e3a8a;
+    --secondary-blue: #3b82f6;
+    --light-blue: #dbeafe;
+    --accent-blue: #60a5fa;
+    --dark-blue: #1e40af;
+    --success-green: #10b981;
+    --warning-orange: #f59e0b;
+    --danger-red: #ef4444;
+    --light-gray: #f8fafc;
+    --border-gray: #e2e8f0;
+}
+
+/* Global Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--light-gray);
+    color: #1f2937;
+}
+
+/* Navigation */
+.navbar {
+    background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue)) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 0.375rem;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--light-blue), #ffffff);
+    border-bottom: 1px solid var(--border-gray);
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    border-color: var(--secondary-blue);
+    color: var(--secondary-blue);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--secondary-blue);
+    border-color: var(--secondary-blue);
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.dashboard-card .card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.dashboard-card .card-icon.blue {
+    background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
+}
+
+.dashboard-card .card-icon.green {
+    background: linear-gradient(135deg, var(--success-green), #059669);
+}
+
+.dashboard-card .card-icon.orange {
+    background: linear-gradient(135deg, var(--warning-orange), #d97706);
+}
+
+.dashboard-card .card-icon.red {
+    background: linear-gradient(135deg, var(--danger-red), #dc2626);
+}
+
+.dashboard-card h3 {
+    color: var(--primary-blue);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-card p {
+    color: #6b7280;
+    margin-bottom: 0;
+}
+
+/* Statistics Cards */
+.stats-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    text-align: center;
+    border-left: 4px solid var(--secondary-blue);
+}
+
+.stats-card h4 {
+    color: var(--primary-blue);
+    font-weight: 700;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.stats-card p {
+    color: #6b7280;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0;
+}
+
+/* Tables */
+.table {
+    background: white;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.table thead th {
+    background: linear-gradient(135deg, var(--light-blue), #ffffff);
+    border-bottom: 2px solid var(--border-gray);
+    color: var(--primary-blue);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.table tbody tr:hover {
+    background-color: var(--light-blue);
+}
+
+/* Forms */
+.form-control, .form-select {
+    border-radius: 0.5rem;
+    border: 2px solid var(--border-gray);
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--secondary-blue);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+}
+
+.badge.bg-success {
+    background: linear-gradient(135deg, var(--success-green), #059669) !important;
+}
+
+.badge.bg-warning {
+    background: linear-gradient(135deg, var(--warning-orange), #d97706) !important;
+}
+
+.badge.bg-danger {
+    background: linear-gradient(135deg, var(--danger-red), #dc2626) !important;
+}
+
+/* AI Features */
+.ai-feature-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.ai-feature-card:hover {
+    border-color: var(--accent-blue);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.ai-feature-card .feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
+}
+
+.ai-feature-card h3 {
+    color: var(--primary-blue);
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.ai-feature-card p {
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+/* Calendar */
+.calendar-day {
+    aspect-ratio: 1;
+    border: 1px solid var(--border-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.calendar-day:hover {
+    background-color: var(--light-blue);
+}
+
+.calendar-day.booked {
+    background-color: var(--secondary-blue);
+    color: white;
+}
+
+.calendar-day.available {
+    background-color: var(--success-green);
+    color: white;
+}
+
+.calendar-day.blocked {
+    background-color: var(--danger-red);
+    color: white;
+}
+
+/* Property Cards */
+.property-card {
+    background: white;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.property-card:hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.property-card .property-image {
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.property-card .property-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--primary-blue);
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.property-card .property-details {
+    padding: 1.5rem;
+}
+
+.property-card .property-title {
+    color: var(--primary-blue);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.property-card .property-location {
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+.property-card .property-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.property-card .property-stats span {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.property-card .property-price {
+    color: var(--success-green);
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-card {
+        padding: 1rem;
+    }
+    
+    .ai-feature-card {
+        padding: 1.5rem;
+    }
+    
+    .property-card .property-details {
+        padding: 1rem;
+    }
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Chart Containers */
+.chart-container {
+    position: relative;
+    height: 400px;
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Status Indicators */
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+
+.status-indicator.online {
+    background-color: var(--success-green);
+}
+
+.status-indicator.offline {
+    background-color: var(--danger-red);
+}
+
+.status-indicator.pending {
+    background-color: var(--warning-orange);
+}
+
+/* Utility Classes */
+.text-primary-blue {
+    color: var(--primary-blue) !important;
+}
+
+.bg-light-blue {
+    background-color: var(--light-blue) !important;
+}
+
+.border-primary-blue {
+    border-color: var(--primary-blue) !important;
+}
+
+.shadow-custom {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.rounded-custom {
+    border-radius: 0.75rem !important;
+}
+
+/* Channels logos and Titles */
+.channel-logo {
+    height: 40px;
+    width: auto;
+    max-width: 80px;
+    object-fit: contain;
+    margin-right: 0.75rem;
+}
+
+.channel-card .card-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+}
+
+.channel-card h5 {
+    margin: 0;
+    flex-grow: 1;
+}

@@ -1,0 +1,447 @@
+<!-- 
+Base template for Booking Vision application.
+This template provides the main structure and styling for all pages.
+Location: booking_vision_APP/templates/base.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Booking Vision - Channel Manager{% endblock %}</title>
+    
+    <!-- Favicon with border radius -->
+    {% load static %}
+    <link rel="icon" type="image/png" href="{% static 'images/bv_logo_3.png' %}" style="border-radius: 20%;">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    
+    <style>
+        /* Fixed navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Add padding to body to account for fixed navbar */
+        body {
+            padding-top: 70px;
+        }
+        
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Activity popup styles */
+        .activity-popup {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 350px;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .activity-popup-header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+            padding: 1rem;
+            border-radius: 0.75rem 0.75rem 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .activity-popup-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .activity-popup-close:hover {
+            opacity: 1;
+        }
+
+        .activity-popup-body {
+            padding: 1rem;
+            display: flex;
+            align-items: start;
+        }
+
+        .activity-popup-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--light-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: var(--primary-blue);
+            flex-shrink: 0;
+        }
+
+        .activity-popup-content {
+            flex-grow: 1;
+        }
+
+        .activity-popup-heading {
+            margin: 0 0 0.25rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .activity-popup-text {
+            margin: 0;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        /* Activity badge styles */
+        #activityBadge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            min-width: 1.5rem;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'booking_vision_APP:dashboard' %}">
+                <img src="{% static 'images/bv_logo.png' %}" alt="Booking Vision" height="40" class="me-2" onerror="this.style.display='none'">
+                <span class="fw-bold">Booking Vision</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'booking_vision_APP:dashboard' %}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'booking_vision_APP:property_list' %}">
+                            <i class="fas fa-home"></i> Properties
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'booking_vision_APP:booking_list' %}">
+                            <i class="fas fa-calendar"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="aiDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-robot"></i> AI Features
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'booking_vision_APP:smart_pricing' %}">Smart Pricing</a></li>
+                            <li><a class="dropdown-item" href="{% url 'booking_vision_APP:predictive_maintenance' %}">Predictive Maintenance</a></li>
+                            <li><a class="dropdown-item" href="{% url 'booking_vision_APP:guest_experience' %}">Guest Experience</a></li>
+                            <li><a class="dropdown-item" href="{% url 'booking_vision_APP:business_intelligence' %}">Business Intelligence</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'booking_vision_APP:analytics' %}">
+                            <i class="fas fa-chart-bar"></i> Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'booking_vision_APP:messages_list' %}">
+                            <i class="fas fa-comments"></i> Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'booking_vision_APP:notifications_list' %}">
+                            <i class="fas fa-bell"></i> Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'booking_vision_APP:payments_list' %}">
+                            <i class="fas fa-dollar-sign"></i> Payments
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <!-- Activity Bell -->
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{% url 'booking_vision_APP:activity' %}" id="activityLink">
+                                <i class="fas fa-bell"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                                      id="activityBadge" style="display: none;">
+                                    <span id="activityCount">0</span>
+                                </span>
+                            </a>
+                        </li>
+                        
+                        <!-- User Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'booking_vision_APP:profile' %}"><i class="fas fa-user-circle"></i> My Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'booking_vision_APP:settings' %}"><i class="fas fa-cog"></i> Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container-fluid mt-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                {% block breadcrumb %}
+                <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
+                {% endblock %}
+            </ol>
+        </nav>
+
+        <!-- Messages -->
+        {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-lg-start mt-5">
+        <div class="container p-4">
+            <div class="row">
+                <div class="col-lg-6 col-md-12 mb-4 mb-md-0">
+                    <h5 class="text-uppercase text-primary">Booking Vision</h5>
+                    <p>
+                        The ultimate AI-powered channel manager for property management.
+                        Streamline your bookings, maximize revenue, and deliver exceptional guest experiences.
+                    </p>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                    <h5 class="text-uppercase">Features</h5>
+                    <ul class="list-unstyled mb-0">
+                        <li><a href="#" class="text-dark">Smart Pricing</a></li>
+                        <li><a href="#" class="text-dark">Multi-Channel Sync</a></li>
+                        <li><a href="#" class="text-dark">AI Analytics</a></li>
+                        <li><a href="#" class="text-dark">Guest Experience</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+                    <h5 class="text-uppercase">Support</h5>
+                    <ul class="list-unstyled mb-0">
+                        <li><a href="#" class="text-dark">Help Center</a></li>
+                        <li><a href="#" class="text-dark">Contact Us</a></li>
+                        <li><a href="#" class="text-dark">Documentation</a></li>
+                        <li><a href="#" class="text-dark">API Reference</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center p-3 bg-primary text-white">
+            © 2024 Booking Vision. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Activity Popup Container -->
+    <div id="activityPopup" class="activity-popup" style="display: none;">
+        <div class="activity-popup-header">
+            <span class="activity-popup-title">New Activity</span>
+            <button class="activity-popup-close" onclick="closeActivityPopup()">×</button>
+        </div>
+        <div class="activity-popup-body">
+            <div class="activity-popup-icon">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="activity-popup-content">
+                <h6 class="activity-popup-heading"></h6>
+                <p class="activity-popup-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    
+    <script>
+    // Global WebSocket for activities
+    let activitySocket;
+    let activityPreferences = {
+        show_popup: true,
+        play_sound: true,
+        popup_duration: 5000
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if user.is_authenticated %}
+            connectActivityWebSocket();
+        {% endif %}
+    });
+
+    function connectActivityWebSocket() {
+        const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        activitySocket = new WebSocket(
+            wsScheme + '://' + window.location.host + '/ws/activities/'
+        );
+        
+        activitySocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            
+            if (data.type === 'initial') {
+                updateActivityBadge(data.unread_count);
+                if (data.preferences) {
+                    activityPreferences = data.preferences;
+                }
+            } else if (data.type === 'notification') {
+                updateActivityBadge(data.unread_count);
+                if (activityPreferences.show_popup) {
+                    showActivityPopup(data.activity);
+                }
+            }
+        };
+        
+        activitySocket.onclose = function(e) {
+            console.error('Activity socket closed unexpectedly');
+            // Reconnect after 3 seconds
+            setTimeout(function() {
+                connectActivityWebSocket();
+            }, 3000);
+        };
+    }
+
+    function updateActivityBadge(count) {
+        const badge = document.getElementById('activityBadge');
+        const countElem = document.getElementById('activityCount');
+        
+        if (count > 0) {
+            countElem.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function showActivityPopup(activity) {
+        const popup = document.getElementById('activityPopup');
+        const icon = popup.querySelector('.activity-popup-icon i');
+        const heading = popup.querySelector('.activity-popup-heading');
+        const text = popup.querySelector('.activity-popup-text');
+        
+        // Update content
+        icon.className = `fas fa-${activity.icon}`;
+        heading.textContent = activity.title;
+        text.textContent = activity.description;
+        
+        // Show popup
+        popup.style.display = 'block';
+        
+        // Auto-hide after duration
+        setTimeout(() => {
+            closeActivityPopup();
+        }, activityPreferences.popup_duration || 5000);
+        
+        // Play sound if enabled
+        if (activityPreferences.play_sound) {
+            playNotificationSound();
+        }
+    }
+
+    function closeActivityPopup() {
+        const popup = document.getElementById('activityPopup');
+        popup.style.display = 'none';
+    }
+
+    function playNotificationSound() {
+        // Use Web Audio API to create a notification sound
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        } catch (e) {
+            console.log('Could not play notification sound:', e);
+        }
+    }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

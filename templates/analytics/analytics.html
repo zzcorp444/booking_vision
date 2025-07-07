@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics - Booking Vision{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
+    <li class="breadcrumb-item active">Analytics</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 text-primary-blue">
+                    <i class="fas fa-chart-bar me-2"></i>Analytics & Reports
+                </h1>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" data-period="30days">30 Days</button>
+                    <button type="button" class="btn btn-outline-primary" data-period="90days">90 Days</button>
+                    <button type="button" class="btn btn-outline-primary" data-period="12months">12 Months</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-success">${{ revenue_stats.total_revenue|floatformat:2 }}</h4>
+                <p>Total Revenue</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-info">${{ revenue_stats.monthly_revenue|floatformat:2 }}</h4>
+                <p>Monthly Revenue</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-primary">${{ revenue_stats.avg_booking_value|floatformat:2 }}</h4>
+                <p>Avg Booking Value</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-warning">{{ occupancy_stats.occupancy_rate }}%</h4>
+                <p>Occupancy Rate</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Revenue Chart -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Revenue Trends
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Occupancy Chart -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bed me-2"></i>Occupancy Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="occupancyChart"></canvas>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <h5 class="text-primary">{{ occupancy_stats.occupancy_rate }}%</h5>
+                        <p class="text-muted mb-0">Average Occupancy</p>
+                        <small class="text-muted">{{ occupancy_stats.booked_nights }} of {{ occupancy_stats.booked_nights|add:occupancy_stats.available_nights }} nights booked</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Channel Performance -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-link me-2"></i>Channel Performance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if channel_stats %}
+                        <div class="row">
+                            {% for channel in channel_stats %}
+                            <div class="col-md-6 col-lg-3 mb-3">
+                                <div class="channel-stat-card p-3 border rounded">
+                                    <h6 class="mb-2">{{ channel.channel.name }}</h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted">Bookings</span>
+                                        <span class="fw-bold">{{ channel.bookings }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted">Revenue</span>
+                                        <span class="fw-bold text-success">${{ channel.revenue|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Avg Value</span>
+                                        <span class="fw-bold">${{ channel.avg_booking_value|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted">No channel data available yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Performance -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-home me-2"></i>Property Performance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if property_stats %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Property</th>
+                                        <th>Bookings</th>
+                                        <th>Revenue</th>
+                                        <th>Avg Booking Value</th>
+                                        <th>Performance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in property_stats %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'booking_vision_APP:property_detail' stat.property.pk %}" class="text-decoration-none">
+                                                <strong>{{ stat.property.name }}</strong>
+                                            </a>
+                                            <br><small class="text-muted">{{ stat.property.city }}</small>
+                                        </td>
+                                        <td>{{ stat.bookings }}</td>
+                                        <td class="text-success fw-bold">${{ stat.revenue|floatformat:2 }}</td>
+                                        <td>${{ stat.avg_booking_value|floatformat:2 }}</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar bg-success" role="progressbar" 
+                                                     style="width: {% widthratio stat.revenue property_stats.0.revenue 100 %}%">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-line text-muted mb-3" style="font-size: 4rem;"></i>
+                            <h5 class="text-muted">No property data available</h5>
+                            <p class="text-muted">Analytics will appear here once you have bookings.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.channel-stat-card {
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.channel-stat-card:hover {
+    background-color: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.chart-container {
+    position: relative;
+    height: 400px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart');
+    if (revenueCtx) {
+        // Fetch revenue data
+        BookingVisionAPI.getRevenueAnalytics('12months').then(data => {
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: data.labels || [],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: data.revenue || [],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: false
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Revenue ($)'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    // Initialize Occupancy Chart
+    const occupancyCtx = document.getElementById('occupancyChart');
+    if (occupancyCtx) {
+        const occupancyRate = {{ occupancy_stats.occupancy_rate|default:0 }};
+        new Chart(occupancyCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Occupied', 'Available'],
+                datasets: [{
+                    data: [occupancyRate, 100 - occupancyRate],
+                    backgroundColor: ['#3b82f6', '#e5e7eb'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+
+    // Period selector
+    const periodButtons = document.querySelectorAll('[data-period]');
+    periodButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            periodButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            const period = this.dataset.period;
+            // Reload data for selected period
+            console.log('Loading data for period:', period);
+        });
+    });
+});
+</script>
+{% endblock %}

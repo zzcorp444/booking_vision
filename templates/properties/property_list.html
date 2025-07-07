@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Properties - Booking Vision{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
+    <li class="breadcrumb-item active">Properties</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 text-primary-blue">
+                    <i class="fas fa-home me-2"></i>Property Management
+                </h1>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add Property
+                    </a>
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                        <i class="fas fa-filter me-2"></i>Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-primary">{{ total_properties }}</h4>
+                <p>Total Properties</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-success">85%</h4>
+                <p>Avg Occupancy</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-info">$2,450</h4>
+                <p>Avg Monthly Revenue</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-warning">4.8★</h4>
+                <p>Avg Rating</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Filters -->
+    {% if current_search or current_type %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-info d-flex align-items-center">
+                <i class="fas fa-info-circle me-2"></i>
+                <span class="me-3">Active Filters:</span>
+                {% if current_search %}
+                    <span class="badge bg-primary me-2">Search: "{{ current_search }}"</span>
+                {% endif %}
+                {% if current_type %}
+                    <span class="badge bg-primary me-2">Type: {{ current_type }}</span>
+                {% endif %}
+                <a href="{% url 'booking_vision_APP:property_list' %}" class="btn btn-sm btn-outline-secondary ms-auto">
+                    Clear All
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Properties Grid -->
+    <div class="row">
+        {% if properties %}
+            {% for property in properties %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="property-card">
+                    <div class="property-image" 
+                         style="background-image: url('{% if property.images.first %}{{ property.images.first.image.url }}{% else %}https://via.placeholder.com/400x200?text=No+Image{% endif %}');">
+                        <div class="property-badge">{{ property.get_property_type_display }}</div>
+                        <div class="property-status">
+                            {% if property.ai_pricing_enabled %}
+                                <span class="badge bg-success"><i class="fas fa-robot"></i> AI Pricing</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="property-details">
+                        <h5 class="property-title">{{ property.name }}</h5>
+                        <p class="property-location">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ property.city }}, {{ property.country }}
+                        </p>
+                        
+                        <div class="property-stats">
+                            <span><i class="fas fa-bed me-1"></i>{{ property.bedrooms }} beds</span>
+                            <span><i class="fas fa-bath me-1"></i>{{ property.bathrooms }} baths</span>
+                            <span><i class="fas fa-users me-1"></i>{{ property.max_guests }} guests</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="property-price">
+                                ${{ property.base_price }}<small>/night</small>
+                            </div>
+                            <div class="property-actions">
+                                <a href="{% url 'booking_vision_APP:property_detail' property.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'booking_vision_APP:property_edit' property.pk %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Performance Indicators -->
+                        <div class="mt-3 pt-3 border-top">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <small class="text-muted">Bookings</small>
+                                    <div class="fw-bold">{{ property.bookings.count }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Revenue</small>
+                                    <div class="fw-bold text-success">$12.5K</div>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Rating</small>
+                                    <div class="fw-bold text-warning">4.8★</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-home text-muted mb-3" style="font-size: 4rem;"></i>
+                    <h5 class="text-muted">No properties found</h5>
+                    <p class="text-muted">Start by adding your first property to begin managing your bookings.</p>
+                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add Your First Property
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Properties pagination" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Filter Properties</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="get">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="search" class="form-label">Search</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ current_search }}" placeholder="Property name, city, or address">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Property Type</label>
+                        <select class="form-select" id="type" name="type">
+                            <option value="">All Types</option>
+                            {% for value, label in property_types %}
+                            <option value="{{ value }}" {% if value == current_type %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.property-image {
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    border-radius: 1rem 1rem 0 0;
+}
+
+.property-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--primary-blue);
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.property-status {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.property-details {
+    padding: 1.5rem;
+}
+
+.property-title {
+    color: var(--primary-blue);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.property-location {
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+.property-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.property-stats span {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.property-price {
+    color: var(--success-green);
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.property-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+</style>
+{% endblock %}

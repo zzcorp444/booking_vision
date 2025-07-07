@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Smart Pricing - Booking Vision{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
+    <li class="breadcrumb-item active">Smart Pricing</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 text-primary-blue">
+                    <i class="fas fa-brain me-2"></i>AI Smart Pricing
+                </h1>
+                <div class="form-check form-switch">
+                    <input class="form-check-input ai-feature-toggle" type="checkbox" data-feature="pricing" id="pricingToggle">
+                    <label class="form-check-label" for="pricingToggle">
+                        <strong>AI Pricing Enabled</strong>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-success">+15.3%</h4>
+                <p>Avg Revenue Increase</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-primary">{{ recommendations|length }}</h4>
+                <p>Active Recommendations</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-info">92%</h4>
+                <p>Pricing Accuracy</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <h4 class="text-warning">{{ properties|length }}</h4>
+                <p>Properties Optimized</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Pricing Optimization Trends
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="pricingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Recommendations -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>AI Pricing Recommendations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recommendations %}
+                        <div class="row">
+                            {% for rec in recommendations %}
+                            <div class="col-lg-6 mb-4">
+                                <div class="ai-feature-card">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h6 class="fw-bold text-primary-blue">{{ rec.property.name }}</h6>
+                                        <span class="badge bg-success">+{{ rec.revenue_increase }}%</span>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <small class="text-muted">Current Price</small>
+                                            <h5 class="mb-0">${{ rec.current_price }}</h5>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Suggested Price</small>
+                                            <h5 class="mb-0 text-success">${{ rec.suggested_price }}</h5>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">Confidence Level</small>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" style="width: {{ rec.confidence|floatformat:0 }}%"></div>
+                                        </div>
+                                        <small>{{ rec.confidence|floatformat:0 }}%</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">Influencing Factors</small>
+                                        <div class="mt-2">
+                                            {% for factor in rec.factors %}
+                                            <span class="badge bg-light text-dark me-1 mb-1">
+                                                <i class="fas fa-{{ factor.impact|yesno:'arrow-up,arrow-down' }} me-1"></i>
+                                                {{ factor.name }}
+                                            </span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="btn btn-primary btn-sm apply-pricing" 
+                                            data-property-id="{{ rec.property.id }}" 
+                                            data-price="{{ rec.suggested_price }}">
+                                        <i class="fas fa-check me-1"></i>Apply Recommendation
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-robot text-muted mb-3" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted">No pricing recommendations available</h5>
+                            <p class="text-muted">Add properties and bookings to get AI-powered pricing insights.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize pricing chart
+    const ctx = document.getElementById('pricingChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Revenue with AI Pricing',
+                    data: [12000, 15000, 18000, 16000, 20000, 22000],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Projected Revenue (Static Pricing)',
+                    data: [10000, 12000, 14000, 13000, 15000, 16000],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderDash: [5, 5],
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'AI Pricing Impact on Revenue'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Revenue ($)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Apply pricing recommendations
+    document.querySelectorAll('.apply-pricing').forEach(button => {
+        button.addEventListener('click', function() {
+            const propertyId = this.dataset.propertyId;
+            const price = this.dataset.price;
+            
+            if (confirm(`Apply suggested price of $${price}?`)) {
+                // Apply pricing logic here
+                this.innerHTML = '<i class="fas fa-check me-1"></i>Applied';
+                this.classList.remove('btn-primary');
+                this.classList.add('btn-success');
+                this.disabled = true;
+                
+                BookingVision.showNotification('Pricing updated successfully!', 'success');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
