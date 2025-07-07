@@ -21,6 +21,17 @@ app.autodiscover_tasks()
 from celery.schedules import crontab
 
 app.conf.beat_schedule = {
+    # No-API sync every hour
+    'sync-channels-no-api': {
+        'task': 'booking_vision_APP.tasks.sync_all_channels_no_api',
+        'schedule': crontab(minute=0),
+    },
+
+    # Process emails every 15 minutes
+    'process-booking-emails': {
+        'task': 'booking_vision_APP.tasks.process_email_bookings',
+        'schedule': crontab(minute='*/15'),
+    },
     # Sync bookings every 30 minutes
     'sync-all-bookings': {
         'task': 'booking_vision_APP.tasks.sync_all_bookings',

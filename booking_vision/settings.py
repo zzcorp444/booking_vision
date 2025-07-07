@@ -98,6 +98,8 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -158,6 +160,22 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+
+# Email sync configuration
+EMAIL_SYNC_PROVIDERS = {
+    'gmail': {
+        'imap_server': 'imap.gmail.com',
+        'imap_port': 993,
+        'smtp_server': 'smtp.gmail.com',
+        'smtp_port': 587,
+    },
+    'outlook': {
+        'imap_server': 'outlook.office365.com',
+        'imap_port': 993,
+        'smtp_server': 'smtp.office365.com',
+        'smtp_port': 587,
+    }
+}
 
 # CSRF Settings - Important for production
 CSRF_TRUSTED_ORIGINS = [
