@@ -461,3 +461,23 @@ body {
 .rounded-custom {
     border-radius: 0.75rem !important;
 }
+
+/* Channels logos and Titles */
+.channel-logo {
+    height: 40px;
+    width: auto;
+    max-width: 80px;
+    object-fit: contain;
+    margin-right: 0.75rem;
+}
+
+.channel-card .card-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+}
+
+.channel-card h5 {
+    margin: 0;
+    flex-grow: 1;
+}
