@@ -18,13 +18,10 @@
         <div class="col-md-6 col-lg-4 mb-4">
             <div class="card channel-card">
                 <div class="card-header d-flex align-items-center">
-                    {% with 'images/channel_logos/'|add:channel.name|lower|add:'_logo.png' as logo_path %}
-                        {% static logo_path as logo_url %}
-                        <img src="{{ logo_url }}" 
-                            alt="{{ channel.name }}" 
-                            class="channel-logo me-3"
-                            onerror="this.src='{% static 'images/placeholder-logo.png' %}'; this.onerror=null;">
-                    {% endwith %}
+                    <img src="{% static 'images/channel_logos/'|add:channel.name|lower|add:'_logo.png' %}" 
+                        alt="{{ channel.name }}" 
+                        class="channel-logo me-3"
+                        onerror="this.style.display='none'">
                     <h5 class="mb-0">{{ channel.name }}</h5>
                 </div>
                 <div class="card-body">
