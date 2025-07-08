@@ -74,30 +74,30 @@
                 </div>
 
             {% else %}
-                <!-- Show YOUR EXISTING booking functionality -->
+                <!-- Show bookings functionality when data exists -->
                 
-                <!-- Sync Status Card (NEW ADDITION) -->
+                <!-- Sync Status Card -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-body">
                         <div class="row text-center">
                             <div class="col-md-4">
                                 <div class="stat-item">
                                     <i class="fas fa-link text-primary mb-2"></i>
-                                    <h4 class="mb-0">{{ sync_status.channels_connected }}</h4>
+                                    <h4 class="mb-0">{{ sync_status.channels_connected|default:0 }}</h4>
                                     <small class="text-muted">Connected Channels</small>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="stat-item">
                                     <i class="fas fa-home text-success mb-2"></i>
-                                    <h4 class="mb-0">{{ sync_status.properties_added }}</h4>
+                                    <h4 class="mb-0">{{ sync_status.properties_added|default:0 }}</h4>
                                     <small class="text-muted">Properties</small>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="stat-item">
                                     <i class="fas fa-calendar-check text-info mb-2"></i>
-                                    <h4 class="mb-0">{{ sync_status.total_bookings }}</h4>
+                                    <h4 class="mb-0">{{ sync_status.total_bookings|default:0 }}</h4>
                                     <small class="text-muted">Total Bookings</small>
                                 </div>
                             </div>
@@ -105,12 +105,12 @@
                     </div>
                 </div>
 
-                <!-- YOUR EXISTING FILTERS AND BOOKING STATS -->
+                <!-- Booking Stats -->
                 <div class="row mb-4">
                     <div class="col-md-3">
                         <div class="card text-center">
                             <div class="card-body">
-                                <h5 class="card-title">{{ booking_stats.total }}</h5>
+                                <h5 class="card-title">{{ booking_stats.total|default:0 }}</h5>
                                 <p class="card-text">Total Bookings</p>
                             </div>
                         </div>
@@ -118,7 +118,7 @@
                     <div class="col-md-3">
                         <div class="card text-center">
                             <div class="card-body">
-                                <h5 class="card-title">{{ booking_stats.pending }}</h5>
+                                <h5 class="card-title">{{ booking_stats.pending|default:0 }}</h5>
                                 <p class="card-text">Pending</p>
                             </div>
                         </div>
@@ -126,7 +126,7 @@
                     <div class="col-md-3">
                         <div class="card text-center">
                             <div class="card-body">
-                                <h5 class="card-title">{{ booking_stats.confirmed }}</h5>
+                                <h5 class="card-title">{{ booking_stats.confirmed|default:0 }}</h5>
                                 <p class="card-text">Confirmed</p>
                             </div>
                         </div>
@@ -134,14 +134,14 @@
                     <div class="col-md-3">
                         <div class="card text-center">
                             <div class="card-body">
-                                <h5 class="card-title">{{ booking_stats.checked_in }}</h5>
+                                <h5 class="card-title">{{ booking_stats.checked_in|default:0 }}</h5>
                                 <p class="card-text">Checked In</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- YOUR EXISTING FILTERS FORM -->
+                <!-- Filters Form -->
                 <div class="row mb-4">
                     <div class="col-12">
                         <form method="get" class="d-flex gap-3 align-items-end">
@@ -179,61 +179,67 @@
                     </div>
                 </div>
 
-                <!-- YOUR EXISTING BOOKINGS LIST -->
+                <!-- Bookings List -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
-                        {% for booking in bookings %}
-                        <div class="booking-item border-bottom py-3">
-                            <!-- YOUR EXISTING BOOKING DISPLAY CODE GOES HERE -->
-                            <div class="row align-items-center">
-                                <div class="col-md-3">
-                                    <h6 class="mb-1">{{ booking.guest.first_name }} {{ booking.guest.last_name }}</h6>
-                                    <small class="text-muted">{{ booking.guest.email }}</small>
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>{{ booking.rental_property.name }}</strong>
-                                    <br><small class="text-muted">{{ booking.channel.name }}</small>
-                                </div>
-                                <div class="col-md-2">
-                                    <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}secondary{% endif %}">
-                                        {{ booking.get_status_display }}
-                                    </span>
-                                </div>
-                                <div class="col-md-2">
-                                    <strong>${{ booking.total_price }}</strong>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="{% url 'booking_vision_APP:booking_detail' booking.pk %}" class="btn btn-sm btn-outline-primary">
-                                        View Details
-                                    </a>
+                        {% if bookings %}
+                            {% for booking in bookings %}
+                            <div class="booking-item border-bottom py-3">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <h6 class="mb-1">{{ booking.guest.first_name }} {{ booking.guest.last_name }}</h6>
+                                        <small class="text-muted">{{ booking.guest.email }}</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>{{ booking.rental_property.name }}</strong>
+                                        <br><small class="text-muted">{{ booking.channel.name }}</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                                            {{ booking.get_status_display }}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <strong>${{ booking.total_price|default:0 }}</strong>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="{% url 'booking_vision_APP:booking_detail' booking.pk %}" class="btn btn-sm btn-outline-primary">
+                                            View Details
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        {% empty %}
-                        <div class="text-center py-4">
-                            <p class="text-muted">No bookings found matching your criteria.</p>
-                        </div>
-                        {% endfor %}
+                            {% endfor %}
 
-                        <!-- YOUR EXISTING PAGINATION -->
-                        {% if is_paginated %}
-                        <nav aria-label="Bookings pagination" class="mt-4">
-                            <ul class="pagination justify-content-center">
-                                {% if page_obj.has_previous %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-                                </li>
-                                {% endif %}
-                                <li class="page-item active">
-                                    <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-                                </li>
-                                {% if page_obj.has_next %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
-                                </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
+                            <!-- Pagination -->
+                            {% if is_paginated %}
+                            <nav aria-label="Bookings pagination" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                    {% endif %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                    </li>
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+                        {% else %}
+                            <div class="no-data-message text-center py-5">
+                                <i class="fas fa-search text-muted mb-3" style="font-size: 3rem;"></i>
+                                <h6>No bookings found</h6>
+                                <p class="text-muted mb-3">No bookings match your current search criteria.</p>
+                                <a href="{% url 'booking_vision_APP:booking_list' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-refresh me-2"></i>Clear Filters
+                                </a>
+                            </div>
                         {% endif %}
                     </div>
                 </div>
@@ -261,6 +267,18 @@
 
 .stat-item i {
     font-size: 2rem;
+}
+
+.no-data-message {
+    background: #f8f9fa;
+    border: 1px dashed #dee2e6;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.booking-item:last-child {
+    border-bottom: none !important;
 }
 </style>
 {% endblock %}

@@ -29,25 +29,49 @@
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="stats-card">
-                <h4 class="text-success">${{ revenue_stats.total_revenue|floatformat:2 }}</h4>
+                <h4 class="text-success">
+                    {% if revenue_stats.total_revenue %}
+                        ${{ revenue_stats.total_revenue|floatformat:2 }}
+                    {% else %}
+                        <span class="text-muted">$0.00</span>
+                    {% endif %}
+                </h4>
                 <p>Total Revenue</p>
             </div>
         </div>
         <div class="col-md-3">
             <div class="stats-card">
-                <h4 class="text-info">${{ revenue_stats.monthly_revenue|floatformat:2 }}</h4>
+                <h4 class="text-info">
+                    {% if revenue_stats.monthly_revenue %}
+                        ${{ revenue_stats.monthly_revenue|floatformat:2 }}
+                    {% else %}
+                        <span class="text-muted">$0.00</span>
+                    {% endif %}
+                </h4>
                 <p>Monthly Revenue</p>
             </div>
         </div>
         <div class="col-md-3">
             <div class="stats-card">
-                <h4 class="text-primary">${{ revenue_stats.avg_booking_value|floatformat:2 }}</h4>
+                <h4 class="text-primary">
+                    {% if revenue_stats.avg_booking_value %}
+                        ${{ revenue_stats.avg_booking_value|floatformat:2 }}
+                    {% else %}
+                        <span class="text-muted">$0.00</span>
+                    {% endif %}
+                </h4>
                 <p>Avg Booking Value</p>
             </div>
         </div>
         <div class="col-md-3">
             <div class="stats-card">
-                <h4 class="text-warning">{{ occupancy_stats.occupancy_rate }}%</h4>
+                <h4 class="text-warning">
+                    {% if occupancy_stats.occupancy_rate %}
+                        {{ occupancy_stats.occupancy_rate }}%
+                    {% else %}
+                        <span class="text-muted">0%</span>
+                    {% endif %}
+                </h4>
                 <p>Occupancy Rate</p>
             </div>
         </div>
@@ -64,9 +88,20 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="revenueChart"></canvas>
-                    </div>
+                    {% if revenue_data %}
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    {% else %}
+                        <div class="no-data-message text-center py-5">
+                            <i class="fas fa-chart-line text-muted mb-3" style="font-size: 3rem;"></i>
+                            <h6>No revenue data available</h6>
+                            <p class="text-muted mb-3">Revenue trends will appear once you have bookings.</p>
+                            <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-2"></i>Add Your First Booking
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -80,14 +115,25 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" style="height: 300px;">
-                        <canvas id="occupancyChart"></canvas>
-                    </div>
-                    <div class="mt-3 text-center">
-                        <h5 class="text-primary">{{ occupancy_stats.occupancy_rate }}%</h5>
-                        <p class="text-muted mb-0">Average Occupancy</p>
-                        <small class="text-muted">{{ occupancy_stats.booked_nights }} of {{ occupancy_stats.booked_nights|add:occupancy_stats.available_nights }} nights booked</small>
-                    </div>
+                    {% if occupancy_stats.occupancy_rate %}
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="occupancyChart"></canvas>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <h5 class="text-primary">{{ occupancy_stats.occupancy_rate }}%</h5>
+                            <p class="text-muted mb-0">Average Occupancy</p>
+                            <small class="text-muted">{{ occupancy_stats.booked_nights }} of {{ occupancy_stats.booked_nights|add:occupancy_stats.available_nights }} nights booked</small>
+                        </div>
+                    {% else %}
+                        <div class="no-data-message text-center py-5">
+                            <i class="fas fa-bed text-muted mb-3" style="font-size: 3rem;"></i>
+                            <h6>No occupancy data available</h6>
+                            <p class="text-muted mb-3">Occupancy overview will appear once you have properties and bookings.</p>
+                            <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-home me-2"></i>Add Property
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -126,7 +172,14 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <p class="text-center text-muted">No channel data available yet.</p>
+                        <div class="no-data-message text-center py-5">
+                            <i class="fas fa-link text-muted mb-3" style="font-size: 3rem;"></i>
+                            <h6>No channel data available yet</h6>
+                            <p class="text-muted mb-3">Channel performance will appear once you connect and sync channels.</p>
+                            <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-link me-2"></i>Connect Channels
+                            </a>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -180,10 +233,18 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-chart-line text-muted mb-3" style="font-size: 4rem;"></i>
-                            <h5 class="text-muted">No property data available</h5>
-                            <p class="text-muted">Analytics will appear here once you have bookings.</p>
+                        <div class="no-data-message text-center py-5">
+                            <i class="fas fa-home text-muted mb-3" style="font-size: 3rem;"></i>
+                            <h6>No property data available</h6>
+                            <p class="text-muted mb-3">Property analytics will appear once you have properties with bookings.</p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-home me-2"></i>Add Property
+                                </a>
+                                <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-calendar-plus me-2"></i>Add Booking
+                                </a>
+                            </div>
                         </div>
                     {% endif %}
                 </div>
@@ -207,13 +268,34 @@
     position: relative;
     height: 400px;
 }
+
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    padding: 1.5rem;
+    color: white;
+    text-align: center;
+}
+
+.stats-card h4 {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.no-data-message {
+    background: #f8f9fa;
+    border: 1px dashed #dee2e6;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    color: #6c757d;
+}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Revenue Chart
+    // Initialize Revenue Chart - only if data exists
     const revenueCtx = document.getElementById('revenueChart');
-    if (revenueCtx) {
+    if (revenueCtx && {{ revenue_data|yesno:"true,false" }}) {
         // Fetch revenue data
         BookingVisionAPI.getRevenueAnalytics('12months').then(data => {
             new Chart(revenueCtx, {
@@ -251,12 +333,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             });
+        }).catch(error => {
+            console.error('Error loading revenue data:', error);
         });
     }
 
-    // Initialize Occupancy Chart
+    // Initialize Occupancy Chart - only if data exists
     const occupancyCtx = document.getElementById('occupancyChart');
-    if (occupancyCtx) {
+    if (occupancyCtx && {{ occupancy_stats.occupancy_rate|yesno:"true,false" }}) {
         const occupancyRate = {{ occupancy_stats.occupancy_rate|default:0 }};
         new Chart(occupancyCtx, {
             type: 'doughnut',

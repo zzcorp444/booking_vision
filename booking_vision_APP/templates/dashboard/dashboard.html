@@ -212,6 +212,60 @@
         width: auto;
         object-fit: contain;
     }
+
+    /* Data-responsive styles */
+    .setup-progress-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .onboarding-checklist {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .checklist-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .checklist-item.completed {
+        background: #f0f9ff;
+        border-left: 4px solid #10b981;
+    }
+
+    .checklist-item.current {
+        background: #fffbeb;
+        border-left: 4px solid #f59e0b;
+    }
+
+    .checklist-item.pending {
+        background: #f9fafb;
+        border-left: 4px solid #e5e7eb;
+    }
+
+    .empty-state-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: inherit;
+        z-index: 10;
+    }
 </style>
 {% endblock %}
 
@@ -223,12 +277,20 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h2 mb-1">Welcome back, {{ user.first_name|default:user.username }}! 👋</h1>
-                    <p class="text-muted">Here's what's happening with your properties today.</p>
+                    <p class="text-muted">
+                        {% if empty_state %}
+                            Let's get your account set up - you're {{ sync_status.setup_progress }}% complete!
+                        {% else %}
+                            Here's what's happening with your properties today.
+                        {% endif %}
+                    </p>
                 </div>
                 <div>
+                    {% if not empty_state %}
                     <button class="btn btn-outline-primary me-2" onclick="startTour()">
                         <i class="fas fa-question-circle me-2"></i>Take a Tour
                     </button>
+                    {% endif %}
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#quickActionModal">
                         <i class="fas fa-plus me-2"></i>Quick Actions
                     </button>
@@ -237,88 +299,330 @@
         </div>
     </div>
 
-    <!-- Key Metrics -->
-    <div class="dashboard-grid" id="metrics-section">
-        <a href="{% url 'booking_vision_APP:analytics' %}" class="text-decoration-none">
-            <div class="metric-card metric-card-hover" data-tour="revenue">
-                <div class="metric-label">Total Revenue</div>
-                <div class="metric-value">${{ total_revenue|floatformat:2 }}</div>
-                <div class="metric-change positive">
-                    <i class="fas fa-arrow-up"></i> 12.5% from last month
+    <!-- Data Insights (only show if we have insights to display) -->
+    {% if data_insights %}
+        {% include 'components/data_insights.html' %}
+    {% endif %}
+
+    <!-- Setup Progress (shown only if not fully set up) -->
+    {% if empty_state %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="setup-progress-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-rocket me-2"></i>Get Started with Booking Vision
+                    </h5>
+                    <span class="badge bg-light text-dark">{{ sync_status.setup_progress }}% Complete</span>
                 </div>
-                <canvas id="revenueSparkline" height="50"></canvas>
-                <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar bg-light" role="progressbar" style="width: {{ sync_status.setup_progress }}%"></div>
+                </div>
+                <p class="mb-0 opacity-90">
+                    {% if empty_state == 'no_channels' %}
+                        Let's connect your first booking channel to get started!
+                    {% elif empty_state == 'no_properties' %}
+                        Great! Now add your rental properties to the platform.
+                    {% elif empty_state == 'no_bookings' %}
+                        Almost there! Sync your existing bookings or wait for new ones.
+                    {% endif %}
+                </p>
             </div>
-        </a>
-        
-        <a href="{% url 'booking_vision_APP:analytics' %}" class="text-decoration-none">
-            <div class="metric-card metric-card-hover" data-tour="occupancy">
-                <div class="metric-label">Occupancy Rate</div>
-                <div class="metric-value">{{ occupancy_rate }}%</div>
-                <div class="metric-change negative">
-                    <i class="fas fa-arrow-down"></i> 2.3% from last week
-                </div>
-                <div class="progress mt-3">
-                    <div class="progress-bar bg-primary" style="width: {{ occupancy_rate }}%"></div>
-                </div>
-                <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
-            </div>
-        </a>
-        
-        <a href="{% url 'booking_vision_APP:booking_list' %}?status=confirmed" class="text-decoration-none">
-            <div class="metric-card metric-card-hover" data-tour="bookings">
-                <div class="metric-label">Active Bookings</div>
-                <div class="metric-value">{{ active_bookings }}</div>
-                <div class="d-flex justify-content-between mt-3">
-                    <small>Check-ins today: <strong>{{ todays_checkins }}</strong></small>
-                    <small>Check-outs today: <strong>{{ todays_checkouts }}</strong></small>
-                </div>
-                <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
-            </div>
-        </a>
-        
-        <a href="{% url 'booking_vision_APP:messages_list' %}" class="text-decoration-none">
-            <div class="metric-card metric-card-hover" data-tour="response">
-                <div class="metric-label">Response Time</div>
-                <div class="metric-value">< 1hr</div>
-                <div class="metric-change positive">
-                    <i class="fas fa-check"></i> Excellent response rate
-                </div>
-                <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
-            </div>
-        </a>
+        </div>
     </div>
 
-    <!-- AI Insights & Quick Actions -->
+    <!-- Onboarding Checklist -->
     <div class="row mb-4">
         <div class="col-lg-8">
+            <div class="onboarding-checklist">
+                <h5 class="mb-4">
+                    <i class="fas fa-list-check me-2"></i>Setup Checklist
+                </h5>
+                
+                <div class="checklist-item {% if has_connected_channels %}completed{% elif empty_state == 'no_channels' %}current{% else %}pending{% endif %}">
+                    <div class="me-3">
+                        {% if has_connected_channels %}
+                            <i class="fas fa-check-circle text-success" style="font-size: 1.2rem;"></i>
+                        {% elif empty_state == 'no_channels' %}
+                            <i class="fas fa-circle text-warning" style="font-size: 1.2rem;"></i>
+                        {% else %}
+                            <i class="far fa-circle text-muted" style="font-size: 1.2rem;"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">Connect Booking Channels</h6>
+                        <p class="mb-0 text-muted small">Connect Airbnb, Booking.com, VRBO, and other channels</p>
+                        {% if has_connected_channels %}
+                            <small class="text-success">✓ {{ connected_channels_count }} channel{{ connected_channels_count|pluralize }} connected</small>
+                        {% endif %}
+                    </div>
+                    {% if not has_connected_channels %}
+                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-sm btn-primary">
+                        Connect Now
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="checklist-item {% if has_properties %}completed{% elif empty_state == 'no_properties' %}current{% else %}pending{% endif %}">
+                    <div class="me-3">
+                        {% if has_properties %}
+                            <i class="fas fa-check-circle text-success" style="font-size: 1.2rem;"></i>
+                        {% elif empty_state == 'no_properties' %}
+                            <i class="fas fa-circle text-warning" style="font-size: 1.2rem;"></i>
+                        {% else %}
+                            <i class="far fa-circle text-muted" style="font-size: 1.2rem;"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">Add Your Properties</h6>
+                        <p class="mb-0 text-muted small">Add rental properties to manage bookings and analytics</p>
+                        {% if has_properties %}
+                            <small class="text-success">✓ {{ properties_count }} propert{{ properties_count|pluralize:"y,ies" }} added</small>
+                        {% endif %}
+                    </div>
+                    {% if has_connected_channels and not has_properties %}
+                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-sm btn-success">
+                        Add Property
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="checklist-item {% if has_bookings %}completed{% elif empty_state == 'no_bookings' %}current{% else %}pending{% endif %}">
+                    <div class="me-3">
+                        {% if has_bookings %}
+                            <i class="fas fa-check-circle text-success" style="font-size: 1.2rem;"></i>
+                        {% elif empty_state == 'no_bookings' %}
+                            <i class="fas fa-circle text-warning" style="font-size: 1.2rem;"></i>
+                        {% else %}
+                            <i class="far fa-circle text-muted" style="font-size: 1.2rem;"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">Sync Your Bookings</h6>
+                        <p class="mb-0 text-muted small">Import existing bookings and start receiving new ones</p>
+                        {% if has_bookings %}
+                            <small class="text-success">✓ {{ bookings_count }} booking{{ bookings_count|pluralize }} synced</small>
+                        {% endif %}
+                    </div>
+                    {% if has_properties and not has_bookings %}
+                    <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-sm btn-info">
+                        Sync Now
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
             <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-headset text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h6>Need Help?</h6>
+                    <p class="text-muted small mb-3">Our team is here to help you get set up quickly.</p>
+                    <a href="{% url 'booking_vision_APP:documentation' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-book me-2"></i>Documentation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Key Metrics - Always show but with data-responsive content -->
+    <div class="dashboard-grid" id="metrics-section">
+        <div class="position-relative">
+            {% if has_revenue_data %}
+            <a href="{% url 'booking_vision_APP:analytics' %}" class="text-decoration-none">
+                <div class="metric-card metric-card-hover" data-tour="revenue">
+                    <div class="metric-label">Total Revenue</div>
+                    <div class="metric-value">${{ total_revenue|floatformat:2 }}</div>
+                    <div class="metric-change positive">
+                        <i class="fas fa-arrow-up"></i> 12.5% from last month
+                    </div>
+                    <canvas id="revenueSparkline" height="50"></canvas>
+                    <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </a>
+            {% else %}
+            <div class="metric-card" data-tour="revenue">
+                <div class="metric-label">Total Revenue</div>
+                <div class="metric-value">$0.00</div>
+                <div class="metric-change text-muted">
+                    <i class="fas fa-info-circle"></i> No revenue data yet
+                </div>
+                {% if empty_state %}
+                <div class="empty-state-overlay">
+                    <div class="text-center">
+                        <i class="fas fa-chart-line text-muted mb-2" style="font-size: 1.5rem;"></i>
+                        <p class="text-muted small mb-0">Revenue tracking will appear after your first booking</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="position-relative">
+            {% if has_bookings %}
+            <a href="{% url 'booking_vision_APP:analytics' %}" class="text-decoration-none">
+                <div class="metric-card metric-card-hover" data-tour="occupancy">
+                    <div class="metric-label">Occupancy Rate</div>
+                    <div class="metric-value">{{ occupancy_rate|default:0 }}%</div>
+                    <div class="metric-change negative">
+                        <i class="fas fa-arrow-down"></i> 2.3% from last week
+                    </div>
+                    <div class="progress mt-3">
+                        <div class="progress-bar bg-primary" style="width: {{ occupancy_rate|default:0 }}%"></div>
+                    </div>
+                    <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </a>
+            {% else %}
+            <div class="metric-card" data-tour="occupancy">
+                <div class="metric-label">Occupancy Rate</div>
+                <div class="metric-value">0%</div>
+                <div class="metric-change text-muted">
+                    <i class="fas fa-info-circle"></i> No bookings yet
+                </div>
+                <div class="progress mt-3">
+                    <div class="progress-bar bg-secondary" style="width: 0%"></div>
+                </div>
+                {% if empty_state %}
+                <div class="empty-state-overlay">
+                    <div class="text-center">
+                        <i class="fas fa-bed text-muted mb-2" style="font-size: 1.5rem;"></i>
+                        <p class="text-muted small mb-0">Occupancy rates will show after bookings are synced</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="position-relative">
+            {% if has_bookings %}
+            <a href="{% url 'booking_vision_APP:booking_list' %}?status=confirmed" class="text-decoration-none">
+                <div class="metric-card metric-card-hover" data-tour="bookings">
+                    <div class="metric-label">Active Bookings</div>
+                    <div class="metric-value">{{ active_bookings|default:0 }}</div>
+                    <div class="d-flex justify-content-between mt-3">
+                        <small>Check-ins today: <strong>{{ todays_checkins|default:0 }}</strong></small>
+                        <small>Check-outs today: <strong>{{ todays_checkouts|default:0 }}</strong></small>
+                    </div>
+                    <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </a>
+            {% else %}
+            <div class="metric-card" data-tour="bookings">
+                <div class="metric-label">Active Bookings</div>
+                <div class="metric-value">0</div>
+                <div class="d-flex justify-content-between mt-3">
+                    <small>Check-ins today: <strong>0</strong></small>
+                    <small>Check-outs today: <strong>0</strong></small>
+                </div>
+                {% if empty_state %}
+                <div class="empty-state-overlay">
+                    <div class="text-center">
+                        <i class="fas fa-calendar-check text-muted mb-2" style="font-size: 1.5rem;"></i>
+                        <p class="text-muted small mb-0">Active bookings will appear here</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="position-relative">
+            {% if has_bookings %}
+            <a href="{% url 'booking_vision_APP:messages_list' %}" class="text-decoration-none">
+                <div class="metric-card metric-card-hover" data-tour="response">
+                    <div class="metric-label">Response Time</div>
+                    <div class="metric-value">< 1hr</div>
+                    <div class="metric-change positive">
+                        <i class="fas fa-check"></i> Excellent response rate
+                    </div>
+                    <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </a>
+            {% else %}
+            <div class="metric-card" data-tour="response">
+                <div class="metric-label">Response Time</div>
+                <div class="metric-value">--</div>
+                <div class="metric-change text-muted">
+                    <i class="fas fa-info-circle"></i> No messages yet
+                </div>
+                {% if empty_state %}
+                <div class="empty-state-overlay">
+                    <div class="text-center">
+                        <i class="fas fa-envelope text-muted mb-2" style="font-size: 1.5rem;"></i>
+                        <p class="text-muted small mb-0">Message analytics will appear here</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- AI Insights & Quick Actions - Data responsive -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card position-relative">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-brain me-2"></i>AI Insights & Recommendations
                     </h5>
+                    {% if ai_insights %}
                     <span class="badge bg-primary">{{ ai_insights|length }} new</span>
+                    {% else %}
+                    <span class="badge bg-secondary">No insights yet</span>
+                    {% endif %}
                 </div>
                 <div class="card-body">
-                    {% for insight in ai_insights %}
-                    <div class="insight-card">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="mb-1">
-                                    <i class="fas fa-{{ insight.type|yesno:'dollar-sign,tools,lightbulb' }} me-2 text-primary"></i>
-                                    {{ insight.property.name }}
-                                </h6>
-                                <p class="mb-2">{{ insight.message }}</p>
-                                <button class="btn btn-sm btn-primary">Take Action</button>
+                    {% if ai_insights and has_bookings %}
+                        {% for insight in ai_insights %}
+                        <div class="insight-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <i class="fas fa-{{ insight.type|yesno:'dollar-sign,tools,lightbulb' }} me-2 text-primary"></i>
+                                        {{ insight.property.name }}
+                                    </h6>
+                                    <p class="mb-2">{{ insight.message }}</p>
+                                    <button class="btn btn-sm btn-primary">Take Action</button>
+                                </div>
+                                <span class="badge bg-{{ insight.priority|yesno:'danger,warning,info' }}">
+                                    {{ insight.priority|title }}
+                                </span>
                             </div>
-                            <span class="badge bg-{{ insight.priority|yesno:'danger,warning,info' }}">
-                                {{ insight.priority|title }}
-                            </span>
                         </div>
-                    </div>
-                    {% empty %}
-                    <p class="text-muted text-center py-3">No new insights at the moment.</p>
-                    {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-robot text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <h6 class="text-muted">AI Insights Coming Soon</h6>
+                            <p class="text-muted small mb-0">
+                                {% if not has_bookings %}
+                                    AI recommendations will appear once you have booking data and activity.
+                                {% else %}
+                                    Your AI insights will appear here as we analyze your data.
+                                {% endif %}
+                            </p>
+                            {% if empty_state == 'no_channels' %}
+                            <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-sm btn-primary mt-2">
+                                Get Started - Connect Channels
+                            </a>
+                            {% elif empty_state == 'no_properties' %}
+                            <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-sm btn-success mt-2">
+                                Add Your First Property
+                            </a>
+                            {% elif empty_state == 'no_bookings' %}
+                            <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-sm btn-info mt-2">
+                                Sync Your Bookings
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -354,36 +658,62 @@
         </div>
     </div>
 
-    <!-- Performance Charts -->
+    <!-- Performance Charts - Data responsive -->
     <div class="row mb-4">
         <div class="col-lg-6">
-            <div class="card">
+            <div class="card position-relative">
                 <div class="card-header">
                     <h5 class="mb-0">Revenue Trends</h5>
                 </div>
                 <div class="card-body">
+                    {% if has_revenue_data %}
                     <div class="chart-container">
                         <canvas id="revenueChart"></canvas>
                     </div>
+                    {% else %}
+                    <div class="chart-container d-flex align-items-center justify-content-center">
+                        <div class="text-center">
+                            <i class="fas fa-chart-line text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <h6 class="text-muted">Revenue Chart</h6>
+                            <p class="text-muted small">Charts will appear once you have revenue data</p>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
         
         <div class="col-lg-6">
-            <div class="card">
+            <div class="card position-relative">
                 <div class="card-header">
                     <h5 class="mb-0">Booking Sources</h5>
                 </div>
                 <div class="card-body">
+                    {% if has_connected_channels and has_bookings %}
                     <div class="chart-container">
                         <canvas id="sourcesChart"></canvas>
                     </div>
+                    {% else %}
+                    <div class="chart-container d-flex align-items-center justify-content-center">
+                        <div class="text-center">
+                            <i class="fas fa-chart-pie text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <h6 class="text-muted">Booking Sources</h6>
+                            <p class="text-muted small">
+                                {% if not has_connected_channels %}
+                                    Connect channels to see booking source distribution
+                                {% else %}
+                                    Source distribution will appear after you have bookings
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Channels card -->
+    <!-- Channels card - Data responsive -->
     <div class="row mb-4">
         <div class="col-lg-12">
             <div class="card">
@@ -392,45 +722,57 @@
                         <i class="fas fa-link me-2"></i>Connected Channels
                     </h5>
                     <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-sm btn-outline-primary">
-                        Manage Channels
+                        {% if has_connected_channels %}Manage Channels{% else %}Connect Channels{% endif %}
                     </a>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        {% for connection in connected_channels %}
-                        <div class="col-md-2 mb-3">
-                            <div class="channel-card p-3 border rounded text-center">
-                                <img src="{% static 'images/channel_logos/'|add:connection.channel.name|lower|add:'_logo.png' %}" 
-                                    alt="{{ connection.channel.name }}" 
-                                    class="channel-logo mb-2"
-                                    onerror="this.style.display='none'">
-                                <h6>{{ connection.channel.name }}</h6>
-                                <span class="badge bg-success">Connected</span>
+                        {% if has_connected_channels %}
+                            {% for connection in connected_channels %}
+                            <div class="col-md-2 mb-3">
+                                <div class="channel-card p-3 border rounded text-center">
+                                    <img src="{% static 'images/channel_logos/'|add:connection.channel.name|lower|add:'_logo.png' %}" 
+                                        alt="{{ connection.channel.name }}" 
+                                        class="channel-logo mb-2"
+                                        onerror="this.style.display='none'">
+                                    <h6>{{ connection.channel.name }}</h6>
+                                    <span class="badge bg-success">Connected</span>
+                                    {% if connection.last_sync %}
+                                    <small class="text-muted d-block mt-1">
+                                        Last sync: {{ connection.last_sync|timesince }} ago
+                                    </small>
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
-                        {% empty %}
-                        <div class="col-12 text-center">
-                            <p class="text-muted">No channels connected yet</p>
+                            {% endfor %}
+                        {% else %}
+                        <div class="col-12 text-center py-4">
+                            <i class="fas fa-link text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <h6 class="text-muted">No Channels Connected</h6>
+                            <p class="text-muted mb-3">Connect your booking channels to start managing all your reservations in one place.</p>
                             <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary">
                                 <i class="fas fa-plus me-2"></i>Connect Your First Channel
                             </a>
                         </div>
-                        {% endfor %}
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Activity & Upcoming Tasks -->
+    <!-- Recent Activity & Upcoming Tasks - Data responsive -->
     <div class="row">
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Recent Activity</h5>
+                    {% if recent_activities %}
                     <a href="{% url 'booking_vision_APP:activity' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    {% endif %}
                 </div>
                 <div class="card-body p-0">
+                    {% if recent_activities %}
                     <div class="activity-feed">
                         {% for activity in recent_activities %}
                         <div class="activity-item">
@@ -445,6 +787,13 @@
                         </div>
                         {% endfor %}
                     </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-history text-muted mb-3" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                        <h6 class="text-muted">No Activity Yet</h6>
+                        <p class="text-muted small mb-0">Your recent activity will appear here as you use the platform.</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -455,24 +804,36 @@
                     <h5 class="mb-0">Upcoming Tasks</h5>
                 </div>
                 <div class="card-body">
-                    {% for task in upcoming_tasks %}
-                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-                        <div class="form-check me-3">
-                            <input class="form-check-input" type="checkbox" id="task{{ forloop.counter }}">
+                    {% if upcoming_tasks %}
+                        {% for task in upcoming_tasks %}
+                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="checkbox" id="task{{ forloop.counter }}">
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="task{{ forloop.counter }}" class="form-check-label">
+                                    <h6 class="mb-0">{{ task.title }}</h6>
+                                    <small class="text-muted">{{ task.property }} - {{ task.due_date }}</small>
+                                </label>
+                            </div>
+                            <span class="badge bg-{{ task.priority|yesno:'danger,warning,info' }}">
+                                {{ task.priority|title }}
+                            </span>
                         </div>
-                        <div class="flex-grow-1">
-                            <label for="task{{ forloop.counter }}" class="form-check-label">
-                                <h6 class="mb-0">{{ task.title }}</h6>
-                                <small class="text-muted">{{ task.property }} - {{ task.due_date }}</small>
-                            </label>
-                        </div>
-                        <span class="badge bg-{{ task.priority|yesno:'danger,warning,info' }}">
-                            {{ task.priority|title }}
-                        </span>
+                        {% endfor %}
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-tasks text-muted mb-3" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                        <h6 class="text-muted">No Pending Tasks</h6>
+                        <p class="text-muted small mb-0">
+                            {% if not has_properties %}
+                                Tasks will appear here once you add properties and bookings.
+                            {% else %}
+                                Great! You're all caught up.
+                            {% endif %}
+                        </p>
                     </div>
-                    {% empty %}
-                    <p class="text-muted text-center">No pending tasks!</p>
-                    {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -485,17 +846,30 @@
                 <div class="row align-items-center">
                     <div class="col-lg-8">
                         <h5 class="mb-2">
-                            <i class="fas fa-info-circle me-2"></i>Need Help Getting Started?
+                            <i class="fas fa-info-circle me-2"></i>
+                            {% if empty_state %}
+                                Need Help Getting Started?
+                            {% else %}
+                                Need Help or Have Questions?
+                            {% endif %}
                         </h5>
-                        <p class="mb-0">Check out our documentation and video tutorials to make the most of Booking Vision.</p>
+                        <p class="mb-0">
+                            {% if empty_state %}
+                                Check out our documentation and video tutorials to make the most of Booking Vision.
+                            {% else %}
+                                Explore advanced features and get tips to optimize your rental business.
+                            {% endif %}
+                        </p>
                     </div>
                     <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
                         <a href="{% url 'booking_vision_APP:documentation' %}" class="btn btn-warning me-2">
                             <i class="fas fa-book me-2"></i>Documentation
                         </a>
+                        {% if not empty_state %}
                         <button class="btn btn-outline-warning" onclick="startTour()">
                             <i class="fas fa-play me-2"></i>Video Tour
                         </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -513,6 +887,25 @@
             </div>
             <div class="modal-body">
                 <div class="d-grid gap-2">
+                    {% if empty_state == 'no_channels' %}
+                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary">
+                        <i class="fas fa-link me-2"></i>Connect Your First Channel
+                    </a>
+                    {% elif empty_state == 'no_properties' %}
+                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-success">
+                        <i class="fas fa-home me-2"></i>Add Your First Property
+                    </a>
+                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-cog me-2"></i>Manage Channels
+                    </a>
+                    {% elif empty_state == 'no_bookings' %}
+                    <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-info">
+                        <i class="fas fa-sync me-2"></i>Sync Existing Bookings
+                    </a>
+                    <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-calendar-plus me-2"></i>Create Manual Booking
+                    </a>
+                    {% else %}
                     <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-outline-primary">
                         <i class="fas fa-home me-2"></i>Add New Property
                     </a>
@@ -528,6 +921,7 @@
                     <button class="btn btn-outline-primary" onclick="syncAllChannels()">
                         <i class="fas fa-sync me-2"></i>Sync All Channels
                     </button>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -535,7 +929,7 @@
 </div>
 
 <script>
-// Initialize charts with proper cleanup
+// Initialize charts with proper cleanup and data-responsive behavior
 document.addEventListener('DOMContentLoaded', function() {
     // Store chart instances globally to prevent memory leaks
     window.dashboardCharts = window.dashboardCharts || {};
@@ -548,6 +942,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Only initialize charts if we have data
+    {% if has_revenue_data %}
     // Revenue Sparkline with fixed dimensions
     const sparklineCtx = document.getElementById('revenueSparkline');
     if (sparklineCtx) {
@@ -633,10 +1029,47 @@ document.addEventListener('DOMContentLoaded', function() {
             }).catch(error => {
                 console.error('Error loading revenue data:', error);
             });
+        } else {
+            // Fallback chart with sample data
+            window.dashboardCharts.revenue = new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [1200, 1900, 3000, 5000, 2000, 3000],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
     }
+    {% endif %}
     
-    // Booking Sources Chart with fixed dimensions
+    {% if has_connected_channels and has_bookings %}
+    // Booking Sources Chart with fixed dimensions - only if we have channels and bookings
     const sourcesCtx = document.getElementById('sourcesChart');
     if (sourcesCtx) {
         const chartContainer = sourcesCtx.parentElement;
@@ -671,6 +1104,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    {% endif %}
     
     // Prevent chart reinitialization on window resize
     let resizeTimer;
@@ -683,8 +1117,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Update the tour function to prevent issues
+// Update the tour function to prevent issues - only show if we have data
 function startTour() {
+    {% if not empty_state %}
     // Tour implementation
     if (typeof Shepherd !== 'undefined') {
         const tour = new Shepherd.Tour({
@@ -708,6 +1143,9 @@ function startTour() {
     } else {
         console.log('Shepherd.js not loaded. Please include the library for tours.');
     }
+    {% else %}
+    alert('Complete your setup first, then take the tour to explore all features!');
+    {% endif %}
 }
 
 // Prevent multiple sync calls
@@ -715,6 +1153,7 @@ let syncInProgress = false;
 function syncAllChannels() {
     if (syncInProgress) return;
     
+    {% if has_connected_channels %}
     syncInProgress = true;
     BookingVision.showNotification('Syncing all channels...', 'info');
     
@@ -735,6 +1174,9 @@ function syncAllChannels() {
     .finally(() => {
         syncInProgress = false;
     });
+    {% else %}
+    alert('Please connect channels first before syncing.');
+    {% endif %}
 }
 </script>
 {% endblock %}

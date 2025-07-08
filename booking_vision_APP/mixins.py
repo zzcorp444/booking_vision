@@ -3,51 +3,209 @@ Data-responsive mixins for Booking Vision application.
 This file contains mixins to add data availability context to views.
 """
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, Sum, Q
+from django.utils import timezone
+from datetime import datetime, timedelta
 
 
 class DataResponsiveMixin:
-    """Mixin to add data availability context to views"""
+    """Enhanced mixin to add comprehensive data availability context to views"""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # Import models to avoid circular imports
+        from .models.channels import ChannelConnection
+        from .models.properties import Property
+        from .models.bookings import Booking
+        from .models.ai_models import PricingRule, MaintenanceTask
 
         # Check if user has any connected channels
-        context['has_connected_channels'] = self.request.user.channelconnection_set.filter(
+        connected_channels = ChannelConnection.objects.filter(
+            user=user,
             is_connected=True
-        ).exists()
+        )
+        context['has_connected_channels'] = connected_channels.exists()
+        context['connected_channels_count'] = connected_channels.count()
 
         # Check if user has any properties
-        context['has_properties'] = self.request.user.property_set.filter(
+        active_properties = Property.objects.filter(
+            owner=user,
             is_active=True
-        ).exists()
+        )
+        context['has_properties'] = active_properties.exists()
+        context['properties_count'] = active_properties.count()
 
         # Check if user has any bookings
-        context['has_bookings'] = self.request.user.property_set.filter(
-            booking__isnull=False
-        ).exists()
+        user_bookings = Booking.objects.filter(
+            rental_property__owner=user
+        )
+        context['has_bookings'] = user_bookings.exists()
+        context['bookings_count'] = user_bookings.count()
 
-        # Calculate sync status
-        context['sync_status'] = {
-            'channels_connected': self.request.user.channelconnection_set.filter(
-                is_connected=True
-            ).count(),
-            'properties_added': self.request.user.property_set.filter(
+        # Recent bookings check (last 30 days)
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        recent_bookings = user_bookings.filter(created_at__gte=thirty_days_ago)
+        context['has_recent_bookings'] = recent_bookings.exists()
+        context['recent_bookings_count'] = recent_bookings.count()
+
+        # AI features status
+        context['ai_features'] = {
+            'pricing_rules': PricingRule.objects.filter(
+                rental_property__owner=user,
                 is_active=True
             ).count(),
-            'total_bookings': sum(
-                prop.booking_set.count()
-                for prop in self.request.user.property_set.all()
+            'maintenance_tasks': MaintenanceTask.objects.filter(
+                rental_property__owner=user
+            ).count(),
+            'ai_enabled_properties': active_properties.filter(
+                Q(ai_pricing_enabled=True) |
+                Q(ai_maintenance_enabled=True) |
+                Q(ai_guest_enabled=True) |
+                Q(ai_analytics_enabled=True)
+            ).count()
+        }
+
+        # Revenue data availability
+        revenue_bookings = user_bookings.filter(
+            status__in=['confirmed', 'checked_out'],
+            total_price__gt=0
+        )
+        context['has_revenue_data'] = revenue_bookings.exists()
+        context['total_revenue'] = revenue_bookings.aggregate(
+            total=Sum('total_price')
+        )['total'] or 0
+
+        # Calculate comprehensive sync status
+        context['sync_status'] = {
+            'channels_connected': connected_channels.count(),
+            'properties_added': active_properties.count(),
+            'total_bookings': user_bookings.count(),
+            'recent_sync': connected_channels.filter(
+                last_sync__gte=thirty_days_ago
+            ).count(),
+            'setup_progress': self._calculate_setup_progress(
+                connected_channels.exists(),
+                active_properties.exists(),
+                user_bookings.exists()
             )
         }
 
-        # Determine empty state
-        if not context['has_connected_channels']:
-            context['empty_state'] = 'no_channels'
-        elif not context['has_properties']:
-            context['empty_state'] = 'no_properties'
-        elif not context['has_bookings']:
-            context['empty_state'] = 'no_bookings'
-        else:
-            context['empty_state'] = None
+        # Determine the current empty state
+        context['empty_state'] = self._determine_empty_state(
+            connected_channels.exists(),
+            active_properties.exists(),
+            user_bookings.exists()
+        )
+
+        # Setup guidance
+        context['setup_guidance'] = self._get_setup_guidance(context['empty_state'])
+
+        # Data insights
+        context['data_insights'] = self._get_data_insights(
+            user, active_properties, user_bookings, connected_channels
+        )
 
         return context
+
+    def _calculate_setup_progress(self, has_channels, has_properties, has_bookings):
+        """Calculate setup completion percentage"""
+        progress = 0
+        if has_channels:
+            progress += 33
+        if has_properties:
+            progress += 33
+        if has_bookings:
+            progress += 34
+        return progress
+
+    def _determine_empty_state(self, has_channels, has_properties, has_bookings):
+        """Determine which empty state to show"""
+        if not has_channels:
+            return 'no_channels'
+        elif not has_properties:
+            return 'no_properties'
+        elif not has_bookings:
+            return 'no_bookings'
+        else:
+            return None
+
+    def _get_setup_guidance(self, empty_state):
+        """Get contextual setup guidance based on current state"""
+        guidance = {
+            'no_channels': {
+                'title': 'Connect Your First Channel',
+                'description': 'Start by connecting your booking channels (Airbnb, Booking.com, etc.) to begin importing your reservations automatically.',
+                'action_text': 'Connect Channels',
+                'action_url': 'booking_vision_APP:channel_management',
+                'icon': 'fas fa-link',
+                'color': 'primary'
+            },
+            'no_properties': {
+                'title': 'Add Your First Property',
+                'description': 'You\'ve connected channels! Now add your properties to start managing bookings.',
+                'action_text': 'Add Property',
+                'action_url': 'booking_vision_APP:property_create',
+                'icon': 'fas fa-home',
+                'color': 'success'
+            },
+            'no_bookings': {
+                'title': 'Sync Your Bookings',
+                'description': 'Your channels are connected and properties are set up. Sync your existing bookings or wait for new ones to arrive.',
+                'action_text': 'Sync Now',
+                'action_url': 'booking_vision_APP:sync_bookings',
+                'icon': 'fas fa-sync',
+                'color': 'info'
+            }
+        }
+        return guidance.get(empty_state, {})
+
+    def _get_data_insights(self, user, properties, bookings, channels):
+        """Generate data insights and recommendations"""
+        insights = []
+
+        if properties.exists() and not bookings.exists():
+            insights.append({
+                'type': 'info',
+                'icon': 'fas fa-lightbulb',
+                'title': 'Setup Complete!',
+                'message': 'Your properties are ready. Bookings will appear automatically as they come in.',
+                'action': None
+            })
+
+        if bookings.exists():
+            confirmed_bookings = bookings.filter(status='confirmed').count()
+            if confirmed_bookings > 0:
+                insights.append({
+                    'type': 'success',
+                    'icon': 'fas fa-chart-line',
+                    'title': f'{confirmed_bookings} Confirmed Booking{"s" if confirmed_bookings != 1 else ""}',
+                    'message': 'Your business is active! Check analytics for insights.',
+                    'action': {
+                        'text': 'View Analytics',
+                        'url': 'booking_vision_APP:analytics'
+                    }
+                })
+
+        # AI recommendations
+        ai_enabled_properties = properties.filter(
+            Q(ai_pricing_enabled=True) |
+            Q(ai_maintenance_enabled=True) |
+            Q(ai_guest_enabled=True) |
+            Q(ai_analytics_enabled=True)
+        ).count()
+
+        if properties.count() > 0 and ai_enabled_properties == 0:
+            insights.append({
+                'type': 'warning',
+                'icon': 'fas fa-robot',
+                'title': 'Enable AI Features',
+                'message': 'Boost your revenue with AI-powered pricing and maintenance predictions.',
+                'action': {
+                    'text': 'Explore AI Features',
+                    'url': 'booking_vision_APP:smart_pricing'
+                }
+            })
+
+        return insights

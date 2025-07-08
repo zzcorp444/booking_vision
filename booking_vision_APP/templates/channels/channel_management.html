@@ -20,82 +20,182 @@
         </div>
     </div>
     
-    <div class="row">
-        {% for channel in channels %}
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card channel-card h-100">
-                <div class="card-header d-flex align-items-center">
-                    <img src="{% static 'images/channel_logos/'|add:channel.name|lower|add:'_logo.png' %}" 
-                        alt="{{ channel.name }}" 
-                        class="channel-logo me-3"
-                        onerror="this.style.display='none'">
-                    <h5 class="mb-0">{{ channel.name }}</h5>
-                </div>
-                <div class="card-body">
-                    {% with connection=connected_channels|get_item:channel.id %}
-                    {% if connection %}
-                        <div class="text-center mb-3">
-                            <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
-                            <p class="text-success fw-bold">Connected</p>
-                            
-                            <!-- Connection Status -->
-                            <div class="mb-3">
-                                <small class="text-muted d-block">Sync Method:</small>
-                                <span class="badge bg-info">
-                                    {% if connection.preferred_sync_method == 'ical' %}
-                                        <i class="fas fa-calendar-alt me-1"></i>iCal Feed
-                                    {% elif connection.preferred_sync_method == 'email' %}
-                                        <i class="fas fa-envelope me-1"></i>Email Parsing
-                                    {% elif connection.preferred_sync_method == 'scraping' %}
-                                        <i class="fas fa-robot me-1"></i>Web Scraping
-                                    {% elif connection.preferred_sync_method == 'extension' %}
-                                        <i class="fas fa-puzzle-piece me-1"></i>Browser Extension
-                                    {% elif connection.preferred_sync_method == 'mobile_api' %}
-                                        <i class="fas fa-mobile-alt me-1"></i>Mobile API
-                                    {% else %}
-                                        Not configured
-                                    {% endif %}
-                                </span>
+    {% if channels %}
+        <div class="row">
+            {% for channel in channels %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card channel-card h-100">
+                    <div class="card-header d-flex align-items-center">
+                        <img src="{% static 'images/channel_logos/'|add:channel.name|lower|add:'_logo.png' %}" 
+                            alt="{{ channel.name }}" 
+                            class="channel-logo me-3"
+                            onerror="this.style.display='none'">
+                        <h5 class="mb-0">{{ channel.name }}</h5>
+                    </div>
+                    <div class="card-body">
+                        {% with connection=connected_channels|get_item:channel.id %}
+                        {% if connection %}
+                            <div class="text-center mb-3">
+                                <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                                <p class="text-success fw-bold">Connected</p>
                                 
-                                {% if connection.last_sync %}
-                                <small class="text-muted d-block mt-2">
-                                    Last sync: {{ connection.last_sync|timesince }} ago
-                                </small>
-                                {% endif %}
+                                <!-- Connection Status -->
+                                <div class="mb-3">
+                                    <small class="text-muted d-block">Sync Method:</small>
+                                    <span class="badge bg-info">
+                                        {% if connection.preferred_sync_method == 'ical' %}
+                                            <i class="fas fa-calendar-alt me-1"></i>iCal Feed
+                                        {% elif connection.preferred_sync_method == 'email' %}
+                                            <i class="fas fa-envelope me-1"></i>Email Parsing
+                                        {% elif connection.preferred_sync_method == 'scraping' %}
+                                            <i class="fas fa-robot me-1"></i>Web Scraping
+                                        {% elif connection.preferred_sync_method == 'extension' %}
+                                            <i class="fas fa-puzzle-piece me-1"></i>Browser Extension
+                                        {% elif connection.preferred_sync_method == 'mobile_api' %}
+                                            <i class="fas fa-mobile-alt me-1"></i>Mobile API
+                                        {% else %}
+                                            <i class="fas fa-question me-1"></i>Not configured
+                                        {% endif %}
+                                    </span>
+                                    
+                                    {% if connection.last_sync %}
+                                    <small class="text-muted d-block mt-2">
+                                        Last sync: {{ connection.last_sync|timesince }} ago
+                                    </small>
+                                    {% else %}
+                                    <small class="text-muted d-block mt-2">
+                                        Never synced - click "Sync Now" to test
+                                    </small>
+                                    {% endif %}
+
+                                    <!-- Sync Status Indicator -->
+                                    {% if connection.sync_status %}
+                                        <div class="mt-2">
+                                            <span class="badge bg-{{ connection.sync_status|yesno:'success,warning,danger' }}">
+                                                {% if connection.sync_status == 'active' %}
+                                                    <i class="fas fa-check me-1"></i>Active
+                                                {% elif connection.sync_status == 'pending' %}
+                                                    <i class="fas fa-clock me-1"></i>Pending
+                                                {% else %}
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>Issue
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-sm btn-outline-primary" onclick="syncChannel({{ channel.id }})">
-                                <i class="fas fa-sync me-2"></i>Sync Now
-                            </button>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="configureChannel({{ channel.id }}, '{{ channel.name }}')">
-                                <i class="fas fa-cog me-2"></i>Reconfigure
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="disconnectChannel({{ channel.id }})">
-                                <i class="fas fa-unlink me-2"></i>Disconnect
-                            </button>
-                        </div>
-                    {% else %}
-                        <div class="text-center mb-3">
-                            <i class="fas fa-plug text-muted fa-3x mb-3"></i>
-                            <p class="text-muted">Not Connected</p>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button class="btn btn-primary" onclick="connectChannel({{ channel.id }}, '{{ channel.name }}')">
-                                <i class="fas fa-link me-2"></i>Connect {{ channel.name }}
-                            </button>
-                        </div>
-                    {% endif %}
-                    {% endwith %}
+                            
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="syncChannel({{ channel.id }})">
+                                    <i class="fas fa-sync me-2"></i>Sync Now
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="configureChannel({{ channel.id }}, '{{ channel.name }}')">
+                                    <i class="fas fa-cog me-2"></i>Reconfigure
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="disconnectChannel({{ channel.id }})">
+                                    <i class="fas fa-unlink me-2"></i>Disconnect
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="text-center mb-3">
+                                <i class="fas fa-plug text-muted fa-3x mb-3"></i>
+                                <p class="text-muted">Not Connected</p>
+                                <small class="text-muted">Connect to start syncing bookings automatically</small>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button class="btn btn-primary" onclick="connectChannel({{ channel.id }}, '{{ channel.name }}')">
+                                    <i class="fas fa-link me-2"></i>Connect {{ channel.name }}
+                                </button>
+                            </div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State - No Channels Available -->
+        <div class="no-data-message text-center py-5">
+            <i class="fas fa-link text-muted mb-3" style="font-size: 4rem;"></i>
+            <h4>No Channels Available</h4>
+            <p class="text-muted mb-4">
+                We're working on adding support for more booking channels. 
+                Check back soon for updates!
+            </p>
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Coming Soon</h6>
+                        <ul class="mb-0 text-start">
+                            <li>Airbnb</li>
+                            <li>Booking.com</li>
+                            <li>VRBO/Expedia</li>
+                            <li>Agoda</li>
+                            <li>And many more...</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
-        {% endfor %}
+    {% endif %}
+
+    <!-- Connection Statistics -->
+    {% if connected_channels %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Connection Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <i class="fas fa-link text-primary mb-2"></i>
+                                <h4 class="mb-0">{{ connected_channels|length }}</h4>
+                                <small class="text-muted">Connected Channels</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <i class="fas fa-sync text-success mb-2"></i>
+                                <h4 class="mb-0">{{ active_syncs|default:0 }}</h4>
+                                <small class="text-muted">Active Syncs</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <i class="fas fa-calendar text-info mb-2"></i>
+                                <h4 class="mb-0">{{ total_bookings_synced|default:0 }}</h4>
+                                <small class="text-muted">Bookings Synced</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <i class="fas fa-clock text-warning mb-2"></i>
+                                <h4 class="mb-0">
+                                    {% if last_sync_time %}
+                                        {{ last_sync_time|timesince }} ago
+                                    {% else %}
+                                        Never
+                                    {% endif %}
+                                </h4>
+                                <small class="text-muted">Last Sync</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    {% endif %}
     
     <!-- Setup Instructions -->
+    {% if channels %}
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
@@ -147,6 +247,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- Enhanced Connection Modal -->
@@ -267,7 +368,7 @@
                             <h6 class="mb-3"><i class="fas fa-calendar-alt me-2"></i>iCal Feed Configuration</h6>
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle me-2"></i>
-                                Find your iCal URL in your {{ channelName }} calendar sync settings.
+                                Find your iCal URL in your <span id="icalChannelName"></span> calendar sync settings.
                             </div>
                             
                             <div class="mb-3">
@@ -316,7 +417,7 @@
                                         <label class="form-label">Your Parsing Email Address</label>
                                         <div class="input-group">
                                             <input type="text" class="form-control" 
-                                                   value="{{ user.username }}.{{ channel.name|lower }}@sync.bookingvision.com" 
+                                                   value="{{ user.username }}.{{ channel.name|lower|default:'channel' }}@sync.bookingvision.com" 
                                                    readonly id="parsingEmail">
                                             <button class="btn btn-outline-secondary" type="button" 
                                                     onclick="copyToClipboard('parsingEmail')">
@@ -324,7 +425,7 @@
                                             </button>
                                         </div>
                                         <small class="text-muted">
-                                            Set up auto-forward in your email for {{ channel.name }} booking confirmations
+                                            Set up auto-forward in your email for booking confirmations
                                         </small>
                                     </div>
                                 </div>
@@ -389,13 +490,13 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">{{ channelName }} Login Email</label>
+                                <label class="form-label"><span id="scrapingChannelName"></span> Login Email</label>
                                 <input type="email" class="form-control" id="scrapingEmail" 
                                        placeholder="your-email@example.com">
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">{{ channelName }} Password</label>
+                                <label class="form-label"><span id="scrapingChannelName2"></span> Password</label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="scrapingPassword">
                                     <button class="btn btn-outline-secondary" type="button" 
@@ -438,7 +539,7 @@
                                     <h6>2. Extension Token</h6>
                                     <div class="input-group mb-3">
                                         <input type="text" class="form-control" 
-                                               value="{{ extension_token }}" readonly id="extensionToken">
+                                               value="{{ extension_token|default:'ext-token-123-abc' }}" readonly id="extensionToken">
                                         <button class="btn btn-outline-secondary" type="button" 
                                                 onclick="copyToClipboard('extensionToken')">
                                             <i class="fas fa-copy"></i>
@@ -450,7 +551,7 @@
                                     <h6>3. How it Works</h6>
                                     <ol class="small">
                                         <li>The extension runs in your browser</li>
-                                        <li>When you visit {{ channelName }}, it captures booking data</li>
+                                        <li>When you visit <span id="extensionChannelName"></span>, it captures booking data</li>
                                         <li>Data syncs automatically to your dashboard</li>
                                         <li>No passwords needed!</li>
                                     </ol>
@@ -559,6 +660,22 @@
     padding: 1.5rem;
     background: #f8f9fa;
     border-radius: 10px;
+}
+
+.no-data-message {
+    background: #f8f9fa;
+    border: 1px dashed #dee2e6;
+    border-radius: 0.5rem;
+    padding: 3rem 2rem;
+    color: #6c757d;
+}
+
+.stat-item {
+    padding: 1rem;
+}
+
+.stat-item i {
+    font-size: 2rem;
 }
 </style>
 
@@ -692,7 +809,11 @@ function copyToClipboard(elementId) {
 function connectChannel(channelId, channelName) {
     document.getElementById('channelId').value = channelId;
     document.getElementById('channelName').textContent = channelName;
-    document.querySelectorAll('#channelName').forEach(el => el.textContent = channelName);
+    
+    // Update all channel name references in the modal
+    document.querySelectorAll('#icalChannelName, #scrapingChannelName, #scrapingChannelName2, #extensionChannelName').forEach(el => {
+        el.textContent = channelName;
+    });
     
     currentStep = 1;
     selectedMethod = null;
@@ -712,6 +833,10 @@ function configureChannel(channelId, channelName) {
                 selectedMethod = data.config.preferred_sync_method;
                 // Pre-fill form fields based on saved config
             }
+        })
+        .catch(error => {
+            console.error('Error loading configuration:', error);
+            connectChannel(channelId, channelName);
         });
 }
 

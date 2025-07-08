@@ -1,0 +1,28 @@
+<!-- 
+Data insights component for showing contextual information and recommendations
+-->
+{% if data_insights %}
+<div class="data-insights-container mb-4">
+    {% for insight in data_insights %}
+    <div class="alert alert-{{ insight.type }} alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-start">
+            <div class="insight-icon me-3">
+                <i class="{{ insight.icon }}"></i>
+            </div>
+            <div class="insight-content flex-grow-1">
+                <h6 class="alert-heading mb-1">{{ insight.title }}</h6>
+                <p class="mb-0">{{ insight.message }}</p>
+                {% if insight.action %}
+                <div class="mt-2">
+                    <a href="{% url insight.action.url %}" class="btn btn-sm btn-outline-{{ insight.type }}">
+                        {{ insight.action.text }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
