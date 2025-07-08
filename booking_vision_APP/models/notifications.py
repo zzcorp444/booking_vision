@@ -2,7 +2,7 @@
 Notification models for automated actions and alerts.
 """
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 
 
 class NotificationRule(models.Model):
@@ -25,7 +25,7 @@ class NotificationRule(models.Model):
         ('push', 'Push Notification'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notification_rules')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notification_rules')  # Fixed
     name = models.CharField(max_length=200)
     trigger = models.CharField(max_length=50, choices=TRIGGER_CHOICES)
     channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES)

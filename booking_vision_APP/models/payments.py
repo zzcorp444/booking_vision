@@ -2,7 +2,7 @@
 Payment models for financial tracking.
 """
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from decimal import Decimal
 
 
@@ -67,7 +67,7 @@ class Payout(models.Model):
         ('failed', 'Failed'),
     ]
 
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payouts')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='payouts')  # Fixed
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
 

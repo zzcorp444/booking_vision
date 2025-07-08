@@ -3,7 +3,10 @@ Channel models for the booking vision application.
 This file defines all channel integration models.
 """
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+from django.conf import settings
+
+User = get_user_model()
 
 class Channel(models.Model):
     """Model representing a booking channel (OTA)"""
@@ -24,7 +27,7 @@ class Channel(models.Model):
 
 class ChannelConnection(models.Model):
     """Model for user-specific channel connections"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Fixed
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 
     # Authentication details

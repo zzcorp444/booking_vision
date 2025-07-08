@@ -2,7 +2,7 @@
 Activity tracking models
 """
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.utils import timezone
 
 
@@ -24,7 +24,7 @@ class Activity(models.Model):
         ('ai_recommendation', 'AI Recommendation'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='activities')  # Fixed
     activity_type = models.CharField(max_length=50, choices=ACTIVITY_TYPES)
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -65,7 +65,7 @@ class Activity(models.Model):
 
 class ActivityPreference(models.Model):
     """User preferences for activity notifications"""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='activity_preferences')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='activity_preferences')  # Fixed
 
     # Notification preferences
     show_popup = models.BooleanField(default=True)

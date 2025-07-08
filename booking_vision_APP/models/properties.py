@@ -3,7 +3,7 @@ Property models for the booking vision application.
 This file defines all property-related database models.
 """
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Property(models.Model):
@@ -16,7 +16,7 @@ class Property(models.Model):
         ('studio', 'Studio'),
     ]
 
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='properties')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='properties')  # Fixed
     name = models.CharField(max_length=200)
     description = models.TextField()
     property_type = models.CharField(max_length=20, choices=PROPERTY_TYPES)
