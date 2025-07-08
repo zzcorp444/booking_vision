@@ -1,205 +1,263 @@
-<!-- 
-Reusable empty state component for Booking Vision application.
-Usage: {% include 'components/empty_state.html' with state='no_channels' %}
--->
+<!-- Enhanced Empty State Component -->
 {% load static %}
 
-{% if empty_state or state %}
 <div class="empty-state-container">
-    {% if empty_state == 'no_channels' or state == 'no_channels' %}
-        <div class="empty-state text-center py-5">
-            <div class="empty-state-animation mb-4">
-                <div class="empty-state-icon-wrapper">
-                    <i class="fas fa-link text-primary" style="font-size: 4rem; opacity: 0.3;"></i>
-                    <div class="pulse-animation"></div>
-                </div>
+    {% if empty_state == 'no_channels' %}
+        <div class="empty-state-card channels-empty">
+            <div class="empty-state-icon">
+                <i class="fas fa-link"></i>
             </div>
-            <h3 class="mb-3 text-primary-blue">Connect Your First Channel</h3>
-            <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">
-                Start by connecting your booking channels (Airbnb, Booking.com, VRBO, etc.) 
-                to begin importing your reservations automatically. We support multiple sync methods 
-                including iCal feeds, email parsing, and web scraping.
+            <h4 class="empty-state-title">Connect Your First Channel</h4>
+            <p class="empty-state-description">
+                Get started by connecting your booking platforms like Airbnb, Booking.com, VRBO, and others. 
+                This will allow you to manage all your reservations from one central dashboard.
             </p>
-            <div class="d-flex justify-content-center gap-3 mb-4">
-                <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-link me-2"></i>Connect Channels
-                </a>
-                <a href="{% url 'booking_vision_APP:documentation' %}" class="btn btn-outline-secondary btn-lg">
-                    <i class="fas fa-question-circle me-2"></i>How It Works
-                </a>
-            </div>
-            
-            <!-- Popular Channels Preview -->
-            <div class="popular-channels mt-4">
-                <p class="text-muted small mb-3">Popular channels we support:</p>
-                <div class="d-flex justify-content-center gap-3">
-                    <div class="channel-preview">
-                        <img src="{% static 'images/airbnb-logo.png' %}" alt="Airbnb" class="channel-logo" style="height: 30px; opacity: 0.6;">
-                    </div>
-                    <div class="channel-preview">
-                        <img src="{% static 'images/booking-logo.png' %}" alt="Booking.com" class="channel-logo" style="height: 30px; opacity: 0.6;">
-                    </div>
-                    <div class="channel-preview">
-                        <img src="{% static 'images/vrbo-logo.png' %}" alt="VRBO" class="channel-logo" style="height: 30px; opacity: 0.6;">
-                    </div>
-                    <div class="channel-preview">
-                        <span class="text-muted">+5 more</span>
-                    </div>
+            <div class="empty-state-features">
+                <div class="feature-item">
+                    <i class="fas fa-check-circle text-success"></i>
+                    <span>Automatic booking synchronization</span>
                 </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle text-success"></i>
+                    <span>Real-time calendar updates</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle text-success"></i>
+                    <span>Centralized guest communication</span>
+                </div>
+            </div>
+            <div class="empty-state-actions">
+                <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Connect Your First Channel
+                </a>
+                <a href="{% url 'booking_vision_APP:documentation' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-book me-2"></i>View Setup Guide
+                </a>
             </div>
         </div>
 
-    {% elif empty_state == 'no_properties' or state == 'no_properties' %}
-        <div class="empty-state text-center py-5">
-            <div class="empty-state-animation mb-4">
-                <div class="empty-state-icon-wrapper">
-                    <i class="fas fa-home text-success" style="font-size: 4rem; opacity: 0.3;"></i>
-                    <div class="pulse-animation success"></div>
+    {% elif empty_state == 'no_properties' %}
+        <div class="empty-state-card properties-empty">
+            <div class="empty-state-icon">
+                <i class="fas fa-home"></i>
+            </div>
+            <h4 class="empty-state-title">Add Your First Property</h4>
+            <p class="empty-state-description">
+                Great! You've connected {{ connected_channels_count }} channel{{ connected_channels_count|pluralize }}. 
+                Now add your rental properties to start managing bookings and accessing powerful analytics.
+            </p>
+            <div class="empty-state-progress">
+                <div class="progress-item completed">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Channels Connected</span>
+                </div>
+                <div class="progress-item current">
+                    <i class="fas fa-circle"></i>
+                    <span>Add Properties</span>
+                </div>
+                <div class="progress-item pending">
+                    <i class="far fa-circle"></i>
+                    <span>Sync Bookings</span>
                 </div>
             </div>
-            <h3 class="mb-3 text-success">Great! Now Add Your Properties</h3>
-            <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">
-                You've successfully connected your channels. Now add your rental properties 
-                to start managing bookings, tracking revenue, and optimizing your operations.
-            </p>
-            <div class="d-flex justify-content-center gap-3 mb-4">
+            <div class="empty-state-actions">
                 <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-success btn-lg">
-                    <i class="fas fa-plus me-2"></i>Add Your First Property
+                    <i class="fas fa-home me-2"></i>Add Your First Property
                 </a>
-                <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-secondary btn-lg">
+                <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-primary">
                     <i class="fas fa-cog me-2"></i>Manage Channels
                 </a>
             </div>
-
-            <!-- Progress Indicator -->
-            <div class="setup-progress mt-4">
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar bg-success" role="progressbar" style="width: 66%"></div>
-                </div>
-                <small class="text-muted mt-2 d-block">Setup Progress: 2 of 3 steps complete</small>
-            </div>
         </div>
 
-    {% elif empty_state == 'no_bookings' or state == 'no_bookings' %}
-        <div class="empty-state text-center py-5">
-            <div class="empty-state-animation mb-4">
-                <div class="empty-state-icon-wrapper">
-                    <i class="fas fa-calendar-check text-info" style="font-size: 4rem; opacity: 0.3;"></i>
-                    <div class="pulse-animation info"></div>
+    {% elif empty_state == 'no_bookings' %}
+        <div class="empty-state-card bookings-empty">
+            <div class="empty-state-icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <h4 class="empty-state-title">Sync Your Bookings</h4>
+            <p class="empty-state-description">
+                Excellent! You have {{ properties_count }} propert{{ properties_count|pluralize:"y,ies" }} 
+                and {{ connected_channels_count }} connected channel{{ connected_channels_count|pluralize }}. 
+                Now sync your existing bookings or wait for new reservations to come in.
+            </p>
+            <div class="empty-state-stats">
+                <div class="stat-item">
+                    <div class="stat-value">{{ connected_channels_count }}</div>
+                    <div class="stat-label">Connected Channels</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ properties_count }}</div>
+                    <div class="stat-label">Properties Added</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Bookings</div>
                 </div>
             </div>
-            <h3 class="mb-3 text-info">Almost Ready! Sync Your Bookings</h3>
-            <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">
-                Your channels are connected and properties are set up. Sync your existing bookings 
-                or wait for new ones to arrive automatically. You can also create manual bookings.
-            </p>
-            <div class="d-flex justify-content-center gap-3 mb-4">
+            <div class="empty-state-actions">
                 <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-info btn-lg">
                     <i class="fas fa-sync me-2"></i>Sync Existing Bookings
                 </a>
-                <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-primary btn-lg">
-                    <i class="fas fa-plus me-2"></i>Add Manual Booking
+                <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-calendar-plus me-2"></i>Create Manual Booking
                 </a>
-            </div>
-
-            <!-- Setup Complete Indicator -->
-            <div class="setup-progress mt-4">
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar bg-info" role="progressbar" style="width: 100%"></div>
-                </div>
-                <small class="text-success mt-2 d-block">
-                    <i class="fas fa-check-circle me-1"></i>
-                    Setup Complete! Waiting for bookings...
-                </small>
             </div>
         </div>
 
-    {% elif empty_state == 'no_data' or state == 'no_data' %}
-        <div class="empty-state text-center py-5">
-            <div class="empty-state-animation mb-4">
-                <div class="empty-state-icon-wrapper">
-                    <i class="fas fa-chart-line text-warning" style="font-size: 4rem; opacity: 0.3;"></i>
-                    <div class="pulse-animation warning"></div>
-                </div>
+    {% else %}
+        <!-- Generic empty state for specific sections -->
+        <div class="empty-state-card generic-empty">
+            <div class="empty-state-icon">
+                <i class="fas fa-{{ icon|default:'info-circle' }}"></i>
             </div>
-            <h3 class="mb-3 text-warning">No Data Available</h3>
-            <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">
-                There's no data to display yet. Once you have bookings and activity, 
-                detailed analytics and insights will appear here.
+            <h5 class="empty-state-title">{{ title|default:'No Data Available' }}</h5>
+            <p class="empty-state-description">
+                {{ description|default:'This section will populate once you have the required data.' }}
             </p>
-            <div class="d-flex justify-content-center gap-3 mb-4">
-                <a href="{% url 'booking_vision_APP:dashboard' %}" class="btn btn-warning btn-lg">
-                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+            {% if action_text and action_url %}
+            <div class="empty-state-actions">
+                <a href="{{ action_url }}" class="btn btn-primary">
+                    {% if action_icon %}<i class="{{ action_icon }} me-2"></i>{% endif %}
+                    {{ action_text }}
                 </a>
             </div>
+            {% endif %}
         </div>
     {% endif %}
 </div>
 
 <style>
 .empty-state-container {
-    min-height: 400px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.empty-state-card {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #f8f9fa;
+    border-radius: 1rem;
+    padding: 3rem 2rem;
+    border: 2px dashed #dee2e6;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+.channels-empty .empty-state-icon { color: var(--primary-blue); }
+.properties-empty .empty-state-icon { color: #28a745; }
+.bookings-empty .empty-state-icon { color: #17a2b8; }
+
+.empty-state-title {
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.empty-state-description {
+    color: #6c757d;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.empty-state-features {
+    text-align: left;
+    max-width: 400px;
+    margin: 2rem auto;
+}
+
+.feature-item {
     display: flex;
     align-items: center;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 0.5rem;
+}
+
+.feature-item i {
+    margin-right: 0.75rem;
+    width: 20px;
+}
+
+.empty-state-progress {
+    display: flex;
     justify-content: center;
+    gap: 2rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
 }
 
-.empty-state-icon-wrapper {
-    position: relative;
-    display: inline-block;
+.progress-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.pulse-animation {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80px;
-    height: 80px;
-    border: 2px solid var(--primary-blue);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-    opacity: 0.6;
+.progress-item.completed i { color: #28a745; }
+.progress-item.current i { color: #ffc107; }
+.progress-item.pending i { color: #dee2e6; }
+
+.empty-state-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
 }
 
-.pulse-animation.success {
-    border-color: var(--bs-success);
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.75rem;
+    min-width: 100px;
 }
 
-.pulse-animation.info {
-    border-color: var(--bs-info);
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-blue);
 }
 
-.pulse-animation.warning {
-    border-color: var(--bs-warning);
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
 }
 
-@keyframes pulse {
-    0% {
-        transform: translate(-50%, -50%) scale(0.8);
-        opacity: 0.8;
+.empty-state-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.empty-state-actions .btn {
+    min-width: 160px;
+}
+
+@media (max-width: 768px) {
+    .empty-state-container {
+        padding: 1rem;
     }
-    50% {
-        transform: translate(-50%, -50%) scale(1.2);
-        opacity: 0.3;
+    
+    .empty-state-card {
+        padding: 2rem 1rem;
     }
-    100% {
-        transform: translate(-50%, -50%) scale(0.8);
-        opacity: 0.8;
+    
+    .empty-state-actions {
+        flex-direction: column;
+        align-items: center;
     }
-}
-
-.channel-logo {
-    filter: grayscale(100%);
-    transition: filter 0.3s ease;
-}
-
-.channel-preview:hover .channel-logo {
-    filter: grayscale(0%);
-}
-
-.setup-progress {
-    max-width: 300px;
-    margin: 0 auto;
+    
+    .empty-state-actions .btn {
+        width: 100%;
+        max-width: 300px;
+    }
 }
 </style>

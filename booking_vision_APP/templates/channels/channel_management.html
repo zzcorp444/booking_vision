@@ -5,6 +5,205 @@
 
 {% block title %}Channel Management - Booking Vision{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Keep all your original CSS and add data-responsive enhancements */
+    .channel-card {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        position: relative;
+    }
+
+    .channel-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border-color: var(--primary-blue);
+    }
+
+    .channel-logo {
+        height: 40px;
+        width: auto;
+        max-width: 120px;
+        object-fit: contain;
+    }
+
+    .method-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .method-card .card {
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .method-card:hover .card,
+    .method-card input:checked ~ .card {
+        border-color: var(--primary-blue);
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
+    }
+
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        color: #6b7280;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .step-circle.active {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    .step-circle.completed {
+        background: #10b981;
+        color: white;
+    }
+
+    .config-form {
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+
+    .no-data-message {
+        background: #f8f9fa;
+        border: 1px dashed #dee2e6;
+        border-radius: 0.5rem;
+        padding: 3rem 2rem;
+        color: #6c757d;
+    }
+
+    .stat-item {
+        padding: 1rem;
+    }
+
+    .stat-item i {
+        font-size: 2rem;
+    }
+
+    /* Data-responsive enhancements */
+    .data-status-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        z-index: 10;
+    }
+
+    .data-status-connected { background: #28a745; }
+    .data-status-syncing { background: #ffc107; animation: pulse 2s infinite; }
+    .data-status-error { background: #dc3545; }
+    .data-status-available { background: #6c757d; }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .channel-metrics {
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .metric-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .metric-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    .metric-value {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .no-data-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(248, 249, 250, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: inherit;
+        z-index: 5;
+    }
+
+    .setup-progress-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .progress-step {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+    }
+
+    .progress-step.completed {
+        background: rgba(40, 167, 69, 0.2);
+    }
+
+    .progress-step.current {
+        background: rgba(255, 193, 7, 0.2);
+    }
+
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.25rem;
+    }
+
+    .step-icon.completed {
+        background: #28a745;
+    }
+
+    .step-icon.current {
+        background: #ffc107;
+        color: #212529;
+    }
+
+    .step-icon.pending {
+        background: rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row">
@@ -19,12 +218,70 @@
             </div>
         </div>
     </div>
+
+    <!-- Data-Responsive Setup Progress Section -->
+    {% if not has_connected_channels %}
+    <div class="setup-progress-section">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h3 class="mb-3">
+                    <i class="fas fa-rocket me-2"></i>Get Started with Channel Connections
+                </h3>
+                <p class="mb-3 opacity-90">
+                    Connect your booking platforms to centralize reservation management. 
+                    Our innovative sync technology works without API keys!
+                </p>
+                
+                <div class="progress-step current">
+                    <div class="step-icon current">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Connect Your First Channel</h6>
+                        <small class="opacity-75">Choose from multiple sync methods - no API required</small>
+                    </div>
+                </div>
+                
+                <div class="progress-step pending">
+                    <div class="step-icon pending">
+                        <i class="fas fa-sync"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Configure Auto-Sync</h6>
+                        <small class="opacity-75">Set up automatic booking synchronization</small>
+                    </div>
+                </div>
+                
+                <div class="progress-step pending">
+                    <div class="step-icon pending">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">Enable Analytics</h6>
+                        <small class="opacity-75">Unlock powerful insights and reporting</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-network-wired" style="font-size: 5rem; opacity: 0.7;"></i>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     
     {% if channels %}
         <div class="row">
             {% for channel in channels %}
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card channel-card h-100">
+                    <!-- Data-responsive status indicator -->
+                    {% with connection=connected_channels|get_item:channel.id %}
+                    {% if connection %}
+                        <div class="data-status-indicator data-status-{% if connection.sync_status == 'active' %}connected{% elif connection.sync_status == 'pending' %}syncing{% else %}error{% endif %}"></div>
+                    {% else %}
+                        <div class="data-status-indicator data-status-available"></div>
+                    {% endif %}
+                    
                     <div class="card-header d-flex align-items-center">
                         <img src="{% static 'images/channel_logos/'|add:channel.name|lower|add:'_logo.png' %}" 
                             alt="{{ channel.name }}" 
@@ -33,7 +290,6 @@
                         <h5 class="mb-0">{{ channel.name }}</h5>
                     </div>
                     <div class="card-body">
-                        {% with connection=connected_channels|get_item:channel.id %}
                         {% if connection %}
                             <div class="text-center mb-3">
                                 <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
@@ -85,6 +341,42 @@
                                 </div>
                             </div>
                             
+                            <!-- Data-Responsive Channel Metrics -->
+                            {% with channel_bookings=channel.booking_set.all channel_revenue=channel.booking_set.all|revenue_sum %}
+                            {% if channel_bookings.exists %}
+                            <div class="channel-metrics">
+                                <div class="metric-row">
+                                    <span class="metric-label">Bookings Synced:</span>
+                                    <span class="metric-value">{{ channel_bookings.count }}</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-label">Total Revenue:</span>
+                                    <span class="metric-value">${{ channel_revenue|floatformat:2 }}</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-label">Avg Booking Value:</span>
+                                    <span class="metric-value">
+                                        ${{ channel_bookings|avg_booking_value|floatformat:2 }}
+                                    </span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="metric-label">Success Rate:</span>
+                                    <span class="metric-value text-success">
+                                        {% if connection.sync_success_rate %}{{ connection.sync_success_rate }}%{% else %}100%{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="channel-metrics">
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-info-circle mb-2"></i>
+                                    <p class="mb-0 small">No bookings synced yet</p>
+                                    <small>Click "Sync Now" to import your reservations</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endwith %}
+                            
                             <div class="d-grid gap-2">
                                 <button class="btn btn-sm btn-outline-primary" onclick="syncChannel({{ channel.id }})">
                                     <i class="fas fa-sync me-2"></i>Sync Now
@@ -101,6 +393,19 @@
                                 <i class="fas fa-plug text-muted fa-3x mb-3"></i>
                                 <p class="text-muted">Not Connected</p>
                                 <small class="text-muted">Connect to start syncing bookings automatically</small>
+                            </div>
+                            
+                            <!-- Data-responsive connection benefits -->
+                            <div class="mb-3">
+                                <small class="text-muted d-block mb-2">What you'll get:</small>
+                                <ul class="list-unstyled small">
+                                    <li><i class="fas fa-check text-success me-1"></i> Automatic booking sync</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Real-time calendar updates</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Revenue analytics</li>
+                                    {% if has_properties %}
+                                    <li><i class="fas fa-check text-success me-1"></i> Cross-platform availability</li>
+                                    {% endif %}
+                                </ul>
                             </div>
                             
                             <div class="d-grid">
@@ -141,15 +446,24 @@
         </div>
     {% endif %}
 
-    <!-- Connection Statistics -->
+    <!-- Connection Statistics - Enhanced with Data Responsiveness -->
     {% if connected_channels %}
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-chart-bar me-2"></i>Connection Overview
                     </h5>
+                    {% if has_bookings %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-check-circle me-1"></i>Data Active
+                    </span>
+                    {% else %}
+                    <span class="badge bg-warning">
+                        <i class="fas fa-clock me-1"></i>Awaiting Sync
+                    </span>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
@@ -165,6 +479,13 @@
                                 <i class="fas fa-sync text-success mb-2"></i>
                                 <h4 class="mb-0">{{ active_syncs|default:0 }}</h4>
                                 <small class="text-muted">Active Syncs</small>
+                                {% if active_syncs == 0 and connected_channels %}
+                                <div class="mt-1">
+                                    <small class="text-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Setup sync methods
+                                    </small>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -172,6 +493,13 @@
                                 <i class="fas fa-calendar text-info mb-2"></i>
                                 <h4 class="mb-0">{{ total_bookings_synced|default:0 }}</h4>
                                 <small class="text-muted">Bookings Synced</small>
+                                {% if total_bookings_synced == 0 and connected_channels %}
+                                <div class="mt-1">
+                                    <small class="text-info">
+                                        <i class="fas fa-info-circle me-1"></i>Run first sync
+                                    </small>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -185,9 +513,42 @@
                                     {% endif %}
                                 </h4>
                                 <small class="text-muted">Last Sync</small>
+                                {% if not last_sync_time and connected_channels %}
+                                <div class="mt-1">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="syncAllChannels()">
+                                        <i class="fas fa-sync me-1"></i>Sync Now
+                                    </button>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Data-responsive insights -->
+                    {% if has_bookings %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-lightbulb me-2"></i>Channel Performance Insights</h6>
+                                <div class="row">
+                                    {% for connection in connected_channels %}
+                                    {% with channel_bookings=connection.channel.booking_set.all %}
+                                    <div class="col-md-4 mb-2">
+                                        <strong>{{ connection.channel.name }}:</strong>
+                                        {% if channel_bookings.exists %}
+                                            {{ channel_bookings.count }} booking{{ channel_bookings.count|pluralize }} 
+                                            (${{ channel_bookings|revenue_sum|floatformat:0 }})
+                                        {% else %}
+                                            No bookings yet
+                                        {% endif %}
+                                    </div>
+                                    {% endwith %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -213,6 +574,9 @@
                                 </div>
                                 <h6>iCal Method</h6>
                                 <p class="text-muted small">Get your calendar feed URL from your channel's settings and paste it here.</p>
+                                {% if not has_connected_channels %}
+                                <span class="badge bg-success">Recommended</span>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3 mb-3">
@@ -222,6 +586,9 @@
                                 </div>
                                 <h6>Email Sync</h6>
                                 <p class="text-muted small">Forward booking emails to our system or connect your email for automatic parsing.</p>
+                                {% if not has_connected_channels %}
+                                <span class="badge bg-info">Easy Setup</span>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3 mb-3">
@@ -231,6 +598,9 @@
                                 </div>
                                 <h6>Auto Scraping</h6>
                                 <p class="text-muted small">Provide login credentials for automated data extraction (secure & encrypted).</p>
+                                {% if not has_connected_channels %}
+                                <span class="badge bg-warning">Advanced</span>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3 mb-3">
@@ -240,6 +610,9 @@
                                 </div>
                                 <h6>Browser Extension</h6>
                                 <p class="text-muted small">Install our extension to capture bookings automatically while browsing.</p>
+                                {% if not has_connected_channels %}
+                                <span class="badge bg-success">Secure</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -597,89 +970,8 @@
     </div>
 </div>
 
-<style>
-.channel-card {
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
-
-.channel-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    border-color: var(--primary-blue);
-}
-
-.channel-logo {
-    height: 40px;
-    width: auto;
-    max-width: 120px;
-    object-fit: contain;
-}
-
-.method-card {
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.method-card .card {
-    border: 2px solid #e5e7eb;
-    transition: all 0.3s ease;
-}
-
-.method-card:hover .card,
-.method-card input:checked ~ .card {
-    border-color: var(--primary-blue);
-    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
-}
-
-.step-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #e5e7eb;
-    color: #6b7280;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    transition: all 0.3s ease;
-}
-
-.step-circle.active {
-    background: var(--primary-blue);
-    color: white;
-}
-
-.step-circle.completed {
-    background: #10b981;
-    color: white;
-}
-
-.config-form {
-    padding: 1.5rem;
-    background: #f8f9fa;
-    border-radius: 10px;
-}
-
-.no-data-message {
-    background: #f8f9fa;
-    border: 1px dashed #dee2e6;
-    border-radius: 0.5rem;
-    padding: 3rem 2rem;
-    color: #6c757d;
-}
-
-.stat-item {
-    padding: 1rem;
-}
-
-.stat-item i {
-    font-size: 2rem;
-}
-</style>
-
 <script>
+// Keep ALL your original JavaScript and add data-responsive enhancements
 let currentStep = 1;
 let selectedMethod = null;
 let testPassed = false;
@@ -977,6 +1269,7 @@ function syncChannel(channelId) {
             setTimeout(() => {
                 button.innerHTML = '<i class="fas fa-sync me-2"></i>Sync Now';
                 button.disabled = false;
+                location.reload(); // Refresh to show new data
             }, 3000);
         } else {
             BookingVision.showNotification('Sync failed: ' + data.error, 'error');
@@ -999,9 +1292,39 @@ function disconnectChannel(channelId) {
             if (data.success) {
                 BookingVision.showNotification('Channel disconnected', 'success');
                 location.reload();
+            } else {
+                BookingVision.showNotification('Error: ' + data.error, 'error');
             }
         });
     }
+}
+
+// Data-responsive enhancement: Sync All Channels
+function syncAllChannels() {
+    const button = event.currentTarget;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Syncing All...';
+    button.disabled = true;
+    
+    fetch('{% url "booking_vision_APP:sync_bookings" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ sync_all: true })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            BookingVision.showNotification(`Synced ${data.channels_synced} channels successfully!`, 'success');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            BookingVision.showNotification('Sync failed: ' + data.error, 'error');
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    });
 }
 
 function showAppPasswordGuide() {

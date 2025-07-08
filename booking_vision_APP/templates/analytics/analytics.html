@@ -1,184 +1,525 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}Analytics - Booking Vision{% endblock %}
 
-{% block breadcrumb %}
-    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
-    <li class="breadcrumb-item active">Analytics</li>
+{% block extra_css %}
+<style>
+    .analytics-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .analytics-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .analytics-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .metric-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 0.75rem;
+        border-left: 4px solid var(--primary-blue);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin: 0.5rem 0;
+        display: block;
+    }
+    
+    .metric-label {
+        color: #6c757d;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .metric-change {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+    
+    .metric-change.positive { color: #28a745; }
+    .metric-change.negative { color: #dc3545; }
+    .metric-change.neutral { color: #6c757d; }
+    
+    .chart-container {
+        position: relative;
+        height: 400px;
+        margin: 1rem 0;
+    }
+    
+    .chart-container.small {
+        height: 250px;
+    }
+    
+    .data-responsive-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(248, 249, 250, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        border-radius: 0.75rem;
+        z-index: 10;
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .empty-chart-icon {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-chart-title {
+        font-size: 1.25rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-chart-description {
+        color: #9ca3af;
+        margin-bottom: 1.5rem;
+        max-width: 300px;
+    }
+    
+    .data-status-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 5;
+    }
+    
+    .analytics-filters {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .insights-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .insight-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        border-left: 4px solid #17a2b8;
+    }
+    
+    .insight-card.warning {
+        border-left-color: #ffc107;
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    }
+    
+    .insight-card.success {
+        border-left-color: #28a745;
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    }
+    
+    .insight-card.danger {
+        border-left-color: #dc3545;
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    }
+    
+    .property-performance-item {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
+    
+    .property-performance-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+    
+    .performance-score {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+        margin-left: auto;
+    }
+    
+    .performance-score.excellent { background: #28a745; }
+    .performance-score.good { background: #17a2b8; }
+    .performance-score.average { background: #ffc107; color: #333; }
+    .performance-score.poor { background: #dc3545; }
+    
+    .data-completeness-indicator {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        z-index: 5;
+    }
+    
+    .completeness-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+    
+    .completeness-dot.high { background: #28a745; }
+    .completeness-dot.medium { background: #ffc107; }
+    .completeness-dot.low { background: #dc3545; }
+    
+    @media (max-width: 768px) {
+        .analytics-header {
+            padding: 1.5rem;
+        }
+        
+        .analytics-card {
+            padding: 1rem;
+        }
+        
+        .metric-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .chart-container {
+            height: 300px;
+        }
+        
+        .analytics-filters {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 text-primary-blue">
-                    <i class="fas fa-chart-bar me-2"></i>Analytics & Reports
+    <!-- Analytics Header with Data Status -->
+    <div class="analytics-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="h2 mb-2">
+                    <i class="fas fa-chart-line me-3"></i>Analytics Dashboard
                 </h1>
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-outline-primary active" data-period="30days">30 Days</button>
-                    <button type="button" class="btn btn-outline-primary" data-period="90days">90 Days</button>
-                    <button type="button" class="btn btn-outline-primary" data-period="12months">12 Months</button>
+                <p class="mb-0 opacity-90">
+                    {% if analytics_ready %}
+                        Comprehensive insights for {{ period_label|lower }} 
+                        {% if bookings_count %}({{ bookings_count }} booking{{ bookings_count|pluralize }}){% endif %}
+                    {% elif empty_state %}
+                        {% if empty_state == 'no_channels' %}
+                            Connect your booking channels to start tracking performance
+                        {% elif empty_state == 'no_properties' %}
+                            Add properties to begin analytics tracking
+                        {% elif empty_state == 'no_bookings' %}
+                            Analytics will populate once you have booking data
+                        {% endif %}
+                    {% else %}
+                        Limited analytics available - more data needed for complete insights
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                {% if analytics_ready %}
+                <div class="d-flex align-items-center justify-content-lg-end gap-2">
+                    <span class="badge bg-success">
+                        <i class="fas fa-check-circle me-1"></i>Analytics Ready
+                    </span>
+                    <span class="badge bg-light text-dark">
+                        {{ data_completeness }}% Complete
+                    </span>
                 </div>
+                {% else %}
+                <div class="d-flex align-items-center justify-content-lg-end gap-2">
+                    <span class="badge bg-warning">
+                        <i class="fas fa-clock me-1"></i>Limited Data
+                    </span>
+                    <span class="badge bg-light text-dark">
+                        {{ data_completeness }}% Complete
+                    </span>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Revenue Statistics -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-success">
-                    {% if revenue_stats.total_revenue %}
-                        ${{ revenue_stats.total_revenue|floatformat:2 }}
-                    {% else %}
-                        <span class="text-muted">$0.00</span>
-                    {% endif %}
-                </h4>
-                <p>Total Revenue</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-info">
-                    {% if revenue_stats.monthly_revenue %}
-                        ${{ revenue_stats.monthly_revenue|floatformat:2 }}
-                    {% else %}
-                        <span class="text-muted">$0.00</span>
-                    {% endif %}
-                </h4>
-                <p>Monthly Revenue</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-primary">
-                    {% if revenue_stats.avg_booking_value %}
-                        ${{ revenue_stats.avg_booking_value|floatformat:2 }}
-                    {% else %}
-                        <span class="text-muted">$0.00</span>
-                    {% endif %}
-                </h4>
-                <p>Avg Booking Value</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-warning">
-                    {% if occupancy_stats.occupancy_rate %}
-                        {{ occupancy_stats.occupancy_rate }}%
-                    {% else %}
-                        <span class="text-muted">0%</span>
-                    {% endif %}
-                </h4>
-                <p>Occupancy Rate</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Row -->
-    <div class="row mb-4">
-        <!-- Revenue Chart -->
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-chart-line me-2"></i>Revenue Trends
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if revenue_data %}
-                        <div class="chart-container">
-                            <canvas id="revenueChart"></canvas>
-                        </div>
-                    {% else %}
-                        <div class="no-data-message text-center py-5">
-                            <i class="fas fa-chart-line text-muted mb-3" style="font-size: 3rem;"></i>
-                            <h6>No revenue data available</h6>
-                            <p class="text-muted mb-3">Revenue trends will appear once you have bookings.</p>
-                            <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-primary">
-                                <i class="fas fa-plus me-2"></i>Add Your First Booking
-                            </a>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Occupancy Chart -->
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-bed me-2"></i>Occupancy Overview
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if occupancy_stats.occupancy_rate %}
-                        <div class="chart-container" style="height: 300px;">
-                            <canvas id="occupancyChart"></canvas>
-                        </div>
-                        <div class="mt-3 text-center">
-                            <h5 class="text-primary">{{ occupancy_stats.occupancy_rate }}%</h5>
-                            <p class="text-muted mb-0">Average Occupancy</p>
-                            <small class="text-muted">{{ occupancy_stats.booked_nights }} of {{ occupancy_stats.booked_nights|add:occupancy_stats.available_nights }} nights booked</small>
-                        </div>
-                    {% else %}
-                        <div class="no-data-message text-center py-5">
-                            <i class="fas fa-bed text-muted mb-3" style="font-size: 3rem;"></i>
-                            <h6>No occupancy data available</h6>
-                            <p class="text-muted mb-3">Occupancy overview will appear once you have properties and bookings.</p>
-                            <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-outline-primary">
-                                <i class="fas fa-home me-2"></i>Add Property
-                            </a>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Channel Performance -->
+    <!-- Setup Progress (shown if not analytics ready) -->
+    {% if not analytics_ready %}
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-link me-2"></i>Channel Performance
-                    </h5>
+            {% include 'components/empty_state.html' with icon='chart-line' title='Analytics Coming Soon' description='Complete your setup to unlock powerful analytics and insights about your rental business.' %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Date Range Filters -->
+    {% if analytics_ready or has_bookings %}
+    <div class="analytics-filters">
+        <div class="filter-group">
+            <label class="form-label mb-0 me-2">Time Period:</label>
+            <select class="form-select form-select-sm" id="dateRangeFilter" onchange="updateAnalytics()">
+                <option value="7" {% if date_range == '7' %}selected{% endif %}>Last 7 Days</option>
+                <option value="30" {% if date_range == '30' %}selected{% endif %}>Last 30 Days</option>
+                <option value="90" {% if date_range == '90' %}selected{% endif %}>Last 3 Months</option>
+                <option value="365" {% if date_range == '365' %}selected{% endif %}>Last Year</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <button class="btn btn-sm btn-outline-primary" onclick="exportAnalytics()">
+                <i class="fas fa-download me-1"></i>Export Data
+            </button>
+            <button class="btn btn-sm btn-primary" onclick="refreshAnalytics()">
+                <i class="fas fa-sync me-1"></i>Refresh
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Key Metrics Grid -->
+    <div class="metric-grid">
+        <!-- Revenue Metric -->
+        <div class="metric-item position-relative">
+            {% if has_revenue_data %}
+                <div class="data-completeness-indicator">
+                    <div class="completeness-dot high"></div>
+                    <span class="text-muted">Complete</span>
                 </div>
-                <div class="card-body">
-                    {% if channel_stats %}
-                        <div class="row">
-                            {% for channel in channel_stats %}
-                            <div class="col-md-6 col-lg-3 mb-3">
-                                <div class="channel-stat-card p-3 border rounded">
-                                    <h6 class="mb-2">{{ channel.channel.name }}</h6>
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="text-muted">Bookings</span>
-                                        <span class="fw-bold">{{ channel.bookings }}</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="text-muted">Revenue</span>
-                                        <span class="fw-bold text-success">${{ channel.revenue|floatformat:2 }}</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-muted">Avg Value</span>
-                                        <span class="fw-bold">${{ channel.avg_booking_value|floatformat:2 }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
+                <div class="metric-label">Total Revenue</div>
+                <div class="metric-value">${{ revenue_analytics.total_revenue|floatformat:2 }}</div>
+                <div class="metric-change {% if revenue_analytics.growth_rate > 0 %}positive{% elif revenue_analytics.growth_rate < 0 %}negative{% else %}neutral{% endif %}">
+                    <i class="fas fa-arrow-{% if revenue_analytics.growth_rate > 0 %}up{% elif revenue_analytics.growth_rate < 0 %}down{% else %}right{% endif %}"></i>
+                    {{ revenue_analytics.growth_rate|floatformat:1 }}% from previous period
+                </div>
+            {% else %}
+                <div class="data-completeness-indicator">
+                    <div class="completeness-dot low"></div>
+                    <span class="text-muted">No Data</span>
+                </div>
+                <div class="metric-label">Total Revenue</div>
+                <div class="metric-value">$0.00</div>
+                <div class="metric-change neutral">
+                    <i class="fas fa-info-circle"></i>
+                    Revenue tracking starts with first booking
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Occupancy Metric -->
+        <div class="metric-item position-relative">
+            {% if occupancy_analytics and not occupancy_analytics.is_empty %}
+                <div class="data-completeness-indicator">
+                    <div class="completeness-dot high"></div>
+                    <span class="text-muted">Complete</span>
+                </div>
+                <div class="metric-label">Occupancy Rate</div>
+                <div class="metric-value">{{ occupancy_analytics.occupancy_rate }}%</div>
+                <div class="metric-change {% if occupancy_analytics.occupancy_rate > 70 %}positive{% elif occupancy_analytics.occupancy_rate > 40 %}neutral{% else %}negative{% endif %}">
+                    <i class="fas fa-bed"></i>
+                    {{ occupancy_analytics.booked_days }} of {{ occupancy_analytics.booked_days|add:occupancy_analytics.available_days }} days booked
+                </div>
+            {% else %}
+                <div class="data-completeness-indicator">
+                    <div class="completeness-dot low"></div>
+                    <span class="text-muted">No Data</span>
+                </div>
+                <div class="metric-label">Occupancy Rate</div>
+                <div class="metric-value">--</div>
+                <div class="metric-change neutral">
+                    <i class="fas fa-info-circle"></i>
+                    {% if not has_properties %}Add properties to track occupancy{% else %}Occupancy tracking starts with bookings{% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Average Booking Value -->
+        <div class="metric-item position-relative">
+            {% if revenue_analytics and not revenue_analytics.is_empty %}
+                <div class="data-completeness-indicator">
+                    <div class="completeness-dot high"></div>
+                    <span class="text-muted">Complete</span>
+                </div>
+                <div class="metric-label">Avg Booking Value</div>
+                <div class="metric-value">${{ revenue_analytics.avg_booking_value|floatformat:2 }}</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-dollar-sign"></i>
+                    Based on {{ bookings_count }} booking{{ bookings_count|pluralize }}
+                </div>
+            {% else %}
+                <div class="data-completeness-indicator">
+                    <div class="completeness-dot low"></div>
+                    <span class="text-muted">No Data</span>
+                </div>
+                <div class="metric-label">Avg Booking Value</div>
+                <div class="metric-value">$0.00</div>
+                <div class="metric-change neutral">
+                    <i class="fas fa-info-circle"></i>
+                    Average calculated after first booking
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Guest Satisfaction -->
+        <div class="metric-item position-relative">
+            {% if guest_analytics and not guest_analytics.is_empty %}
+                <div class="data-completeness-indicator">
+                    <div class="completeness-dot {% if guest_analytics.total_guests > 10 %}high{% elif guest_analytics.total_guests > 3 %}medium{% else %}low{% endif %}"></div>
+                    <span class="text-muted">{% if guest_analytics.total_guests > 10 %}Complete{% elif guest_analytics.total_guests > 3 %}Partial{% else %}Limited{% endif %}</span>
+                </div>
+                <div class="metric-label">Guest Satisfaction</div>
+                <div class="metric-value">{{ guest_analytics.guest_satisfaction|floatformat:1 }}/5.0</div>
+                <div class="metric-change {% if guest_analytics.guest_satisfaction > 4.5 %}positive{% elif guest_analytics.guest_satisfaction > 3.5 %}neutral{% else %}negative{% endif %}">
+                    <i class="fas fa-star"></i>
+                    {{ guest_analytics.repeat_rate|floatformat:1 }}% repeat guest rate
+                </div>
+            {% else %}
+                <div class="data-completeness-indicator">
+                    <div class="completeness-dot low"></div>
+                    <span class="text-muted">No Data</span>
+                </div>
+                <div class="metric-label">Guest Satisfaction</div>
+                <div class="metric-value">--</div>
+                <div class="metric-change neutral">
+                    <i class="fas fa-info-circle"></i>
+                    Satisfaction tracking starts with guest feedback
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row">
+        <!-- Revenue Trends Chart -->
+        <div class="col-lg-8 mb-4">
+            <div class="analytics-card position-relative">
+                <div class="data-status-badge">
+                    {% if chart_data.revenue_chart_ready %}
+                        <span class="badge bg-success">Live Data</span>
                     {% else %}
-                        <div class="no-data-message text-center py-5">
-                            <i class="fas fa-link text-muted mb-3" style="font-size: 3rem;"></i>
-                            <h6>No channel data available yet</h6>
-                            <p class="text-muted mb-3">Channel performance will appear once you connect and sync channels.</p>
-                            <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-primary">
+                        <span class="badge bg-secondary">No Data</span>
+                    {% endif %}
+                </div>
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-line me-2"></i>Revenue Trends
+                </h5>
+                <div class="chart-container">
+                    {% if chart_data.revenue_chart_ready %}
+                        <canvas id="revenueChart"></canvas>
+                    {% else %}
+                        <div class="data-responsive-overlay">
+                            <i class="fas fa-chart-line empty-chart-icon"></i>
+                            <h6 class="empty-chart-title">Revenue Chart</h6>
+                            <p class="empty-chart-description">
+                                {% if not has_revenue_data %}
+                                    Revenue trends will appear once you have booking revenue data.
+                                {% else %}
+                                    Need at least 3 bookings to show meaningful trends.
+                                {% endif %}
+                            </p>
+                            {% if empty_state == 'no_bookings' %}
+                            <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-sync me-2"></i>Sync Bookings
+                            </a>
+                            {% elif not has_revenue_data %}
+                            <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-2"></i>Add First Booking
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Channel Performance -->
+        <div class="col-lg-4 mb-4">
+            <div class="analytics-card position-relative">
+                <div class="data-status-badge">
+                    {% if chart_data.channel_chart_ready %}
+                        <span class="badge bg-success">Live Data</span>
+                    {% else %}
+                        <span class="badge bg-secondary">No Data</span>
+                    {% endif %}
+                </div>
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-pie me-2"></i>Channel Performance
+                </h5>
+                <div class="chart-container small">
+                    {% if chart_data.channel_chart_ready %}
+                        <canvas id="channelChart"></canvas>
+                    {% else %}
+                        <div class="data-responsive-overlay">
+                            <i class="fas fa-chart-pie empty-chart-icon"></i>
+                            <h6 class="empty-chart-title">Channel Distribution</h6>
+                            <p class="empty-chart-description">
+                                {% if not has_connected_channels %}
+                                    Connect booking channels to see performance distribution.
+                                {% elif not has_bookings %}
+                                    Channel performance will show after bookings are synced.
+                                {% endif %}
+                            </p>
+                            {% if not has_connected_channels %}
+                            <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-link me-2"></i>Connect Channels
                             </a>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>
@@ -186,196 +527,289 @@
         </div>
     </div>
 
-    <!-- Property Performance -->
+    <!-- Occupancy and Bookings Charts -->
     <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-home me-2"></i>Property Performance
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if property_stats %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Property</th>
-                                        <th>Bookings</th>
-                                        <th>Revenue</th>
-                                        <th>Avg Booking Value</th>
-                                        <th>Performance</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for stat in property_stats %}
-                                    <tr>
-                                        <td>
-                                            <a href="{% url 'booking_vision_APP:property_detail' stat.property.pk %}" class="text-decoration-none">
-                                                <strong>{{ stat.property.name }}</strong>
-                                            </a>
-                                            <br><small class="text-muted">{{ stat.property.city }}</small>
-                                        </td>
-                                        <td>{{ stat.bookings }}</td>
-                                        <td class="text-success fw-bold">${{ stat.revenue|floatformat:2 }}</td>
-                                        <td>${{ stat.avg_booking_value|floatformat:2 }}</td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar bg-success" role="progressbar" 
-                                                     style="width: {% widthratio stat.revenue property_stats.0.revenue 100 %}%">
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="analytics-card position-relative">
+                <div class="data-status-badge">
+                    {% if chart_data.occupancy_chart_ready %}
+                        <span class="badge bg-success">Live Data</span>
                     {% else %}
-                        <div class="no-data-message text-center py-5">
-                            <i class="fas fa-home text-muted mb-3" style="font-size: 3rem;"></i>
-                            <h6>No property data available</h6>
-                            <p class="text-muted mb-3">Property analytics will appear once you have properties with bookings.</p>
-                            <div class="d-flex justify-content-center gap-3">
-                                <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-outline-primary">
-                                    <i class="fas fa-home me-2"></i>Add Property
-                                </a>
-                                <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-calendar-plus me-2"></i>Add Booking
-                                </a>
+                        <span class="badge bg-secondary">No Data</span>
+                    {% endif %}
+                </div>
+                <h5 class="mb-3">
+                    <i class="fas fa-bed me-2"></i>Occupancy Trends
+                </h5>
+                <div class="chart-container small">
+                    {% if chart_data.occupancy_chart_ready %}
+                        <canvas id="occupancyChart"></canvas>
+                    {% else %}
+                        <div class="data-responsive-overlay">
+                            <i class="fas fa-bed empty-chart-icon"></i>
+                            <h6 class="empty-chart-title">Occupancy Analysis</h6>
+                            <p class="empty-chart-description">
+                                {% if not has_properties %}
+                                    Add properties to track occupancy rates.
+                                {% elif not has_bookings %}
+                                    Occupancy data will appear with your first bookings.
+                                {% endif %}
+                            </p>
+                            {% if not has_properties %}
+                            <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-success btn-sm">
+                                <i class="fas fa-home me-2"></i>Add Property
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="analytics-card position-relative">
+                <div class="data-status-badge">
+                    {% if has_bookings %}
+                        <span class="badge bg-success">Live Data</span>
+                    {% else %}
+                        <span class="badge bg-secondary">No Data</span>
+                    {% endif %}
+                </div>
+                <h5 class="mb-3">
+                    <i class="fas fa-calendar-check me-2"></i>Booking Patterns
+                </h5>
+                <div class="chart-container small">
+                    {% if has_bookings %}
+                        <canvas id="bookingPatternsChart"></canvas>
+                    {% else %}
+                        <div class="data-responsive-overlay">
+                            <i class="fas fa-calendar-check empty-chart-icon"></i>
+                            <h6 class="empty-chart-title">Booking Patterns</h6>
+                            <p class="empty-chart-description">
+                                Booking patterns and seasonality insights will appear once you have booking history.
+                            </p>
+                            <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-info btn-sm">
+                                <i class="fas fa-sync me-2"></i>Sync Bookings
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Performance Section -->
+    {% if has_properties %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="analytics-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-home me-2"></i>Property Performance
+                </h5>
+                {% if property_analytics and not property_analytics.is_empty %}
+                    <div class="row">
+                        {% for property_data in property_analytics.property_performance %}
+                        <div class="col-lg-6 mb-3">
+                            <div class="property-performance-item">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ property_data.property.name }}</h6>
+                                    <small class="text-muted">
+                                        {{ property_data.bookings_count }} booking{{ property_data.bookings_count|pluralize }} • 
+                                        ${{ property_data.total_revenue|floatformat:2 }} revenue
+                                    </small>
+                                </div>
+                                <div class="performance-score {% if property_data.performance_score > 80 %}excellent{% elif property_data.performance_score > 60 %}good{% elif property_data.performance_score > 40 %}average{% else %}poor{% endif %}">
+                                    {{ property_data.performance_score|floatformat:0 }}
+                                </div>
                             </div>
                         </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if property_analytics.underperformers %}
+                    <div class="alert alert-warning mt-3">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Properties Needing Attention</h6>
+                        <p class="mb-0">
+                            {{ property_analytics.underperformers|length }} propert{{ property_analytics.underperformers|length|pluralize:"y,ies" }} 
+                            may benefit from pricing optimization or marketing improvements.
+                        </p>
+                    </div>
                     {% endif %}
-                </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-bar text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <h6 class="text-muted">Property Performance Analysis</h6>
+                        <p class="text-muted">Performance metrics will appear once you have booking data for your properties.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
+    {% endif %}
+
+    <!-- Insights and Recommendations -->
+    {% if analytics_ready %}
+    <div class="insights-grid">
+        <div class="insight-card success">
+            <h6><i class="fas fa-lightbulb me-2"></i>Key Insights</h6>
+            <ul class="mb-0">
+                {% if revenue_analytics.peak_revenue_day %}
+                <li>Best performing day: {{ revenue_analytics.peak_revenue_day|date:"l" }}</li>
+                {% endif %}
+                {% if channel_analytics.top_channel %}
+                <li>Top channel: {{ channel_analytics.top_channel.channel.name }} ({{ channel_analytics.top_channel.performance_score|floatformat:1 }}% of revenue)</li>
+                {% endif %}
+                {% if guest_analytics.repeat_rate > 20 %}
+                <li>Strong repeat guest rate: {{ guest_analytics.repeat_rate|floatformat:1 }}%</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <div class="insight-card warning">
+            <h6><i class="fas fa-chart-line me-2"></i>Opportunities</h6>
+            <ul class="mb-0">
+                {% if occupancy_analytics.occupancy_rate < 70 %}
+                <li>Occupancy could be improved (currently {{ occupancy_analytics.occupancy_rate }}%)</li>
+                {% endif %}
+                {% if revenue_analytics.growth_rate < 0 %}
+                <li>Revenue declining - consider pricing strategy review</li>
+                {% endif %}
+                {% if guest_analytics.repeat_rate < 15 %}
+                <li>Focus on guest experience to increase repeat bookings</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <div class="insight-card">
+            <h6><i class="fas fa-target me-2"></i>Recommendations</h6>
+            <ul class="mb-0">
+                <li>Enable AI pricing optimization for better revenue</li>
+                <li>Set up automated guest communication workflows</li>
+                <li>Consider expanding to underperforming channels</li>
+            </ul>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
-<style>
-.channel-stat-card {
-    background-color: #f8f9fa;
-    transition: all 0.3s ease;
-}
-
-.channel-stat-card:hover {
-    background-color: #e9ecef;
-    transform: translateY(-2px);
-}
-
-.chart-container {
-    position: relative;
-    height: 400px;
-}
-
-.stats-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 10px;
-    padding: 1.5rem;
-    color: white;
-    text-align: center;
-}
-
-.stats-card h4 {
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-}
-
-.no-data-message {
-    background: #f8f9fa;
-    border: 1px dashed #dee2e6;
-    border-radius: 0.5rem;
-    padding: 2rem;
-    color: #6c757d;
-}
-</style>
-
+<!-- Chart Initialization Script -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Revenue Chart - only if data exists
-    const revenueCtx = document.getElementById('revenueChart');
-    if (revenueCtx && {{ revenue_data|yesno:"true,false" }}) {
-        // Fetch revenue data
-        BookingVisionAPI.getRevenueAnalytics('12months').then(data => {
-            new Chart(revenueCtx, {
-                type: 'line',
-                data: {
-                    labels: data.labels || [],
-                    datasets: [{
-                        label: 'Revenue',
-                        data: data.revenue || [],
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: false
-                        },
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Revenue ($)'
-                            }
+    // Only initialize charts if data is available
+    {% if chart_data.revenue_chart_ready %}
+    initializeRevenueChart();
+    {% endif %}
+    
+    {% if chart_data.channel_chart_ready %}
+    initializeChannelChart();
+    {% endif %}
+    
+    {% if chart_data.occupancy_chart_ready %}
+    initializeOccupancyChart();
+    {% endif %}
+    
+    {% if has_bookings %}
+    initializeBookingPatternsChart();
+    {% endif %}
+});
+
+{% if chart_data.revenue_chart_ready %}
+function initializeRevenueChart() {
+    const ctx = document.getElementById('revenueChart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [{% for day in revenue_analytics.revenue_per_day %}'{{ day.date|date:"M j" }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Revenue',
+                data: [{% for day in revenue_analytics.revenue_per_day %}{{ day.revenue }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Revenue Trend - {{ period_label }}'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
                         }
                     }
                 }
-            });
-        }).catch(error => {
-            console.error('Error loading revenue data:', error);
-        });
-    }
-
-    // Initialize Occupancy Chart - only if data exists
-    const occupancyCtx = document.getElementById('occupancyChart');
-    if (occupancyCtx && {{ occupancy_stats.occupancy_rate|yesno:"true,false" }}) {
-        const occupancyRate = {{ occupancy_stats.occupancy_rate|default:0 }};
-        new Chart(occupancyCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Occupied', 'Available'],
-                datasets: [{
-                    data: [occupancyRate, 100 - occupancyRate],
-                    backgroundColor: ['#3b82f6', '#e5e7eb'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                },
-                cutout: '70%'
             }
-        });
-    }
-
-    // Period selector
-    const periodButtons = document.querySelectorAll('[data-period]');
-    periodButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            periodButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            const period = this.dataset.period;
-            // Reload data for selected period
-            console.log('Loading data for period:', period);
-        });
+        }
     });
-});
+}
+{% endif %}
+
+{% if chart_data.channel_chart_ready %}
+function initializeChannelChart() {
+    const ctx = document.getElementById('channelChart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for channel in channel_analytics.channel_performance %}'{{ channel.channel.name }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for channel in channel_analytics.channel_performance %}{{ channel.total_revenue }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: [
+                    '#667eea',
+                    '#764ba2',
+                    '#f093fb',
+                    '#f5576c',
+                    '#4facfe',
+                    '#00f2fe'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Revenue by Channel'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': $' + context.parsed.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+{% endif %}
+
+function updateAnalytics() {
+    const range = document.getElementById('dateRangeFilter').value;
+    window.location.href = `?range=${range}`;
+}
+
+function refreshAnalytics() {
+    window.location.reload();
+}
+
+function exportAnalytics() {
+    // Implementation for exporting analytics data
+    alert('Export functionality coming soon!');
+}
 </script>
 {% endblock %}

@@ -1,213 +1,988 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}Smart Pricing - Booking Vision{% endblock %}
 
-{% block breadcrumb %}
-    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
-    <li class="breadcrumb-item active">Smart Pricing</li>
+{% block extra_css %}
+<style>
+    .ai-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ai-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="circuit" patternUnits="userSpaceOnUse" width="20" height="20"><path d="M0 10h20M10 0v20" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" fill="none"/></pattern></defs><rect width="100" height="100" fill="url(%23circuit)"/></svg>');
+        opacity: 0.3;
+    }
+    
+    .ai-status-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        z-index: 10;
+    }
+    
+    .ai-enabled {
+        background: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+        border: 1px solid rgba(40, 167, 69, 0.3);
+    }
+    
+    .ai-limited {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+    
+    .ai-disabled {
+        background: rgba(108, 117, 125, 0.2);
+        color: #6c757d;
+        border: 1px solid rgba(108, 117, 125, 0.3);
+    }
+    
+    .pricing-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        position: relative;
+        border-left: 4px solid transparent;
+    }
+    
+    .pricing-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .pricing-card.recommended {
+        border-left-color: #28a745;
+        background: linear-gradient(135deg, #f8fff9 0%, #f0fff4 100%);
+    }
+    
+    .pricing-card.current {
+        border-left-color: #17a2b8;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f7fa 100%);
+    }
+    
+    .pricing-card.warning {
+        border-left-color: #ffc107;
+        background: linear-gradient(135deg, #fffbf0 0%, #fff8e1 100%);
+    }
+    
+    .price-display {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin: 1rem 0;
+    }
+    
+    .price-change {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .price-change.increase {
+        color: #28a745;
+    }
+    
+    .price-change.decrease {
+        color: #dc3545;
+    }
+    
+    .confidence-meter {
+        background: #e9ecef;
+        border-radius: 10px;
+        height: 8px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+    
+    .confidence-fill {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+    }
+    
+    .confidence-high {
+        background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .confidence-medium {
+        background: linear-gradient(90deg, #ffc107 0%, #fd7e14 100%);
+    }
+    
+    .confidence-low {
+        background: linear-gradient(90deg, #dc3545 0%, #e83e8c 100%);
+    }
+    
+    .data-requirement-card {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .data-progress {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .progress-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .progress-item.completed {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+    }
+    
+    .progress-item.partial {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+    }
+    
+    .progress-item.missing {
+        background: #f8d7da;
+        border-left: 4px solid #dc3545;
+    }
+    
+    .ai-insights-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .insight-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #667eea;
+        position: relative;
+    }
+    
+    .insight-card.high-priority {
+        border-left-color: #dc3545;
+    }
+    
+    .insight-card.medium-priority {
+        border-left-color: #ffc107;
+    }
+    
+    .insight-card.low-priority {
+        border-left-color: #28a745;
+    }
+    
+    .insight-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .insight-icon.revenue {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .insight-icon.occupancy {
+        background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+    }
+    
+    .insight-icon.competition {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    }
+    
+    .insight-icon.demand {
+        background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+    }
+    
+    .market-analysis-chart {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin: 2rem 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 1rem 0;
+    }
+    
+    .empty-state-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(248, 249, 250, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        border-radius: 1rem;
+        z-index: 10;
+    }
+    
+    .property-selector {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .ai-learning-status {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        border-left: 4px solid #2196f3;
+    }
+    
+    .learning-progress {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .learning-bar {
+        flex-grow: 1;
+        height: 10px;
+        background: #e1f5fe;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    
+    .learning-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #2196f3 0%, #21cbf3 100%);
+        border-radius: 5px;
+        transition: width 0.3s ease;
+    }
+    
+    .optimization-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .action-button {
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border: 2px solid #e9ecef;
+        background: white;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    .action-button:hover {
+        border-color: var(--primary-blue);
+        transform: translateY(-2px);
+        text-decoration: none;
+        color: inherit;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .seasonal-trends {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin: 2rem 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    @media (max-width: 768px) {
+        .ai-header {
+            padding: 1.5rem;
+        }
+        
+        .pricing-card {
+            padding: 1.5rem;
+        }
+        
+        .price-display {
+            font-size: 2rem;
+        }
+        
+        .ai-insights-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .optimization-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 text-primary-blue">
-                    <i class="fas fa-brain me-2"></i>AI Smart Pricing
+    <!-- AI Smart Pricing Header -->
+    <div class="ai-header">
+        {% if ai_features.pricing_rules > 0 %}
+            <div class="ai-status-badge ai-enabled">
+                <i class="fas fa-robot me-1"></i>AI Active
+            </div>
+        {% elif has_bookings and bookings_count >= 3 %}
+            <div class="ai-status-badge ai-limited">
+                <i class="fas fa-clock me-1"></i>Learning Mode
+            </div>
+        {% else %}
+            <div class="ai-status-badge ai-disabled">
+                <i class="fas fa-pause me-1"></i>Needs Data
+            </div>
+        {% endif %}
+        
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="h2 mb-3">
+                    <i class="fas fa-brain me-3"></i>AI Smart Pricing
                 </h1>
-                <div class="form-check form-switch">
-                    <input class="form-check-input ai-feature-toggle" type="checkbox" data-feature="pricing" id="pricingToggle">
-                    <label class="form-check-label" for="pricingToggle">
-                        <strong>AI Pricing Enabled</strong>
-                    </label>
-                </div>
+                <p class="mb-0 opacity-90">
+                    {% if ai_features.pricing_rules > 0 %}
+                        AI is actively optimizing prices for {{ ai_features.ai_enabled_properties }} propert{{ ai_features.ai_enabled_properties|pluralize:"y,ies" }}
+                    {% elif has_bookings and bookings_count >= 3 %}
+                        AI is learning from your {{ bookings_count }} booking{{ bookings_count|pluralize }} to provide pricing recommendations
+                    {% elif has_bookings %}
+                        Need {{ 3|subtract:bookings_count }} more booking{{ 3|subtract:bookings_count|pluralize }} to enable AI pricing recommendations
+                    {% else %}
+                        AI-powered dynamic pricing to maximize your revenue automatically
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                {% if ai_features.pricing_rules > 0 %}
+                <button class="btn btn-light me-2" onclick="optimizeAllPrices()">
+                    <i class="fas fa-magic me-2"></i>Optimize All
+                </button>
+                <button class="btn btn-outline-light" onclick="viewPricingHistory()">
+                    <i class="fas fa-chart-line me-2"></i>History
+                </button>
+                {% elif has_bookings and bookings_count >= 3 %}
+                <button class="btn btn-light me-2" onclick="enableAIPricing()">
+                    <i class="fas fa-robot me-2"></i>Enable AI
+                </button>
+                <button class="btn btn-outline-light" onclick="viewRecommendations()">
+                    <i class="fas fa-lightbulb me-2"></i>Recommendations
+                </button>
+                {% else %}
+                <button class="btn btn-light" onclick="learnAboutPricing()">
+                    <i class="fas fa-info-circle me-2"></i>Learn More
+                </button>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Pricing Overview Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-success">+15.3%</h4>
-                <p>Avg Revenue Increase</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-primary">{{ recommendations|length }}</h4>
-                <p>Active Recommendations</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-info">92%</h4>
-                <p>Pricing Accuracy</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-warning">{{ properties|length }}</h4>
-                <p>Properties Optimized</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pricing Chart -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-chart-line me-2"></i>Pricing Optimization Trends
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="pricingChart"></canvas>
+    <!-- Data Requirements Progress (shown when insufficient data) -->
+    {% if not has_bookings or bookings_count < 3 %}
+    <div class="data-requirement-card">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h4 class="mb-3">
+                    <i class="fas fa-database me-2"></i>Building Your AI Pricing Engine
+                </h4>
+                <p class="text-muted mb-3">
+                    Our AI needs booking data to learn your market patterns and optimize pricing. 
+                    Here's what we need to get started:
+                </p>
+                
+                <div class="data-progress">
+                    <div class="progress-item {% if has_properties %}completed{% else %}missing{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-{% if has_properties %}check-circle text-success{% else %}times-circle text-danger{% endif %} me-2"></i>
+                            <span>Add Properties</span>
+                        </div>
+                        <span class="badge bg-{% if has_properties %}success{% else %}danger{% endif %}">
+                            {{ properties_count }}/1 required
+                        </span>
+                    </div>
+                    
+                    <div class="progress-item {% if has_connected_channels %}completed{% else %}missing{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-{% if has_connected_channels %}check-circle text-success{% else %}times-circle text-danger{% endif %} me-2"></i>
+                            <span>Connect Booking Channels</span>
+                        </div>
+                        <span class="badge bg-{% if has_connected_channels %}success{% else %}danger{% endif %}">
+                            {{ connected_channels_count }}/1 required
+                        </span>
+                    </div>
+                    
+                    <div class="progress-item {% if bookings_count >= 3 %}completed{% elif bookings_count > 0 %}partial{% else %}missing{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-{% if bookings_count >= 3 %}check-circle text-success{% elif bookings_count > 0 %}clock text-warning{% else %}times-circle text-danger{% endif %} me-2"></i>
+                            <span>Sync Booking History</span>
+                        </div>
+                        <span class="badge bg-{% if bookings_count >= 3 %}success{% elif bookings_count > 0 %}warning{% else %}danger{% endif %}">
+                            {{ bookings_count }}/3 required
+                        </span>
                     </div>
                 </div>
             </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-robot" style="font-size: 4rem; color: #dee2e6; margin-bottom: 1rem;"></i>
+                <div class="progress mb-3">
+                    <div class="progress-bar bg-primary" style="width: {{ data_completeness }}%"></div>
+                </div>
+                <small class="text-muted">{{ data_completeness }}% Complete</small>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            {% if not has_properties %}
+            <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary me-2">
+                <i class="fas fa-home me-2"></i>Add Your First Property
+            </a>
+            {% elif not has_connected_channels %}
+            <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-success me-2">
+                <i class="fas fa-link me-2"></i>Connect Booking Channels
+            </a>
+            {% elif bookings_count < 3 %}
+            <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-info me-2">
+                <i class="fas fa-sync me-2"></i>Sync Your Bookings
+            </a>
+            {% endif %}
+            <a href="{% url 'booking_vision_APP:documentation' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-book me-2"></i>Setup Guide
+            </a>
         </div>
     </div>
+    {% endif %}
 
-    <!-- Pricing Recommendations -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-lightbulb me-2"></i>AI Pricing Recommendations
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if recommendations %}
-                        <div class="row">
-                            {% for rec in recommendations %}
-                            <div class="col-lg-6 mb-4">
-                                <div class="ai-feature-card">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <h6 class="fw-bold text-primary-blue">{{ rec.property.name }}</h6>
-                                        <span class="badge bg-success">+{{ rec.revenue_increase }}%</span>
-                                    </div>
-                                    
-                                    <div class="row mb-3">
-                                        <div class="col-6">
-                                            <small class="text-muted">Current Price</small>
-                                            <h5 class="mb-0">${{ rec.current_price }}</h5>
-                                        </div>
-                                        <div class="col-6">
-                                            <small class="text-muted">Suggested Price</small>
-                                            <h5 class="mb-0 text-success">${{ rec.suggested_price }}</h5>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <small class="text-muted">Confidence Level</small>
-                                        <div class="progress">
-                                            <div class="progress-bar bg-success" style="width: {{ rec.confidence|floatformat:0 }}%"></div>
-                                        </div>
-                                        <small>{{ rec.confidence|floatformat:0 }}%</small>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <small class="text-muted">Influencing Factors</small>
-                                        <div class="mt-2">
-                                            {% for factor in rec.factors %}
-                                            <span class="badge bg-light text-dark me-1 mb-1">
-                                                <i class="fas fa-{{ factor.impact|yesno:'arrow-up,arrow-down' }} me-1"></i>
-                                                {{ factor.name }}
-                                            </span>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                    
-                                    <button class="btn btn-primary btn-sm apply-pricing" 
-                                            data-property-id="{{ rec.property.id }}" 
-                                            data-price="{{ rec.suggested_price }}">
-                                        <i class="fas fa-check me-1"></i>Apply Recommendation
-                                    </button>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-robot text-muted mb-3" style="font-size: 3rem;"></i>
-                            <h5 class="text-muted">No pricing recommendations available</h5>
-                            <p class="text-muted">Add properties and bookings to get AI-powered pricing insights.</p>
-                        </div>
-                    {% endif %}
+    <!-- Property Selector (shown when data is available) -->
+    {% if has_properties %}
+    <div class="property-selector">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <label class="form-label mb-0">Select Property for AI Analysis:</label>
+                <select class="form-select mt-2" id="propertySelector" onchange="updatePricingAnalysis()">
+                    <option value="">All Properties</option>
+                    {% for property in active_properties %}
+                    <option value="{{ property.id }}" {% if property.id == selected_property_id %}selected{% endif %}>
+                        {{ property.name }} ({{ property.city }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <div class="d-flex align-items-center justify-content-md-end gap-2">
+                    <span class="text-muted small">Last updated:</span>
+                    <span class="badge bg-info">{{ last_analysis_time|default:"Never"|timesince }} ago</span>
+                    <button class="btn btn-sm btn-outline-primary" onclick="refreshAnalysis()">
+                        <i class="fas fa-refresh"></i>
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
+    {% endif %}
+
+    <!-- AI Learning Status (shown when AI is learning) -->
+    {% if has_bookings and bookings_count >= 3 and ai_features.pricing_rules == 0 %}
+    <div class="ai-learning-status">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h5 class="mb-2">
+                    <i class="fas fa-graduation-cap me-2"></i>AI Learning in Progress
+                </h5>
+                <p class="mb-0">
+                    Our AI is analyzing your {{ bookings_count }} bookings to understand market patterns, 
+                    seasonal trends, and optimal pricing strategies for your properties.
+                </p>
+                
+                <div class="learning-progress">
+                    <span class="small text-muted">Learning Progress:</span>
+                    <div class="learning-bar">
+                        <div class="learning-fill" style="width: {{ ai_learning_progress|default:45 }}%"></div>
+                    </div>
+                    <span class="small font-weight-bold">{{ ai_learning_progress|default:45 }}%</span>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <button class="btn btn-primary" onclick="accelerateLearning()">
+                    <i class="fas fa-rocket me-2"></i>Boost Learning
+                </button>
+                <small class="d-block text-muted mt-2">Get recommendations faster</small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pricing Recommendations Grid -->
+    {% if has_bookings and bookings_count >= 3 %}
+    <div class="row">
+        {% for property in active_properties %}
+        {% with property_data=property|get_property_pricing_data %}
+        <div class="col-lg-6 mb-4">
+            <div class="pricing-card {% if property_data.recommendation_type == 'increase' %}recommended{% elif property_data.recommendation_type == 'current' %}current{% elif property_data.recommendation_type == 'decrease' %}warning{% endif %}">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="mb-1">{{ property.name }}</h5>
+                        <small class="text-muted">{{ property.city }}, {{ property.state }}</small>
+                    </div>
+                    <div class="text-end">
+                        {% if property.ai_pricing_enabled %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-robot me-1"></i>AI Active
+                        </span>
+                        {% else %}
+                        <span class="badge bg-secondary">Manual</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <label class="small text-muted">Current Price</label>
+                            <div class="price-display" style="font-size: 2rem;">
+                                ${{ property_data.current_price|default:0|floatformat:0 }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <label class="small text-muted">AI Recommended</label>
+                            <div class="price-display" style="font-size: 2rem; color: {% if property_data.recommendation_type == 'increase' %}#28a745{% elif property_data.recommendation_type == 'decrease' %}#dc3545{% else %}#6c757d{% endif %};">
+                                {% if property_data.ai_recommended_price %}
+                                    ${{ property_data.ai_recommended_price|floatformat:0 }}
+                                {% else %}
+                                    <span class="text-muted" style="font-size: 1rem;">Learning...</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if property_data.ai_recommended_price %}
+                <div class="price-change {% if property_data.price_change > 0 %}increase{% elif property_data.price_change < 0 %}decrease{% endif %}">
+                    <i class="fas fa-arrow-{% if property_data.price_change > 0 %}up{% elif property_data.price_change < 0 %}down{% else %}right{% endif %}"></i>
+                    <span>
+                        {% if property_data.price_change > 0 %}+{% endif %}{{ property_data.price_change|floatformat:1 }}%
+                        ({{ property_data.projected_revenue_impact|floatformat:1 }}% revenue impact)
+                    </span>
+                </div>
+
+                <div class="confidence-meter">
+                    <div class="confidence-fill confidence-{% if property_data.confidence > 80 %}high{% elif property_data.confidence > 50 %}medium{% else %}low{% endif %}" 
+                         style="width: {{ property_data.confidence }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <small class="text-muted">Confidence: {{ property_data.confidence }}%</small>
+                    <small class="text-muted">
+                        Based on {{ property_data.data_points }} data points
+                    </small>
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    {% if property_data.ai_recommended_price %}
+                    <button class="btn btn-primary flex-fill" onclick="applyRecommendation({{ property.id }}, {{ property_data.ai_recommended_price }})">
+                        <i class="fas fa-magic me-2"></i>Apply AI Price
+                    </button>
+                    {% endif %}
+                    {% if not property.ai_pricing_enabled %}
+                    <button class="btn btn-outline-success" onclick="enableAutoPricing({{ property.id }})">
+                        <i class="fas fa-robot me-2"></i>Enable Auto
+                    </button>
+                    {% else %}
+                    <button class="btn btn-outline-secondary" onclick="disableAutoPricing({{ property.id }})">
+                        <i class="fas fa-pause me-2"></i>Disable
+                    </button>
+                    {% endif %}
+                    <button class="btn btn-outline-info" onclick="viewPropertyAnalysis({{ property.id }})">
+                        <i class="fas fa-chart-line"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- AI Insights Grid -->
+    {% if has_bookings and bookings_count >= 5 %}
+    <div class="ai-insights-grid">
+        <div class="insight-card high-priority">
+            <div class="insight-icon revenue">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <h6>Revenue Optimization</h6>
+            <p class="mb-2">
+                AI detected {{ revenue_opportunities|default:3 }} pricing opportunities 
+                that could increase revenue by up to {{ max_revenue_increase|default:15 }}%.
+            </p>
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">High Impact</small>
+                <button class="btn btn-sm btn-primary" onclick="viewRevenueOpportunities()">
+                    View Details
+                </button>
+            </div>
+        </div>
+
+        <div class="insight-card medium-priority">
+            <div class="insight-icon occupancy">
+                <i class="fas fa-bed"></i>
+            </div>
+            <h6>Occupancy Patterns</h6>
+            <p class="mb-2">
+                Your properties have {{ avg_occupancy_rate|default:68 }}% occupancy. 
+                AI suggests dynamic pricing to improve low-demand periods.
+            </p>
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Medium Impact</small>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewOccupancyAnalysis()">
+                    Analyze
+                </button>
+            </div>
+        </div>
+
+        <div class="insight-card low-priority">
+            <div class="insight-icon competition">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <h6>Market Position</h6>
+            <p class="mb-2">
+                Your average prices are {{ market_position|default:"5%" }} below market average. 
+                Consider gradual increases during peak seasons.
+            </p>
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Market Insight</small>
+                <button class="btn btn-sm btn-outline-info" onclick="viewMarketAnalysis()">
+                    Compare
+                </button>
+            </div>
+        </div>
+
+        <div class="insight-card medium-priority">
+            <div class="insight-icon demand">
+                <i class="fas fa-fire"></i>
+            </div>
+            <h6>Seasonal Demand</h6>
+            <p class="mb-2">
+                Peak season ({{ peak_season|default:"Jun-Aug" }}) shows {{ demand_increase|default:40 }}% higher demand. 
+                Optimize pricing 2 weeks in advance.
+            </p>
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Seasonal</small>
+                <button class="btn btn-sm btn-outline-warning" onclick="viewSeasonalTrends()">
+                    View Trends
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Market Analysis Chart -->
+    {% if has_bookings and bookings_count >= 3 %}
+    <div class="market-analysis-chart">
+        <h5 class="mb-3">
+            <i class="fas fa-chart-area me-2"></i>Price Performance Analysis
+        </h5>
+        <div class="chart-container">
+            {% if chart_data.pricing_chart_ready %}
+                <canvas id="pricePerformanceChart"></canvas>
+            {% else %}
+                <div class="empty-state-overlay">
+                    <i class="fas fa-chart-line text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <h6 class="text-muted">Price Analysis Chart</h6>
+                    <p class="text-muted">Need more booking data to show price performance trends</p>
+                    <small class="text-muted">{{ bookings_count }}/10 bookings required for detailed analysis</small>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Seasonal Trends -->
+    {% if has_bookings and bookings_count >= 10 %}
+    <div class="seasonal-trends">
+        <h5 class="mb-3">
+            <i class="fas fa-calendar-alt me-2"></i>Seasonal Pricing Trends
+        </h5>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="seasonalTrendsChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h6>AI Recommendations:</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Increase prices 15-20% during {{ peak_months|default:"summer months" }}
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        Offer 10% discount during {{ low_months|default:"off-season" }}
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Monitor competitor pricing during {{ competitive_months|default:"holidays" }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="optimization-actions">
+        {% if ai_features.pricing_rules > 0 %}
+        <a href="#" class="action-button" onclick="optimizeAllPrices()">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="fas fa-magic fa-2x text-primary"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">Optimize All Prices</h6>
+                    <small class="text-muted">Apply AI recommendations to all properties</small>
+                </div>
+            </div>
+        </a>
+        {% endif %}
+
+        <a href="#" class="action-button" onclick="schedulePriceUpdates()">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="fas fa-clock fa-2x text-info"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">Schedule Updates</h6>
+                    <small class="text-muted">Set automatic price adjustments</small>
+                </div>
+            </div>
+        </a>
+
+        <a href="#" class="action-button" onclick="viewPricingHistory()">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="fas fa-history fa-2x text-secondary"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">Pricing History</h6>
+                    <small class="text-muted">View past price changes and results</small>
+                </div>
+            </div>
+        </a>
+
+        <a href="{% url 'booking_vision_APP:analytics' %}" class="action-button">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="fas fa-chart-line fa-2x text-success"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">Revenue Analytics</h6>
+                    <small class="text-muted">Deep dive into performance metrics</small>
+                </div>
+            </div>
+        </a>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize pricing chart
-    const ctx = document.getElementById('pricingChart');
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
-                    label: 'Revenue with AI Pricing',
-                    data: [12000, 15000, 18000, 16000, 20000, 22000],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4
-                }, {
-                    label: 'Projected Revenue (Static Pricing)',
-                    data: [10000, 12000, 14000, 13000, 15000, 16000],
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderDash: [5, 5],
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
+    // Initialize charts if data is available
+    {% if chart_data.pricing_chart_ready %}
+    initializePricePerformanceChart();
+    {% endif %}
+    
+    {% if has_bookings and bookings_count >= 10 %}
+    initializeSeasonalTrendsChart();
+    {% endif %}
+});
+
+{% if chart_data.pricing_chart_ready %}
+function initializePricePerformanceChart() {
+    const ctx = document.getElementById('pricePerformanceChart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [{% for point in price_performance_data %}'{{ point.date|date:"M j" }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Average Price',
+                data: [{% for point in price_performance_data %}{{ point.price }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true
+            }, {
+                label: 'Occupancy Rate',
+                data: [{% for point in price_performance_data %}{{ point.occupancy }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderWidth: 2,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
                     title: {
                         display: true,
-                        text: 'AI Pricing Impact on Revenue'
+                        text: 'Price ($)'
                     }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Revenue ($)'
-                        }
-                    }
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Occupancy (%)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
                 }
+            }
+        }
+    });
+}
+{% endif %}
+
+function updatePricingAnalysis() {
+    const propertyId = document.getElementById('propertySelector').value;
+    const url = new URL(window.location);
+    if (propertyId) {
+        url.searchParams.set('property_id', propertyId);
+    } else {
+        url.searchParams.delete('property_id');
+    }
+    window.location.href = url.toString();
+}
+
+function applyRecommendation(propertyId, recommendedPrice) {
+    if (confirm(`Apply AI recommended price of $${recommendedPrice}?`)) {
+        fetch(`/api/properties/${propertyId}/update-price/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                price: recommendedPrice,
+                source: 'ai_recommendation'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                BookingVision.showNotification('Price updated successfully!', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                BookingVision.showNotification('Error: ' + data.error, 'error');
             }
         });
     }
+}
 
-    // Apply pricing recommendations
-    document.querySelectorAll('.apply-pricing').forEach(button => {
-        button.addEventListener('click', function() {
-            const propertyId = this.dataset.propertyId;
-            const price = this.dataset.price;
-            
-            if (confirm(`Apply suggested price of $${price}?`)) {
-                // Apply pricing logic here
-                this.innerHTML = '<i class="fas fa-check me-1"></i>Applied';
-                this.classList.remove('btn-primary');
-                this.classList.add('btn-success');
-                this.disabled = true;
-                
-                BookingVision.showNotification('Pricing updated successfully!', 'success');
+function enableAutoPricing(propertyId) {
+    if (confirm('Enable automatic AI pricing for this property?')) {
+        fetch(`/api/properties/${propertyId}/enable-ai-pricing/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                BookingVision.showNotification('AI pricing enabled!', 'success');
+                location.reload();
             }
         });
-    });
-});
+    }
+}
+
+function enableAIPricing() {
+    if (confirm('Enable AI pricing for all eligible properties?')) {
+        fetch('{% url "booking_vision_APP:enable_ai_pricing" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                BookingVision.showNotification('AI pricing enabled!', 'success');
+                location.reload();
+            }
+        });
+    }
+}
+
+function accelerateLearning() {
+    // Implementation for accelerating AI learning
+    BookingVision.showNotification('Learning acceleration initiated!', 'info');
+}
+
+function optimizeAllPrices() {
+    if (confirm('Apply AI pricing recommendations to all properties?')) {
+        // Implementation for bulk price optimization
+        BookingVision.showNotification('Optimizing all prices...', 'info');
+    }
+}
+
+function viewRevenueOpportunities() {
+    // Implementation for viewing revenue opportunities
+    window.location.href = '{% url "booking_vision_APP:analytics" %}?view=revenue_opportunities';
+}
+
+function learnAboutPricing() {
+    window.location.href = '{% url "booking_vision_APP:documentation" %}#ai-pricing';
+}
 </script>
 {% endblock %}

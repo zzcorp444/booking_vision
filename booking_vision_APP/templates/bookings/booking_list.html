@@ -1,284 +1,620 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
-{% block title %}Bookings - Booking Vision{% endblock %}
+{% block title %}Properties - Booking Vision{% endblock %}
+
+{% block extra_css %}
+<style>
+    .properties-header {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .property-card {
+        background: white;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    
+    .property-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .property-image {
+        height: 200px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .property-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .property-image-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: white;
+        font-size: 3rem;
+        opacity: 0.7;
+    }
+    
+    .property-status-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-active {
+        background: rgba(40, 167, 69, 0.9);
+        color: white;
+    }
+    
+    .status-inactive {
+        background: rgba(108, 117, 125, 0.9);
+        color: white;
+    }
+    
+    .status-draft {
+        background: rgba(255, 193, 7, 0.9);
+        color: #212529;
+    }
+    
+    .property-content {
+        padding: 1.5rem;
+    }
+    
+    .property-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #2d3748;
+    }
+    
+    .property-location {
+        color: #718096;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .property-specs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: #4a5568;
+    }
+    
+    .property-spec {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .property-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: #f7fafc;
+        border-radius: 0.5rem;
+    }
+    
+    .metric-item {
+        text-align: center;
+    }
+    
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        display: block;
+    }
+    
+    .metric-label {
+        font-size: 0.75rem;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .property-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .property-performance {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .performance-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    .performance-excellent { background: #48bb78; }
+    .performance-good { background: #38b2ac; }
+    .performance-average { background: #ed8936; }
+    .performance-poor { background: #f56565; }
+    .performance-no-data { background: #a0aec0; }
+    
+    .ai-insights-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background: rgba(102, 126, 234, 0.9);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .properties-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+    
+    .properties-filters {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .property-summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .summary-card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border-left: 4px solid transparent;
+    }
+    
+    .summary-card.total { border-left-color: #667eea; }
+    .summary-card.active { border-left-color: #48bb78; }
+    .summary-card.revenue { border-left-color: #38b2ac; }
+    .summary-card.occupancy { border-left-color: #ed8936; }
+    
+    .empty-properties {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #f8f9fa;
+        border-radius: 1rem;
+        border: 2px dashed #dee2e6;
+    }
+    
+    .onboarding-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .setup-checklist {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .checklist-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    
+    .checklist-item.completed {
+        background: #f0fff4;
+        border-left-color: #48bb78;
+    }
+    
+    .checklist-item.current {
+        background: #fffaf0;
+        border-left-color: #ed8936;
+    }
+    
+    .checklist-item.pending {
+        background: #f7fafc;
+        border-left-color: #e2e8f0;
+    }
+    
+    @media (max-width: 768px) {
+        .properties-header {
+            padding: 1.5rem;
+        }
+        
+        .properties-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .property-content {
+            padding: 1rem;
+        }
+        
+        .property-metrics {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .properties-filters {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 text-primary-blue">
-                    <i class="fas fa-calendar-check me-2"></i>Bookings
+    <!-- Properties Header -->
+    <div class="properties-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="h2 mb-2">
+                    <i class="fas fa-home me-3"></i>Property Portfolio
                 </h1>
-                {% if has_bookings %}
-                <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Add Manual Booking
+                <p class="mb-0 opacity-90">
+                    {% if has_properties %}
+                        Managing {{ properties_count }} propert{{ properties_count|pluralize:"y,ies" }}
+                        {% if has_bookings %} with {{ bookings_count }} total booking{{ bookings_count|pluralize }}{% endif %}
+                    {% elif has_connected_channels %}
+                        Ready to add your first property - channels are connected!
+                    {% else %}
+                        Build your rental portfolio and connect booking channels
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-light me-2">
+                    <i class="fas fa-plus me-2"></i>Add Property
+                </a>
+                {% if has_properties %}
+                <button class="btn btn-outline-light" onclick="bulkActions()">
+                    <i class="fas fa-cog me-2"></i>Bulk Actions
+                </button>
+                {% else %}
+                <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-light">
+                    <i class="fas fa-link me-2"></i>Connect Channels
                 </a>
                 {% endif %}
             </div>
+        </div>
+    </div>
 
-            {% if empty_state == 'no_channels' %}
-                <!-- No Channels Connected State -->
-                <div class="empty-state text-center py-5">
-                    <div class="empty-state-icon mb-4">
-                        <i class="fas fa-link text-muted" style="font-size: 4rem;"></i>
-                    </div>
-                    <h3 class="mb-3">Connect Your First Channel</h3>
-                    <p class="text-muted mb-4">
-                        Start by connecting your booking channels (Airbnb, Booking.com, etc.) 
-                        to begin importing your reservations automatically.
-                    </p>
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-link me-2"></i>Connect Channels
-                        </a>
-                    </div>
-                </div>
-
-            {% elif empty_state == 'no_properties' %}
-                <!-- No Properties Added State -->
-                <div class="empty-state text-center py-5">
-                    <div class="empty-state-icon mb-4">
-                        <i class="fas fa-home text-muted" style="font-size: 4rem;"></i>
-                    </div>
-                    <h3 class="mb-3">Add Your First Property</h3>
-                    <p class="text-muted mb-4">
-                        You've connected channels but need to add your properties 
-                        to start managing bookings.
-                    </p>
-                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary btn-lg">
-                        <i class="fas fa-plus me-2"></i>Add Property
+    <!-- Onboarding for New Users -->
+    {% if not has_properties and not has_connected_channels %}
+    <div class="onboarding-card">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h4 class="mb-2">
+                    <i class="fas fa-rocket me-2"></i>Welcome to Your Property Management Hub!
+                </h4>
+                <p class="mb-3 opacity-90">
+                    Get started by adding your rental properties and connecting your booking channels. 
+                    This will enable powerful analytics, automated pricing, and centralized management.
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-light">
+                        <i class="fas fa-home me-2"></i>Add First Property
+                    </a>
+                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-light">
+                        <i class="fas fa-link me-2"></i>Connect Channels
+                    </a>
+                    <a href="{% url 'booking_vision_APP:documentation' %}" class="btn btn-outline-light">
+                        <i class="fas fa-book me-2"></i>Setup Guide
                     </a>
                 </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-building" style="font-size: 4rem; opacity: 0.7;"></i>
+            </div>
+        </div>
+    </div>
 
-            {% elif empty_state == 'no_bookings' %}
-                <!-- No Bookings Yet State -->
-                <div class="empty-state text-center py-5">
-                    <div class="empty-state-icon mb-4">
-                        <i class="fas fa-calendar-alt text-muted" style="font-size: 4rem;"></i>
-                    </div>
-                    <h3 class="mb-3">No Bookings Yet</h3>
-                    <p class="text-muted mb-4">
-                        Your channels are connected and properties are set up. 
-                        Bookings will appear here automatically, or you can add one manually.
-                    </p>
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-sync me-2"></i>Sync Now
-                        </a>
-                        <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-primary btn-lg">
-                            <i class="fas fa-plus me-2"></i>Add Manual Booking
-                        </a>
-                    </div>
+    <!-- Setup Checklist -->
+    <div class="setup-checklist">
+        <h5 class="mb-3">
+            <i class="fas fa-list-check me-2"></i>Getting Started Checklist
+        </h5>
+        
+        <div class="checklist-item current">
+            <div class="me-3">
+                <i class="fas fa-circle text-warning" style="font-size: 1.2rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="mb-1">Add Your First Property</h6>
+                <p class="mb-0 text-muted small">Add rental properties to start managing bookings and analytics</p>
+            </div>
+            <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-sm btn-primary">
+                Add Now
+            </a>
+        </div>
+
+        <div class="checklist-item pending">
+            <div class="me-3">
+                <i class="far fa-circle text-muted" style="font-size: 1.2rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="mb-1">Connect Booking Channels</h6>
+                <p class="mb-0 text-muted small">Connect Airbnb, Booking.com, VRBO for automatic sync</p>
+            </div>
+        </div>
+
+        <div class="checklist-item pending">
+            <div class="me-3">
+                <i class="far fa-circle text-muted" style="font-size: 1.2rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="mb-1">Sync Your Bookings</h6>
+                <p class="mb-0 text-muted small">Import existing bookings and enable analytics</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Properties with Data -->
+    {% if has_properties %}
+    
+    <!-- Property Summary Cards -->
+    <div class="property-summary-cards">
+        <div class="summary-card total">
+            <div class="summary-label">Total Properties</div>
+            <div class="summary-value">{{ properties_count }}</div>
+        </div>
+        <div class="summary-card active">
+            <div class="summary-label">Active Listings</div>
+            <div class="summary-value">{{ active_properties|length }}</div>
+        </div>
+        <div class="summary-card revenue">
+            <div class="summary-label">Total Revenue</div>
+            <div class="summary-value">${{ total_revenue|floatformat:2 }}</div>
+        </div>
+        <div class="summary-card occupancy">
+            <div class="summary-label">Avg Occupancy</div>
+            <div class="summary-value">
+                {% if has_bookings %}{{ occupancy_rate|default:0 }}%{% else %}--{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Properties Filters -->
+    <div class="properties-filters">
+        <div class="filter-group">
+            <label class="form-label mb-0 me-2">Filter:</label>
+            <select class="form-select form-select-sm" onchange="filterProperties(this.value)">
+                <option value="">All Properties</option>
+                <option value="active">Active Only</option>
+                <option value="inactive">Inactive Only</option>
+                <option value="high-performance">High Performance</option>
+                <option value="needs-attention">Needs Attention</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <select class="form-select form-select-sm" onchange="sortProperties(this.value)">
+                <option value="name">Sort by Name</option>
+                <option value="revenue">Sort by Revenue</option>
+                <option value="occupancy">Sort by Occupancy</option>
+                <option value="created">Sort by Date Added</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Properties Grid -->
+    <div class="properties-grid">
+        {% for property in active_properties %}
+        <div class="property-card" data-property-id="{{ property.id }}">
+            {% if property.ai_pricing_enabled or property.ai_maintenance_enabled %}
+            <div class="ai-insights-badge">
+                <i class="fas fa-robot me-1"></i>AI Enabled
+            </div>
+            {% endif %}
+            
+            <div class="property-image">
+                <div class="property-status-badge status-{{ property.status|default:'active' }}">
+                    {{ property.get_status_display|default:'Active' }}
                 </div>
-
-            {% else %}
-                <!-- Show bookings functionality when data exists -->
+                {% if property.main_image %}
+                    <img src="{{ property.main_image.url }}" alt="{{ property.name }}">
+                {% else %}
+                    <div class="property-image-placeholder">
+                        <i class="fas fa-home"></i>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="property-content">
+                <h3 class="property-title">{{ property.name }}</h3>
+                <div class="property-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    {{ property.city }}, {{ property.state }}
+                </div>
                 
-                <!-- Sync Status Card -->
-                <div class="card mb-4 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-md-4">
-                                <div class="stat-item">
-                                    <i class="fas fa-link text-primary mb-2"></i>
-                                    <h4 class="mb-0">{{ sync_status.channels_connected|default:0 }}</h4>
-                                    <small class="text-muted">Connected Channels</small>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-item">
-                                    <i class="fas fa-home text-success mb-2"></i>
-                                    <h4 class="mb-0">{{ sync_status.properties_added|default:0 }}</h4>
-                                    <small class="text-muted">Properties</small>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-item">
-                                    <i class="fas fa-calendar-check text-info mb-2"></i>
-                                    <h4 class="mb-0">{{ sync_status.total_bookings|default:0 }}</h4>
-                                    <small class="text-muted">Total Bookings</small>
-                                </div>
-                            </div>
-                        </div>
+                <div class="property-specs">
+                    <div class="property-spec">
+                        <i class="fas fa-bed"></i>
+                        {{ property.bedrooms }} bed{{ property.bedrooms|pluralize }}
+                    </div>
+                    <div class="property-spec">
+                        <i class="fas fa-bath"></i>
+                        {{ property.bathrooms }} bath{{ property.bathrooms|pluralize }}
+                    </div>
+                    <div class="property-spec">
+                        <i class="fas fa-users"></i>
+                        {{ property.max_guests }} guest{{ property.max_guests|pluralize }}
                     </div>
                 </div>
 
-                <!-- Booking Stats -->
-                <div class="row mb-4">
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ booking_stats.total|default:0 }}</h5>
-                                <p class="card-text">Total Bookings</p>
-                            </div>
-                        </div>
+                <!-- Property Metrics (Data Responsive) -->
+                <div class="property-metrics">
+                    {% with property_bookings=property.booking_set.all %}
+                    <div class="metric-item">
+                        <span class="metric-value">{{ property_bookings.count }}</span>
+                        <span class="metric-label">Bookings</span>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ booking_stats.pending|default:0 }}</h5>
-                                <p class="card-text">Pending</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ booking_stats.confirmed|default:0 }}</h5>
-                                <p class="card-text">Confirmed</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ booking_stats.checked_in|default:0 }}</h5>
-                                <p class="card-text">Checked In</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Filters Form -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <form method="get" class="d-flex gap-3 align-items-end">
-                            <div class="flex-grow-1">
-                                <label for="search" class="form-label">Search</label>
-                                <input type="text" class="form-control" id="search" name="search" 
-                                       value="{{ current_search }}" placeholder="Search by guest name, email, or property">
-                            </div>
-                            <div>
-                                <label for="status" class="form-label">Status</label>
-                                <select class="form-select" id="status" name="status">
-                                    <option value="">All Statuses</option>
-                                    {% for value, label in status_choices %}
-                                    <option value="{{ value }}" {% if value == current_status %}selected{% endif %}>
-                                        {{ label }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div>
-                                <label for="property" class="form-label">Property</label>
-                                <select class="form-select" id="property" name="property">
-                                    <option value="">All Properties</option>
-                                    {% for prop in properties %}
-                                    <option value="{{ prop.id }}" {% if prop.id|stringformat:"s" == current_property %}selected{% endif %}>
-                                        {{ prop.name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-outline-primary">
-                                <i class="fas fa-search"></i> Filter
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Bookings List -->
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        {% if bookings %}
-                            {% for booking in bookings %}
-                            <div class="booking-item border-bottom py-3">
-                                <div class="row align-items-center">
-                                    <div class="col-md-3">
-                                        <h6 class="mb-1">{{ booking.guest.first_name }} {{ booking.guest.last_name }}</h6>
-                                        <small class="text-muted">{{ booking.guest.email }}</small>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <strong>{{ booking.rental_property.name }}</strong>
-                                        <br><small class="text-muted">{{ booking.channel.name }}</small>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}secondary{% endif %}">
-                                            {{ booking.get_status_display }}
-                                        </span>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <strong>${{ booking.total_price|default:0 }}</strong>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="{% url 'booking_vision_APP:booking_detail' booking.pk %}" class="btn btn-sm btn-outline-primary">
-                                            View Details
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-
-                            <!-- Pagination -->
-                            {% if is_paginated %}
-                            <nav aria-label="Bookings pagination" class="mt-4">
-                                <ul class="pagination justify-content-center">
-                                    {% if page_obj.has_previous %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-                                    </li>
-                                    {% endif %}
-                                    <li class="page-item active">
-                                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-                                    </li>
-                                    {% if page_obj.has_next %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
-                                    </li>
-                                    {% endif %}
-                                </ul>
-                            </nav>
+                    <div class="metric-item">
+                        <span class="metric-value">
+                            {% if property_bookings.exists %}
+                                ${{ property_bookings|revenue_sum|floatformat:0 }}
+                            {% else %}
+                                $0
                             {% endif %}
-                        {% else %}
-                            <div class="no-data-message text-center py-5">
-                                <i class="fas fa-search text-muted mb-3" style="font-size: 3rem;"></i>
-                                <h6>No bookings found</h6>
-                                <p class="text-muted mb-3">No bookings match your current search criteria.</p>
-                                <a href="{% url 'booking_vision_APP:booking_list' %}" class="btn btn-outline-primary">
-                                    <i class="fas fa-refresh me-2"></i>Clear Filters
-                                </a>
-                            </div>
-                        {% endif %}
+                        </span>
+                        <span class="metric-label">Revenue</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-value">
+                            {% if property_bookings.exists %}
+                                {{ property|occupancy_rate|default:"--" }}%
+                            {% else %}
+                                --%
+                            {% endif %}
+                        </span>
+                        <span class="metric-label">Occupancy</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-value">
+                            {% if property_bookings.exists %}
+                                {{ property|avg_rating|default:"--" }}
+                            {% else %}
+                                --
+                            {% endif %}
+                        </span>
+                        <span class="metric-label">Rating</span>
+                    </div>
+                    {% endwith %}
+                </div>
+
+                <div class="property-actions">
+                    <div class="property-performance">
+                        {% with performance=property|performance_score %}
+                        <div class="performance-indicator performance-{{ performance.level }}"></div>
+                        <span class="text-muted small">
+                            {% if performance.level == 'no-data' %}
+                                No data yet
+                            {% else %}
+                                {{ performance.label }} performance
+                            {% endif %}
+                        </span>
+                        {% endwith %}
+                    </div>
+                    
+                    <div class="d-flex gap-1">
+                        <a href="{% url 'booking_vision_APP:property_detail' property.id %}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'booking_vision_APP:property_edit' property.id %}" 
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-sm btn-outline-info" 
+                                onclick="viewAnalytics({{ property.id }})">
+                            <i class="fas fa-chart-line"></i>
+                        </button>
                     </div>
                 </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Empty State for No Properties -->
+    <div class="empty-properties">
+        <i class="fas fa-home text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+        <h4 class="text-muted">No Properties Yet</h4>
+        <p class="text-muted mb-4">
+            {% if has_connected_channels %}
+                Great! You've connected your channels. Now add your rental properties to start managing bookings.
+            {% else %}
+                Add your first rental property to begin building your portfolio and tracking performance.
+            {% endif %}
+        </p>
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+            <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Add Your First Property
+            </a>
+            {% if not has_connected_channels %}
+            <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-primary">
+                <i class="fas fa-link me-2"></i>Connect Channels First
+            </a>
             {% endif %}
         </div>
     </div>
+    {% endif %}
 </div>
 
-<style>
-.empty-state {
-    min-height: 400px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+<script>
+function filterProperties(filter) {
+    // Implementation for filtering properties
+    console.log('Filtering by:', filter);
 }
 
-.empty-state-icon {
-    opacity: 0.6;
+function sortProperties(sort) {
+    // Implementation for sorting properties
+    console.log('Sorting by:', sort);
 }
 
-.stat-item {
-    padding: 1rem;
+function bulkActions() {
+    // Implementation for bulk actions
+    console.log('Bulk actions');
 }
 
-.stat-item i {
-    font-size: 2rem;
+function viewAnalytics(propertyId) {
+    window.location.href = `{% url 'booking_vision_APP:analytics' %}?property_id=${propertyId}`;
 }
-
-.no-data-message {
-    background: #f8f9fa;
-    border: 1px dashed #dee2e6;
-    border-radius: 0.5rem;
-    padding: 2rem;
-    color: #6c757d;
-}
-
-.booking-item:last-child {
-    border-bottom: none !important;
-}
-</style>
+</script>
 {% endblock %}
