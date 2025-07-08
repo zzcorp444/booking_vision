@@ -12,7 +12,6 @@ import json
 
 from ..models.channels import Channel, ChannelConnection, PropertyChannel
 from ..models.properties import Property
-from ..integrations.sync_manager import SyncManager
 from ..integrations.no_api_sync_manager import NoAPIChannelSync
 
 
