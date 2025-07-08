@@ -27,7 +27,7 @@ def home_redirect(request):
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     """Main dashboard view with comprehensive analytics"""
-    template_name = 'dashboard/dashboard_enhanced.html'  # Changed to use enhanced template
+    template_name = 'dashboard/dashboard.html'
     login_url = '/accounts/login/'
 
     def get_context_data(self, **kwargs):
