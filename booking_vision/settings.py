@@ -130,7 +130,14 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
-# Channel Layers
+# Add Channel layers configuration (using in-memory for development)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
+
+"""# Channel Layers
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -138,7 +145,7 @@ CHANNEL_LAYERS = {
             "hosts": [config('REDIS_URL', default='redis://localhost:6379')],
         },
     },
-}
+}"""
 
 # REST Framework
 REST_FRAMEWORK = {
