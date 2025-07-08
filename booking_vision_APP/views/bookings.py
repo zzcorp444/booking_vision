@@ -6,7 +6,7 @@ Location: booking_vision_APP/views/bookings.py
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView, TemplateView, CreateView  # Add CreateView here
+from django.views.generic import ListView, DetailView, TemplateView, CreateView
 from django.http import JsonResponse
 from django.db.models import Q, Count, Sum, Avg
 from datetime import datetime, timedelta
@@ -19,9 +19,10 @@ from ..models.bookings import Booking, Guest, BookingMessage
 from ..models.properties import Property
 from ..models.channels import Channel
 from ..ai.sentiment_analysis import SentimentAnalyzer
+from ..mixins import DataResponsiveMixin  # Add this import
 
 
-class BookingListView(LoginRequiredMixin, ListView):
+class BookingListView(DataResponsiveMixin, LoginRequiredMixin, ListView):  # Just add DataResponsiveMixin
     """List all bookings for the current user"""
     model = Booking
     template_name = 'bookings/booking_list.html'
@@ -56,8 +57,9 @@ class BookingListView(LoginRequiredMixin, ListView):
         return queryset
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)  # This will include DataResponsiveMixin context
 
+        # Keep ALL your existing context data
         # Filter options
         context['properties'] = Property.objects.filter(
             owner=self.request.user,
@@ -82,6 +84,7 @@ class BookingListView(LoginRequiredMixin, ListView):
         return context
 
 
+# Keep ALL your existing classes unchanged
 class BookingDetailView(LoginRequiredMixin, DetailView):
     """Detailed view of a single booking"""
     model = Booking

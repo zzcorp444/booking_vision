@@ -13,15 +13,17 @@ import json
 from ..models.channels import Channel, ChannelConnection, PropertyChannel
 from ..models.properties import Property
 from ..integrations.no_api_sync_manager import NoAPIChannelSync
+from ..mixins import DataResponsiveMixin  # Add this import
 
 
-class ChannelManagementView(LoginRequiredMixin, TemplateView):
+class ChannelManagementView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):  # Add DataResponsiveMixin
     """Channel connection management view"""
     template_name = 'channels/channel_management.html'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)  # This includes DataResponsiveMixin context
 
+        # Keep ALL your existing context data
         # Get all channels
         context['channels'] = Channel.objects.filter(is_active=True)
 
@@ -36,9 +38,31 @@ class ChannelManagementView(LoginRequiredMixin, TemplateView):
         }
         context['connected_channels'] = connected_channels
 
+        # Add setup progress calculation (new addition)
+        context['setup_progress'] = self.calculate_setup_progress()
+
         return context
 
+    def calculate_setup_progress(self):
+        """Calculate user's setup progress"""
+        steps_completed = 0
+        total_steps = 3
 
+        if self.request.user.channelconnection_set.filter(is_connected=True).exists():
+            steps_completed += 1
+        if self.request.user.property_set.filter(is_active=True).exists():
+            steps_completed += 1
+        if self.request.user.property_set.filter(booking__isnull=False).exists():
+            steps_completed += 1
+
+        return {
+            'completed': steps_completed,
+            'total': total_steps,
+            'percentage': (steps_completed / total_steps) * 100
+        }
+
+
+# Keep ALL your existing functions unchanged
 @login_required
 @require_http_methods(["POST"])
 def connect_channel(request):
@@ -150,4 +174,3 @@ def link_property_to_channel(request):
             'success': False,
             'error': str(e)
         }, status=400)
-

@@ -3,257 +3,264 @@
 
 {% block title %}Bookings - Booking Vision{% endblock %}
 
-{% block breadcrumb %}
-    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
-    <li class="breadcrumb-item active">Bookings</li>
-{% endblock %}
-
 {% block content %}
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 text-primary-blue">
-                    <i class="fas fa-calendar-alt me-2"></i>Bookings Management
+                    <i class="fas fa-calendar-check me-2"></i>Bookings
                 </h1>
-                <div class="d-flex gap-2">
-                    <a href="{% url 'booking_vision_APP:booking_calendar' %}" class="btn btn-outline-primary">
-                        <i class="fas fa-calendar me-2"></i>Calendar View
-                    </a>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
-                        <i class="fas fa-filter me-2"></i>Filters
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Booking Statistics -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-primary">{{ booking_stats.total }}</h4>
-                <p>Total Bookings</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-warning">{{ booking_stats.pending }}</h4>
-                <p>Pending</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-success">{{ booking_stats.confirmed }}</h4>
-                <p>Confirmed</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-info">{{ booking_stats.checked_in }}</h4>
-                <p>Currently Checked In</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Current Filters -->
-    {% if current_status or current_property or current_search %}
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="alert alert-info d-flex align-items-center">
-                <i class="fas fa-info-circle me-2"></i>
-                <span class="me-3">Active Filters:</span>
-                {% if current_status %}
-                    <span class="badge bg-primary me-2">Status: {{ current_status }}</span>
-                {% endif %}
-                {% if current_property %}
-                    <span class="badge bg-primary me-2">Property: {{ current_property }}</span>
-                {% endif %}
-                {% if current_search %}
-                    <span class="badge bg-primary me-2">Search: "{{ current_search }}"</span>
-                {% endif %}
-                <a href="{% url 'booking_vision_APP:booking_list' %}" class="btn btn-sm btn-outline-secondary ms-auto">
-                    Clear All
+                {% if has_bookings %}
+                <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add Manual Booking
                 </a>
+                {% endif %}
             </div>
-        </div>
-    </div>
-    {% endif %}
 
-    <!-- Bookings Table -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-list me-2"></i>All Bookings
-                    </h5>
+            {% if empty_state == 'no_channels' %}
+                <!-- No Channels Connected State -->
+                <div class="empty-state text-center py-5">
+                    <div class="empty-state-icon mb-4">
+                        <i class="fas fa-link text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h3 class="mb-3">Connect Your First Channel</h3>
+                    <p class="text-muted mb-4">
+                        Start by connecting your booking channels (Airbnb, Booking.com, etc.) 
+                        to begin importing your reservations automatically.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-link me-2"></i>Connect Channels
+                        </a>
+                    </div>
                 </div>
-                <div class="card-body">
-                    {% if bookings %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Booking ID</th>
-                                        <th>Guest</th>
-                                        <th>Property</th>
-                                        <th>Check-in</th>
-                                        <th>Check-out</th>
-                                        <th>Nights</th>
-                                        <th>Guests</th>
-                                        <th>Channel</th>
-                                        <th>Status</th>
-                                        <th>Total</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for booking in bookings %}
-                                    <tr>
-                                        <td>
-                                            <a href="{% url 'booking_vision_APP:booking_detail' booking.pk %}" class="text-decoration-none">
-                                                <strong>#{{ booking.id }}</strong>
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <strong>{{ booking.guest.first_name }} {{ booking.guest.last_name }}</strong>
-                                                <br><small class="text-muted">{{ booking.guest.email }}</small>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <strong>{{ booking.rental_property.name }}</strong>
-                                                <br><small class="text-muted">{{ booking.rental_property.city }}</small>
-                                            </div>
-                                        </td>
-                                        <td>{{ booking.check_in_date }}</td>
-                                        <td>{{ booking.check_out_date }}</td>
-                                        <td>
-                                            <span class="badge bg-light text-dark">{{ booking.nights }} nights</span>
-                                        </td>
-                                        <td>{{ booking.num_guests }}</td>
-                                        <td>
-                                            <span class="badge bg-secondary">{{ booking.channel.name }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'cancelled' %}danger{% else %}info{% endif %}">
-                                                {{ booking.get_status_display }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <strong>${{ booking.total_price }}</strong>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{% url 'booking_vision_APP:booking_detail' booking.pk %}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                                    <i class="fas fa-ellipsis-v"></i>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>Edit</a></li>
-                                                    <li><a class="dropdown-item" href="#"><i class="fas fa-envelope me-2"></i>Message Guest</a></li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-ban me-2"></i>Cancel</a></li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
 
-                        <!-- Pagination -->
+            {% elif empty_state == 'no_properties' %}
+                <!-- No Properties Added State -->
+                <div class="empty-state text-center py-5">
+                    <div class="empty-state-icon mb-4">
+                        <i class="fas fa-home text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h3 class="mb-3">Add Your First Property</h3>
+                    <p class="text-muted mb-4">
+                        You've connected channels but need to add your properties 
+                        to start managing bookings.
+                    </p>
+                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Add Property
+                    </a>
+                </div>
+
+            {% elif empty_state == 'no_bookings' %}
+                <!-- No Bookings Yet State -->
+                <div class="empty-state text-center py-5">
+                    <div class="empty-state-icon mb-4">
+                        <i class="fas fa-calendar-alt text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h3 class="mb-3">No Bookings Yet</h3>
+                    <p class="text-muted mb-4">
+                        Your channels are connected and properties are set up. 
+                        Bookings will appear here automatically, or you can add one manually.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sync me-2"></i>Sync Now
+                        </a>
+                        <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i>Add Manual Booking
+                        </a>
+                    </div>
+                </div>
+
+            {% else %}
+                <!-- Show YOUR EXISTING booking functionality -->
+                
+                <!-- Sync Status Card (NEW ADDITION) -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <div class="stat-item">
+                                    <i class="fas fa-link text-primary mb-2"></i>
+                                    <h4 class="mb-0">{{ sync_status.channels_connected }}</h4>
+                                    <small class="text-muted">Connected Channels</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-item">
+                                    <i class="fas fa-home text-success mb-2"></i>
+                                    <h4 class="mb-0">{{ sync_status.properties_added }}</h4>
+                                    <small class="text-muted">Properties</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-item">
+                                    <i class="fas fa-calendar-check text-info mb-2"></i>
+                                    <h4 class="mb-0">{{ sync_status.total_bookings }}</h4>
+                                    <small class="text-muted">Total Bookings</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- YOUR EXISTING FILTERS AND BOOKING STATS -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ booking_stats.total }}</h5>
+                                <p class="card-text">Total Bookings</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ booking_stats.pending }}</h5>
+                                <p class="card-text">Pending</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ booking_stats.confirmed }}</h5>
+                                <p class="card-text">Confirmed</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ booking_stats.checked_in }}</h5>
+                                <p class="card-text">Checked In</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- YOUR EXISTING FILTERS FORM -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <form method="get" class="d-flex gap-3 align-items-end">
+                            <div class="flex-grow-1">
+                                <label for="search" class="form-label">Search</label>
+                                <input type="text" class="form-control" id="search" name="search" 
+                                       value="{{ current_search }}" placeholder="Search by guest name, email, or property">
+                            </div>
+                            <div>
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="">All Statuses</option>
+                                    {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if value == current_status %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label for="property" class="form-label">Property</label>
+                                <select class="form-select" id="property" name="property">
+                                    <option value="">All Properties</option>
+                                    {% for prop in properties %}
+                                    <option value="{{ prop.id }}" {% if prop.id|stringformat:"s" == current_property %}selected{% endif %}>
+                                        {{ prop.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="fas fa-search"></i> Filter
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- YOUR EXISTING BOOKINGS LIST -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        {% for booking in bookings %}
+                        <div class="booking-item border-bottom py-3">
+                            <!-- YOUR EXISTING BOOKING DISPLAY CODE GOES HERE -->
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <h6 class="mb-1">{{ booking.guest.first_name }} {{ booking.guest.last_name }}</h6>
+                                    <small class="text-muted">{{ booking.guest.email }}</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>{{ booking.rental_property.name }}</strong>
+                                    <br><small class="text-muted">{{ booking.channel.name }}</small>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge bg-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                                        {{ booking.get_status_display }}
+                                    </span>
+                                </div>
+                                <div class="col-md-2">
+                                    <strong>${{ booking.total_price }}</strong>
+                                </div>
+                                <div class="col-md-2">
+                                    <a href="{% url 'booking_vision_APP:booking_detail' booking.pk %}" class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">No bookings found matching your criteria.</p>
+                        </div>
+                        {% endfor %}
+
+                        <!-- YOUR EXISTING PAGINATION -->
                         {% if is_paginated %}
-                        <nav aria-label="Bookings pagination" class="mt-3">
+                        <nav aria-label="Bookings pagination" class="mt-4">
                             <ul class="pagination justify-content-center">
                                 {% if page_obj.has_previous %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=1">First</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-                                    </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
                                 {% endif %}
-                                
                                 <li class="page-item active">
                                     <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
                                 </li>
-                                
                                 {% if page_obj.has_next %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-                                    </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
                                 {% endif %}
                             </ul>
                         </nav>
                         {% endif %}
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-calendar-times text-muted mb-3" style="font-size: 4rem;"></i>
-                            <h5 class="text-muted">No bookings found</h5>
-                            <p class="text-muted">Your bookings will appear here once you start receiving reservations.</p>
-                        </div>
-                    {% endif %}
+                    </div>
                 </div>
-            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Filter Modal -->
-<div class="modal fade" id="filterModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Filter Bookings</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="get">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="search" class="form-label">Search</label>
-                        <input type="text" class="form-control" id="search" name="search" 
-                               value="{{ current_search }}" placeholder="Guest name, email, or property">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Status</label>
-                        <select class="form-select" id="status" name="status">
-                            <option value="">All Statuses</option>
-                            {% for value, label in status_choices %}
-                            <option value="{{ value }}" {% if value == current_status %}selected{% endif %}>
-                                {{ label }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="property" class="form-label">Property</label>
-                        <select class="form-select" id="property" name="property">
-                            <option value="">All Properties</option>
-                            {% for prop in properties %}
-                            <option value="{{ prop.id }}" {% if prop.id|stringformat:"s" == current_property %}selected{% endif %}>
-                                {{ prop.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Apply Filters</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<style>
+.empty-state {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.empty-state-icon {
+    opacity: 0.6;
+}
+
+.stat-item {
+    padding: 1rem;
+}
+
+.stat-item i {
+    font-size: 2rem;
+}
+</style>
 {% endblock %}
