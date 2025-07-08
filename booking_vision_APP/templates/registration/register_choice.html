@@ -1,0 +1,63 @@
+<!-- booking_vision_APP/templates/registration/register_choice.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - Booking Vision{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-8">
+            <h2 class="text-center mb-4">Join Booking Vision</h2>
+            
+            <div class="row">
+                <!-- Host Registration -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-home fa-4x text-primary mb-3"></i>
+                            <h4>I'm a Property Host</h4>
+                            <p class="text-muted">Manage your properties, sync bookings, and maximize revenue with AI-powered tools.</p>
+                            <ul class="text-start">
+                                <li>Multi-channel synchronization</li>
+                                <li>AI-powered pricing</li>
+                                <li>Advanced analytics</li>
+                                <li>Automated guest communication</li>
+                            </ul>
+                            <a href="{% url 'booking_vision_APP:register_host' %}" class="btn btn-primary">
+                                Register as Host
+                            </a>
+                            <p class="mt-2 text-muted small">14-day free trial, then from $29/month</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Guest Registration -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-user fa-4x text-success mb-3"></i>
+                            <h4>I'm a Guest</h4>
+                            <p class="text-muted">Search and book properties, manage your reservations, and enjoy your stays.</p>
+                            <ul class="text-start">
+                                <li>Browse available properties</li>
+                                <li>View rates and availability</li>
+                                <li>Read reviews and ratings</li>
+                                <li>Book directly</li>
+                            </ul>
+                            <a href="{% url 'booking_vision_APP:register_guest' %}" class="btn btn-success">
+                                Register as Guest
+                            </a>
+                            <p class="mt-2 text-muted small">Free forever</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <p>Already have an account? <a href="{% url 'login' %}">Log in here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

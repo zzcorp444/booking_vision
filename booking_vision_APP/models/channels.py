@@ -33,6 +33,32 @@ class ChannelConnection(models.Model):
     access_token = models.TextField(blank=True)
     refresh_token = models.TextField(blank=True)
 
+    # No-API sync fields
+    ical_url = models.URLField(blank=True, help_text="iCal feed URL")
+    email_sync_enabled = models.BooleanField(default=False)
+    scraping_enabled = models.BooleanField(default=False)
+    extension_token = models.CharField(max_length=255, blank=True)
+
+    # Credentials for scraping (encrypted in production)
+    login_email = models.EmailField(blank=True)
+    login_password_encrypted = models.CharField(max_length=255, blank=True)
+
+    # Sync preferences
+    preferred_sync_method = models.CharField(
+        max_length=20,
+        choices=[
+            ('ical', 'iCal Feed'),
+            ('email', 'Email Parsing'),
+            ('scraping', 'Web Scraping'),
+            ('extension', 'Browser Extension'),
+            ('mobile_api', 'Mobile API'),
+        ],
+        default='ical'
+    )
+
+    last_sync_method = models.CharField(max_length=20, blank=True)
+    last_sync_error = models.TextField(blank=True)
+
     # Connection status
     is_connected = models.BooleanField(default=False)
     last_sync = models.DateTimeField(null=True, blank=True)

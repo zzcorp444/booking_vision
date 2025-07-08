@@ -2,6 +2,7 @@
 Celery background tasks for Booking Vision
 """
 from celery import shared_task
+from asgiref.sync import async_to_sync
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.db.models import Q
@@ -386,3 +387,55 @@ def calculate_occupancy_rate(user, date):
     ).values('rental_property').distinct().count()
 
     return (occupied / total_properties) * 100
+
+
+@shared_task
+def sync_all_channels_no_api():
+    """Sync all channels without API for all users"""
+    from django.contrib.auth.models import User
+    from .integrations.no_api_sync_manager import NoAPIChannelSync
+
+    logger.info("Starting no-API sync for all users")
+
+    results = {}
+    for user in User.objects.filter(is_active=True):
+        try:
+            sync_manager = NoAPIChannelSync(user)
+            user_results = async_to_sync(sync_manager.sync_all_channels)()
+            results[user.username] = user_results
+            logger.info(f"Synced channels for user {user.username}: {user_results}")
+        except Exception as e:
+            logger.error(f"Error syncing for user {user.id}: {str(e)}")
+            results[user.username] = {'error': str(e)}
+
+    return results
+
+
+@shared_task
+def process_email_bookings():
+    """Process booking emails for all users"""
+    from django.contrib.auth.models import User
+    from .integrations.no_api_sync_manager import AirbnbNoAPISync
+
+    logger.info("Processing booking emails")
+
+    for user in User.objects.filter(is_active=True):
+        try:
+            # Get email-enabled channels
+            connections = user.channelconnection_set.filter(
+                email_sync_enabled=True,
+                is_connected=True
+            )
+
+            for connection in connections:
+                sync_class = {
+                    'Airbnb': AirbnbNoAPISync,
+                    # Add other channels
+                }.get(connection.channel.name)
+
+                if sync_class:
+                    sync = sync_class()
+                    async_to_sync(sync.sync_via_email)(user)
+
+        except Exception as e:
+            logger.error(f"Error processing emails for user {user.id}: {str(e)}")

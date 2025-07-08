@@ -202,12 +202,12 @@ Location: booking_vision_APP/templates/base.html
                 
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                        <!-- Activity Bell -->
+                        <!-- Activity Feed Icon -->
                         <li class="nav-item">
                             <a class="nav-link position-relative" href="{% url 'booking_vision_APP:activity' %}" id="activityLink">
-                                <i class="fas fa-bell"></i>
+                                <i class="fas fa-stream"></i> <!-- Changed from fa-bell to fa-stream -->
                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
-                                      id="activityBadge" style="display: none;">
+                                    id="activityBadge" style="display: none;">
                                     <span id="activityCount">0</span>
                                 </span>
                             </a>

@@ -31,7 +31,7 @@ urlpatterns = [
     path('bookings/<int:pk>/', bookings.BookingDetailView.as_view(), name='booking_detail'),
     path('bookings/calendar/', bookings.CalendarView.as_view(), name='booking_calendar'),
 
-    # Channel Management URLs (Add this section)
+    # Channel Management URLs
     path('channels/', channels.ChannelManagementView.as_view(), name='channel_management'),
     path('channels/connect/', channels.connect_channel, name='connect_channel'),
     path('channels/sync/', channels.sync_bookings, name='sync_bookings'),

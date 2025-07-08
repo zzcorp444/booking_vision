@@ -13,6 +13,12 @@ import json
 from ..models.properties import Property
 from ..models.bookings import Booking
 
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+
 
 @login_required
 @require_http_methods(["GET"])
@@ -290,3 +296,60 @@ def ai_toggle_api(request, feature):
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def extension_sync(request):
+    """Receive booking data from browser extension"""
+    channel_name = request.data.get('channel')
+    bookings_data = request.data.get('bookings', [])
+
+    try:
+        # Process bookings
+        from ..integrations.no_api_sync_manager import AirbnbNoAPISync
+        sync = AirbnbNoAPISync()
+
+        # Convert extension data to standard format
+        formatted_bookings = []
+        for booking in bookings_data:
+            formatted_bookings.append({
+                'external_booking_id': booking.get('confirmationCode'),
+                'guest_name': booking.get('guestName'),
+                'check_in': sync._parse_date(booking.get('checkIn')),
+                'check_out': sync._parse_date(booking.get('checkOut')),
+                'total_price': booking.get('totalPrice', 0),
+                'status': 'confirmed',
+                'channel': channel_name
+            })
+
+        # Save bookings
+        saved_count = await sync._save_bookings(request.user, formatted_bookings, channel_name)
+
+        return Response({
+            'success': True,
+            'bookings_received': len(bookings_data),
+            'bookings_saved': saved_count
+        })
+
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_extension_token(request):
+    """Get token for browser extension"""
+    from rest_framework.authtoken.models import Token
+
+    token, created = Token.objects.get_or_create(user=request.user)
+
+    return Response({
+        'token': token.key,
+        'server_url': request.build_absolute_uri('/').rstrip('/')
+    })

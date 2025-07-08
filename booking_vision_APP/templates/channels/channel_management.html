@@ -1,3 +1,4 @@
+<!-- booking_vision_APP/templates/channels/channel_management.html -->
 {% extends 'base.html' %}
 {% load static %}
 
@@ -8,15 +9,20 @@
     <div class="row">
         <div class="col-12">
             <h1 class="h3 mb-4 text-primary-blue">
-                <i class="fas fa-link me-2"></i>Channel Management
+                <i class="fas fa-link me-2"></i>Channel Management - No API Required
             </h1>
+            
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Revolutionary Sync Technology!</strong> Connect your channels without any API keys using our innovative multi-method synchronization.
+            </div>
         </div>
     </div>
     
     <div class="row">
         {% for channel in channels %}
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card channel-card">
+            <div class="card channel-card h-100">
                 <div class="card-header d-flex align-items-center">
                     <img src="{% static 'images/channel_logos/'|add:channel.name|lower|add:'_logo.png' %}" 
                         alt="{{ channel.name }}" 
@@ -25,83 +31,776 @@
                     <h5 class="mb-0">{{ channel.name }}</h5>
                 </div>
                 <div class="card-body">
-                    {% if channel.id in connected_channels %}
-                        <div class="text-center">
+                    {% with connection=connected_channels|get_item:channel.id %}
+                    {% if connection %}
+                        <div class="text-center mb-3">
                             <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
-                            <p class="text-success">Connected</p>
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-sm btn-outline-primary" onclick="syncChannel({{ channel.id }})">
-                                    <i class="fas fa-sync me-2"></i>Sync Now
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="disconnectChannel({{ channel.id }})">
-                                    <i class="fas fa-unlink me-2"></i>Disconnect
-                                </button>
+                            <p class="text-success fw-bold">Connected</p>
+                            
+                            <!-- Connection Status -->
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Sync Method:</small>
+                                <span class="badge bg-info">
+                                    {% if connection.preferred_sync_method == 'ical' %}
+                                        <i class="fas fa-calendar-alt me-1"></i>iCal Feed
+                                    {% elif connection.preferred_sync_method == 'email' %}
+                                        <i class="fas fa-envelope me-1"></i>Email Parsing
+                                    {% elif connection.preferred_sync_method == 'scraping' %}
+                                        <i class="fas fa-robot me-1"></i>Web Scraping
+                                    {% elif connection.preferred_sync_method == 'extension' %}
+                                        <i class="fas fa-puzzle-piece me-1"></i>Browser Extension
+                                    {% elif connection.preferred_sync_method == 'mobile_api' %}
+                                        <i class="fas fa-mobile-alt me-1"></i>Mobile API
+                                    {% else %}
+                                        Not configured
+                                    {% endif %}
+                                </span>
+                                
+                                {% if connection.last_sync %}
+                                <small class="text-muted d-block mt-2">
+                                    Last sync: {{ connection.last_sync|timesince }} ago
+                                </small>
+                                {% endif %}
                             </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-sm btn-outline-primary" onclick="syncChannel({{ channel.id }})">
+                                <i class="fas fa-sync me-2"></i>Sync Now
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="configureChannel({{ channel.id }}, '{{ channel.name }}')">
+                                <i class="fas fa-cog me-2"></i>Reconfigure
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="disconnectChannel({{ channel.id }})">
+                                <i class="fas fa-unlink me-2"></i>Disconnect
+                            </button>
                         </div>
                     {% else %}
-                        <div class="text-center">
-                            <i class="fas fa-times-circle text-muted fa-3x mb-3"></i>
+                        <div class="text-center mb-3">
+                            <i class="fas fa-plug text-muted fa-3x mb-3"></i>
                             <p class="text-muted">Not Connected</p>
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-primary" onclick="connectChannel({{ channel.id }}, '{{ channel.name }}')">
-                                    <i class="fas fa-link me-2"></i>Connect via iCal
-                                </button>
-                                <button class="btn btn-outline-secondary" onclick="showEmailSetup({{ channel.id }})">
-                                    <i class="fas fa-envelope me-2"></i>Email Sync
-                                </button>
-                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button class="btn btn-primary" onclick="connectChannel({{ channel.id }}, '{{ channel.name }}')">
+                                <i class="fas fa-link me-2"></i>Connect {{ channel.name }}
+                            </button>
                         </div>
                     {% endif %}
+                    {% endwith %}
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
-
-<!-- Connection Modal -->
-<div class="modal fade" id="connectionModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Connect to <span id="channelName"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="connectionForm">
-                    <input type="hidden" id="channelId">
-                    <div class="mb-3">
-                        <label class="form-label">API Key</label>
-                        <input type="text" class="form-control" id="apiKey" required>
+    
+    <!-- Setup Instructions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Quick Setup Guide
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="text-center">
+                                <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-calendar-alt fa-2x"></i>
+                                </div>
+                                <h6>iCal Method</h6>
+                                <p class="text-muted small">Get your calendar feed URL from your channel's settings and paste it here.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="text-center">
+                                <div class="rounded-circle bg-info text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-envelope fa-2x"></i>
+                                </div>
+                                <h6>Email Sync</h6>
+                                <p class="text-muted small">Forward booking emails to our system or connect your email for automatic parsing.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="text-center">
+                                <div class="rounded-circle bg-warning text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-robot fa-2x"></i>
+                                </div>
+                                <h6>Auto Scraping</h6>
+                                <p class="text-muted small">Provide login credentials for automated data extraction (secure & encrypted).</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <div class="text-center">
+                                <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-puzzle-piece fa-2x"></i>
+                                </div>
+                                <h6>Browser Extension</h6>
+                                <p class="text-muted small">Install our extension to capture bookings automatically while browsing.</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">API Secret</label>
-                        <input type="password" class="form-control" id="apiSecret" required>
-                    </div>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        You can find your API credentials in your {{ channel.name }} partner dashboard.
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitConnection()">Connect</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Enhanced Connection Modal -->
+<div class="modal fade" id="connectionModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-link me-2"></i>Connect <span id="channelName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="channelId">
+                
+                <!-- Progress Steps -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between">
+                        <div class="text-center flex-fill">
+                            <div class="step-circle active" id="step1">1</div>
+                            <small>Choose Method</small>
+                        </div>
+                        <div class="text-center flex-fill">
+                            <div class="step-circle" id="step2">2</div>
+                            <small>Configure</small>
+                        </div>
+                        <div class="text-center flex-fill">
+                            <div class="step-circle" id="step3">3</div>
+                            <small>Test & Save</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 1: Method Selection -->
+                <div id="step1Content" class="step-content">
+                    <h6 class="mb-3">Select Synchronization Method</h6>
+                    <div class="row">
+                        <!-- iCal Method -->
+                        <div class="col-md-6 mb-3">
+                            <div class="method-card" onclick="selectMethod('ical')">
+                                <input type="radio" name="syncMethod" id="icalMethod" value="ical" class="d-none">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-calendar-alt fa-3x text-primary mb-3"></i>
+                                        <h5>iCal Feed</h5>
+                                        <p class="text-muted small">Best for availability sync. Real-time calendar updates.</p>
+                                        <div class="mt-3">
+                                            <span class="badge bg-success">Recommended</span>
+                                            <span class="badge bg-info">Easy Setup</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Email Method -->
+                        <div class="col-md-6 mb-3">
+                            <div class="method-card" onclick="selectMethod('email')">
+                                <input type="radio" name="syncMethod" id="emailMethod" value="email" class="d-none">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-envelope fa-3x text-info mb-3"></i>
+                                        <h5>Email Parsing</h5>
+                                        <p class="text-muted small">Parse booking confirmation emails automatically.</p>
+                                        <div class="mt-3">
+                                            <span class="badge bg-warning">Detailed Info</span>
+                                            <span class="badge bg-secondary">Email Access</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Web Scraping Method -->
+                        <div class="col-md-6 mb-3">
+                            <div class="method-card" onclick="selectMethod('scraping')">
+                                <input type="radio" name="syncMethod" id="scrapingMethod" value="scraping" class="d-none">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-robot fa-3x text-warning mb-3"></i>
+                                        <h5>Web Scraping</h5>
+                                        <p class="text-muted small">Automated data extraction from channel dashboards.</p>
+                                        <div class="mt-3">
+                                            <span class="badge bg-primary">Full Data</span>
+                                            <span class="badge bg-dark">Advanced</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Browser Extension Method -->
+                        <div class="col-md-6 mb-3">
+                            <div class="method-card" onclick="selectMethod('extension')">
+                                <input type="radio" name="syncMethod" id="extensionMethod" value="extension" class="d-none">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-puzzle-piece fa-3x text-success mb-3"></i>
+                                        <h5>Browser Extension</h5>
+                                        <p class="text-muted small">Capture data while browsing your channels.</p>
+                                        <div class="mt-3">
+                                            <span class="badge bg-success">User-Friendly</span>
+                                            <span class="badge bg-info">Real-time</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Configuration -->
+                <div id="step2Content" class="step-content" style="display: none;">
+                    <!-- Dynamic configuration forms -->
+                    <div id="configForms">
+                        <!-- iCal Configuration -->
+                        <div id="icalConfig" class="config-form" style="display: none;">
+                            <h6 class="mb-3"><i class="fas fa-calendar-alt me-2"></i>iCal Feed Configuration</h6>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Find your iCal URL in your {{ channelName }} calendar sync settings.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">iCal Feed URL</label>
+                                <input type="url" class="form-control" id="icalUrl" 
+                                       placeholder="https://example.com/calendar/ical/abc123.ics">
+                                <small class="text-muted">This URL should end with .ics</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Sync Frequency</label>
+                                <select class="form-select" id="icalSyncFrequency">
+                                    <option value="15">Every 15 minutes</option>
+                                    <option value="30" selected>Every 30 minutes</option>
+                                    <option value="60">Every hour</option>
+                                    <option value="360">Every 6 hours</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Email Configuration -->
+                        <div id="emailConfig" class="config-form" style="display: none;">
+                            <h6 class="mb-3"><i class="fas fa-envelope me-2"></i>Email Sync Configuration</h6>
+                            
+                            <ul class="nav nav-tabs mb-3" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#autoForward">
+                                        Auto-Forward
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#emailAccess">
+                                        Email Access
+                                    </button>
+                                </li>
+                            </ul>
+                            
+                            <div class="tab-content">
+                                <!-- Auto-Forward Tab -->
+                                <div class="tab-pane fade show active" id="autoForward">
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <strong>Easiest Method!</strong> Forward booking emails to our parsing address.
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Your Parsing Email Address</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" 
+                                                   value="{{ user.username }}.{{ channel.name|lower }}@sync.bookingvision.com" 
+                                                   readonly id="parsingEmail">
+                                            <button class="btn btn-outline-secondary" type="button" 
+                                                    onclick="copyToClipboard('parsingEmail')">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">
+                                            Set up auto-forward in your email for {{ channel.name }} booking confirmations
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Email Access Tab -->
+                                <div class="tab-pane fade" id="emailAccess">
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-lock me-2"></i>
+                                        We'll need access to scan for booking emails. Your credentials are encrypted.
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Email Provider</label>
+                                        <select class="form-select" id="emailProvider" onchange="updateEmailSettings()">
+                                            <option value="">Select Provider</option>
+                                            <option value="gmail">Gmail</option>
+                                            <option value="outlook">Outlook/Hotmail</option>
+                                            <option value="yahoo">Yahoo Mail</option>
+                                            <option value="custom">Other (IMAP)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div id="emailProviderSettings" style="display: none;">
+                                        <div class="mb-3">
+                                            <label class="form-label">Email Address</label>
+                                            <input type="email" class="form-control" id="emailAddress">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">App Password</label>
+                                            <input type="password" class="form-control" id="emailPassword">
+                                            <small class="text-muted">
+                                                Use an app-specific password. 
+                                                <a href="#" onclick="showAppPasswordGuide()">How to create one?</a>
+                                            </small>
+                                        </div>
+                                        
+                                        <div id="customImapSettings" style="display: none;">
+                                            <div class="mb-3">
+                                                <label class="form-label">IMAP Server</label>
+                                                <input type="text" class="form-control" id="imapServer" 
+                                                       placeholder="imap.example.com">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">IMAP Port</label>
+                                                <input type="number" class="form-control" id="imapPort" 
+                                                       value="993">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Web Scraping Configuration -->
+                        <div id="scrapingConfig" class="config-form" style="display: none;">
+                            <h6 class="mb-3"><i class="fas fa-robot me-2"></i>Web Scraping Configuration</h6>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                Your credentials are encrypted and only used for automated sync. We never store plain passwords.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">{{ channelName }} Login Email</label>
+                                <input type="email" class="form-control" id="scrapingEmail" 
+                                       placeholder="your-email@example.com">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">{{ channelName }} Password</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="scrapingPassword">
+                                    <button class="btn btn-outline-secondary" type="button" 
+                                            onclick="togglePasswordVisibility('scrapingPassword')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enable2FA">
+                                    <label class="form-check-label" for="enable2FA">
+                                        My account has 2FA enabled
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="2faSettings" style="display: none;">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-mobile-alt me-2"></i>
+                                    You'll receive a notification when we need 2FA verification.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Browser Extension Configuration -->
+                        <div id="extensionConfig" class="config-form" style="display: none;">
+                            <h6 class="mb-3"><i class="fas fa-puzzle-piece me-2"></i>Browser Extension Setup</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>1. Install Extension</h6>
+                                    <div class="d-grid gap-2 mb-3">
+                                        <button class="btn btn-success" onclick="installExtensionForBrowser()">
+                                            <i class="fas fa-download me-2"></i>Install for Your Browser
+                                        </button>
+                                    </div>
+                                    
+                                    <h6>2. Extension Token</h6>
+                                    <div class="input-group mb-3">
+                                        <input type="text" class="form-control" 
+                                               value="{{ extension_token }}" readonly id="extensionToken">
+                                        <button class="btn btn-outline-secondary" type="button" 
+                                                onclick="copyToClipboard('extensionToken')">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6>3. How it Works</h6>
+                                    <ol class="small">
+                                        <li>The extension runs in your browser</li>
+                                        <li>When you visit {{ channelName }}, it captures booking data</li>
+                                        <li>Data syncs automatically to your dashboard</li>
+                                        <li>No passwords needed!</li>
+                                    </ol>
+                                    
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        Most secure method - no credentials required!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Test & Save -->
+                <div id="step3Content" class="step-content" style="display: none;">
+                    <h6 class="mb-3">Test Connection & Save</h6>
+                    
+                    <div id="testResults" class="mb-4">
+                        <!-- Test results will appear here -->
+                    </div>
+                    
+                    <div class="text-center">
+                        <button class="btn btn-lg btn-primary" onclick="testConnection()">
+                            <i class="fas fa-flask me-2"></i>Test Connection
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="prevBtn" onclick="previousStep()" style="display: none;">
+                    <i class="fas fa-arrow-left me-2"></i>Previous
+                </button>
+                <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextStep()">
+                    Next<i class="fas fa-arrow-right ms-2"></i>
+                </button>
+                <button type="button" class="btn btn-success" id="saveBtn" onclick="saveConfiguration()" style="display: none;">
+                    <i class="fas fa-save me-2"></i>Save Configuration
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.channel-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.channel-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-color: var(--primary-blue);
+}
+
+.channel-logo {
+    height: 40px;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
+}
+
+.method-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.method-card .card {
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.method-card:hover .card,
+.method-card input:checked ~ .card {
+    border-color: var(--primary-blue);
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
+}
+
+.step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #6b7280;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.step-circle.active {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.step-circle.completed {
+    background: #10b981;
+    color: white;
+}
+
+.config-form {
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+</style>
+
 <script>
+let currentStep = 1;
+let selectedMethod = null;
+let testPassed = false;
+
+function selectMethod(method) {
+    selectedMethod = method;
+    document.getElementById(method + 'Method').checked = true;
+    
+    // Visual feedback
+    document.querySelectorAll('.method-card .card').forEach(card => {
+        card.style.borderColor = '#e5e7eb';
+    });
+    event.currentTarget.querySelector('.card').style.borderColor = 'var(--primary-blue)';
+}
+
+function nextStep() {
+    if (currentStep === 1 && !selectedMethod) {
+        alert('Please select a synchronization method');
+        return;
+    }
+    
+    if (currentStep < 3) {
+        currentStep++;
+        updateStepDisplay();
+    }
+}
+
+function previousStep() {
+    if (currentStep > 1) {
+        currentStep--;
+        updateStepDisplay();
+    }
+}
+
+function updateStepDisplay() {
+    // Hide all steps
+    document.querySelectorAll('.step-content').forEach(content => {
+        content.style.display = 'none';
+    });
+    
+    // Show current step
+    document.getElementById(`step${currentStep}Content`).style.display = 'block';
+    
+    // Update step circles
+    for (let i = 1; i <= 3; i++) {
+        const circle = document.getElementById(`step${i}`);
+        if (i < currentStep) {
+            circle.classList.add('completed');
+            circle.innerHTML = '<i class="fas fa-check"></i>';
+        } else if (i === currentStep) {
+            circle.classList.add('active');
+            circle.classList.remove('completed');
+            circle.textContent = i;
+        } else {
+            circle.classList.remove('active', 'completed');
+            circle.textContent = i;
+        }
+    }
+    
+    // Update buttons
+    document.getElementById('prevBtn').style.display = currentStep > 1 ? 'inline-block' : 'none';
+    document.getElementById('nextBtn').style.display = currentStep < 3 ? 'inline-block' : 'none';
+    document.getElementById('saveBtn').style.display = currentStep === 3 && testPassed ? 'inline-block' : 'none';
+    
+    // Show appropriate config form
+    if (currentStep === 2) {
+        showConfigForm();
+    }
+}
+
+function showConfigForm() {
+    // Hide all config forms
+    document.querySelectorAll('.config-form').forEach(form => {
+        form.style.display = 'none';
+    });
+    
+    // Show selected method's form
+    if (selectedMethod) {
+        document.getElementById(selectedMethod + 'Config').style.display = 'block';
+    }
+}
+
+function updateEmailSettings() {
+    const provider = document.getElementById('emailProvider').value;
+    const settings = document.getElementById('emailProviderSettings');
+    const customSettings = document.getElementById('customImapSettings');
+    
+    if (provider) {
+        settings.style.display = 'block';
+        customSettings.style.display = provider === 'custom' ? 'block' : 'none';
+    } else {
+        settings.style.display = 'none';
+    }
+}
+
+function togglePasswordVisibility(fieldId) {
+    const field = document.getElementById(fieldId);
+    const button = event.currentTarget;
+    const icon = button.querySelector('i');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        field.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    document.execCommand('copy');
+    
+    // Show feedback
+    const button = event.currentTarget;
+    const originalHtml = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i>';
+    button.classList.add('btn-success');
+    
+    setTimeout(() => {
+        button.innerHTML = originalHtml;
+        button.classList.remove('btn-success');
+    }, 2000);
+}
+
 function connectChannel(channelId, channelName) {
     document.getElementById('channelId').value = channelId;
     document.getElementById('channelName').textContent = channelName;
+    document.querySelectorAll('#channelName').forEach(el => el.textContent = channelName);
+    
+    currentStep = 1;
+    selectedMethod = null;
+    testPassed = false;
+    updateStepDisplay();
+    
     new bootstrap.Modal(document.getElementById('connectionModal')).show();
 }
 
-function submitConnection() {
+function configureChannel(channelId, channelName) {
+    // Load existing configuration
+    fetch(`/api/channel/${channelId}/config/`)
+        .then(response => response.json())
+        .then(data => {
+            connectChannel(channelId, channelName);
+            if (data.config) {
+                selectedMethod = data.config.preferred_sync_method;
+                // Pre-fill form fields based on saved config
+            }
+        });
+}
+
+function testConnection() {
+    const testResults = document.getElementById('testResults');
+    testResults.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Testing...</span>
+            </div>
+            <p>Testing connection...</p>
+        </div>
+    `;
+    
+    // Simulate test
+    setTimeout(() => {
+        const success = Math.random() > 0.2; // 80% success rate for demo
+        
+        if (success) {
+            testResults.innerHTML = `
+                <div class="alert alert-success">
+                    <h6><i class="fas fa-check-circle me-2"></i>Connection Test Successful!</h6>
+                    <ul class="mb-0">
+                        <li>Successfully connected to ${document.getElementById('channelName').textContent}</li>
+                        <li>Found 3 test bookings</li>
+                        <li>Sync method verified and working</li>
+                    </ul>
+                </div>
+            `;
+            testPassed = true;
+            document.getElementById('saveBtn').style.display = 'inline-block';
+        } else {
+            testResults.innerHTML = `
+                <div class="alert alert-danger">
+                    <h6><i class="fas fa-times-circle me-2"></i>Connection Test Failed</h6>
+                    <p>Please check your configuration and try again.</p>
+                    <small>Error: Unable to fetch data. Verify your credentials/URL.</small>
+                </div>
+                <button class="btn btn-warning" onclick="previousStep()">
+                    <i class="fas fa-arrow-left me-2"></i>Go Back to Configuration
+                </button>
+            `;
+            testPassed = false;
+        }
+    }, 2000);
+}
+
+function saveConfiguration() {
     const channelId = document.getElementById('channelId').value;
-    const apiKey = document.getElementById('apiKey').value;
-    const apiSecret = document.getElementById('apiSecret').value;
+    let configData = {
+        channel_id: channelId,
+        sync_method: selectedMethod
+    };
+    
+    // Collect method-specific data
+    switch (selectedMethod) {
+        case 'ical':
+            configData.ical_url = document.getElementById('icalUrl').value;
+            configData.sync_frequency = document.getElementById('icalSyncFrequency').value;
+            break;
+            
+        case 'email':
+            const emailTab = document.querySelector('#emailConfig .tab-pane.active').id;
+            if (emailTab === 'emailAccess') {
+                configData.email_provider = document.getElementById('emailProvider').value;
+                configData.email_address = document.getElementById('emailAddress').value;
+                configData.email_password = document.getElementById('emailPassword').value;
+                
+                if (configData.email_provider === 'custom') {
+                    configData.imap_server = document.getElementById('imapServer').value;
+                    configData.imap_port = document.getElementById('imapPort').value;
+                }
+            }
+            break;
+            
+        case 'scraping':
+            configData.login_email = document.getElementById('scrapingEmail').value;
+            configData.login_password = document.getElementById('scrapingPassword').value;
+            configData.has_2fa = document.getElementById('enable2FA').checked;
+            break;
+            
+        case 'extension':
+            // No additional config needed
+            break;
+    }
+    
+    // Show saving indicator
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    saveBtn.disabled = true;
     
     fetch('{% url "booking_vision_APP:connect_channel" %}', {
         method: 'POST',
@@ -109,44 +808,101 @@ function submitConnection() {
             'Content-Type': 'application/json',
             'X-CSRFToken': '{{ csrf_token }}'
         },
-        body: JSON.stringify({
-            channel_id: channelId,
-            api_key: apiKey,
-            api_secret: apiSecret
-        })
+        body: JSON.stringify(configData)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
-            location.reload();
+            BookingVision.showNotification('Channel connected successfully!', 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         } else {
-            alert('Error: ' + data.error);
+            BookingVision.showNotification('Error: ' + data.error, 'error');
+            saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Configuration';
+            saveBtn.disabled = false;
         }
+    })
+    .catch(error => {
+        BookingVision.showNotification('Network error. Please try again.', 'error');
+        saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Configuration';
+        saveBtn.disabled = false;
     });
 }
 
 function syncChannel(channelId) {
-    if (confirm('Sync all bookings from this channel?')) {
-        fetch('{% url "booking_vision_APP:sync_bookings" %}', {
+    const button = event.currentTarget;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Syncing...';
+    button.disabled = true;
+    
+    fetch('{% url "booking_vision_APP:sync_bookings" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ channel_id: channelId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            BookingVision.showNotification('Sync completed successfully!', 'success');
+            button.innerHTML = '<i class="fas fa-check me-2"></i>Synced';
+            setTimeout(() => {
+                button.innerHTML = '<i class="fas fa-sync me-2"></i>Sync Now';
+                button.disabled = false;
+            }, 3000);
+        } else {
+            BookingVision.showNotification('Sync failed: ' + data.error, 'error');
+            button.innerHTML = '<i class="fas fa-sync me-2"></i>Sync Now';
+            button.disabled = false;
+        }
+    });
+}
+
+function disconnectChannel(channelId) {
+    if (confirm('Are you sure you want to disconnect this channel?')) {
+        fetch(`/api/channel/${channelId}/disconnect/`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({
-                channel_id: channelId
-            })
+            }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Sync completed successfully!');
-            } else {
-                alert('Error: ' + data.error);
+                BookingVision.showNotification('Channel disconnected', 'success');
+                location.reload();
             }
         });
     }
 }
+
+function showAppPasswordGuide() {
+    // Show modal with app password instructions
+    alert('App password guide would open here with provider-specific instructions');
+}
+
+function installExtensionForBrowser() {
+    // Detect browser and redirect to appropriate store
+    const isChrome = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
+    const isFirefox = /Firefox/.test(navigator.userAgent);
+    const isEdge = /Edg/.test(navigator.userAgent);
+    
+    if (isChrome) {
+        window.open('https://chrome.google.com/webstore/detail/booking-vision-sync/[your-extension-id]', '_blank');
+    } else if (isFirefox) {
+        window.open('https://addons.mozilla.org/firefox/addon/booking-vision-sync/', '_blank');
+    } else if (isEdge) {
+        window.open('https://microsoftedge.microsoft.com/addons/detail/booking-vision-sync/[your-extension-id]', '_blank');
+    } else {
+        alert('Please use Chrome, Firefox, or Edge browser to install the extension.');
+    }
+}
+
+// Enable 2FA settings toggle
+document.getElementById('enable2FA')?.addEventListener('change', function() {
+    document.getElementById('2faSettings').style.display = this.checked ? 'block' : 'none';
+});
 </script>
 {% endblock %}

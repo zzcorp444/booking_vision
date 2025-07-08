@@ -1,6 +1,7 @@
 """
 Channel management views
 """
+import asyncio
 from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
@@ -12,6 +13,7 @@ import json
 from ..models.channels import Channel, ChannelConnection, PropertyChannel
 from ..models.properties import Property
 from ..integrations.sync_manager import SyncManager
+from ..integrations.no_api_sync_manager import NoAPIChannelSync
 
 
 class ChannelManagementView(LoginRequiredMixin, TemplateView):
@@ -41,11 +43,10 @@ class ChannelManagementView(LoginRequiredMixin, TemplateView):
 @login_required
 @require_http_methods(["POST"])
 def connect_channel(request):
-    """Connect to a channel"""
+    """Connect to a channel without API"""
     data = json.loads(request.body)
     channel_id = data.get('channel_id')
-    api_key = data.get('api_key')
-    api_secret = data.get('api_secret')
+    sync_method = data.get('sync_method')
 
     try:
         channel = Channel.objects.get(id=channel_id)
@@ -55,18 +56,35 @@ def connect_channel(request):
             user=request.user,
             channel=channel,
             defaults={
-                'api_key': api_key,
-                'api_secret': api_secret,
+                'preferred_sync_method': sync_method,
                 'is_connected': True
             }
         )
 
-        # Test connection
-        sync_manager = SyncManager(request.user)
+        # Save method-specific configuration
+        if sync_method == 'ical':
+            connection.ical_url = data.get('ical_url', '')
+        elif sync_method == 'email':
+            connection.email_sync_enabled = True
+            # Save email configuration to user profile
+        elif sync_method == 'scraping':
+            connection.scraping_enabled = True
+            connection.login_email = data.get('login_email', '')
+            # Encrypt and save password
+            from cryptography.fernet import Fernet
+            key = Fernet.generate_key()  # In production, use a persistent key
+            f = Fernet(key)
+            encrypted_password = f.encrypt(data.get('login_password', '').encode())
+            connection.login_password_encrypted = encrypted_password.decode()
+        elif sync_method == 'extension':
+            # Extension doesn't need additional config
+            pass
+
+        connection.save()
 
         return JsonResponse({
             'success': True,
-            'message': f'Successfully connected to {channel.name}'
+            'message': f'Successfully configured {channel.name} for {sync_method} sync'
         })
 
     except Exception as e:
@@ -78,11 +96,12 @@ def connect_channel(request):
 
 @login_required
 @require_http_methods(["POST"])
-def sync_bookings(request):
-    """Manually trigger booking sync"""
+async def sync_bookings(request):
+    """Manually trigger booking sync without API"""
     try:
-        sync_manager = SyncManager(request.user)
-        results = sync_manager.sync_all_bookings()
+        # Convert to async view
+        sync_manager = NoAPIChannelSync(request.user)
+        results = await sync_manager.sync_all_channels()
 
         return JsonResponse({
             'success': True,
