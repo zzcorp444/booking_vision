@@ -116,10 +116,54 @@
                             </table>
                         </div>
                     {% else %}
+                        <!-- Enhanced Empty State for Payments -->
                         <div class="text-center py-5">
-                            <i class="fas fa-money-check-alt text-muted mb-3" style="font-size: 4rem;"></i>
-                            <h5 class="text-muted">No payment transactions yet</h5>
-                            <p class="text-muted">Payment information will appear here as bookings are processed.</p>
+                            <div class="mb-4">
+                                <i class="fas fa-money-check-alt text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                                <h5 class="text-muted mb-3">No payment transactions yet</h5>
+                                <p class="text-muted mb-4">Payment information will appear here as bookings are processed and payments are received.</p>
+                            </div>
+                            
+                            {% if not has_bookings %}
+                                <div class="alert alert-info d-inline-block text-start">
+                                    <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>To start tracking payments:</h6>
+                                    <ul class="mb-0 small">
+                                        <li>Connect your booking platforms</li>
+                                        <li>Add your rental properties</li>
+                                        <li>Sync existing bookings or receive new ones</li>
+                                        <li>Payment data will sync automatically</li>
+                                    </ul>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary me-2">
+                                        <i class="fas fa-link me-2"></i>Connect Channels
+                                    </a>
+                                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-home me-2"></i>Add Property
+                                    </a>
+                                </div>
+                            {% elif not has_properties %}
+                                <div class="alert alert-warning d-inline-block">
+                                    <i class="fas fa-home me-2"></i>Add properties to start tracking payment data
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Add Your First Property
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-success d-inline-block">
+                                    <i class="fas fa-clock me-2"></i>Payment data will sync automatically as bookings are received
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-primary me-2">
+                                        <i class="fas fa-sync me-2"></i>Sync Bookings
+                                    </a>
+                                    <a href="{% url 'booking_vision_APP:booking_list' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-calendar me-2"></i>View Bookings
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>
@@ -147,7 +191,10 @@
                         </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted text-center">No data available</p>
+                        <div class="text-center py-3">
+                            <i class="fas fa-chart-pie text-muted mb-2" style="font-size: 2rem; opacity: 0.4;"></i>
+                            <p class="text-muted small mb-0">Payment breakdown will appear here once you receive payments</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -168,7 +215,10 @@
                         </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted text-center">No revenue data yet</p>
+                        <div class="text-center py-3">
+                            <i class="fas fa-home text-muted mb-2" style="font-size: 2rem; opacity: 0.4;"></i>
+                            <p class="text-muted small mb-0">Revenue by property will show here as payments are received</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -194,7 +244,10 @@
                         </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted text-center">No upcoming payouts</p>
+                        <div class="text-center py-3">
+                            <i class="fas fa-calendar-plus text-muted mb-2" style="font-size: 2rem; opacity: 0.4;"></i>
+                            <p class="text-muted small mb-0">Upcoming payouts will be scheduled here based on your payment history</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>

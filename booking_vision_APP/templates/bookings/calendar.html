@@ -30,6 +30,7 @@
         </div>
     </div>
 
+    {% if has_properties %}
     <!-- Calendar Navigation -->
     <div class="row mb-4">
         <div class="col-12">
@@ -81,6 +82,27 @@
             <div class="card">
                 <div class="card-body">
                     <div class="calendar-container">
+                        <!-- Empty Calendar State for No Bookings -->
+                        {% if not bookings_by_date %}
+                        <div class="alert alert-info mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle me-3"></i>
+                                <div>
+                                    <strong>No bookings for {{ month_name }} {{ year }}</strong>
+                                    <br><small>Your calendar will show bookings when they're synced from your channels or added manually.</small>
+                                </div>
+                                <div class="ms-auto">
+                                    <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-sm btn-primary me-2">
+                                        <i class="fas fa-sync me-1"></i>Sync Bookings
+                                    </a>
+                                    <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-plus me-1"></i>Add Booking
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                         <div class="calendar-grid">
                             <!-- Weekday Headers -->
                             <div class="calendar-header">Mon</div>
@@ -123,6 +145,48 @@
             </div>
         </div>
     </div>
+
+    {% else %}
+    <!-- Enhanced Empty State for Calendar -->
+    <div class="row">
+        <div class="col-12">
+            <div class="empty-state-container text-center py-5">
+                <div class="empty-state-card mx-auto" style="max-width: 600px;">
+                    <div class="mb-4">
+                        <i class="fas fa-calendar-alt text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                        <h4 class="text-muted mb-3">No Properties to Display</h4>
+                        <p class="text-muted mb-4">Add your rental properties to start viewing and managing your booking calendar.</p>
+                    </div>
+                    
+                    <div class="alert alert-info d-inline-block text-start mb-4">
+                        <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>Calendar features include:</h6>
+                        <ul class="mb-0 small">
+                            <li>Visual booking overview by month</li>
+                            <li>Block dates for maintenance or personal use</li>
+                            <li>See occupancy patterns at a glance</li>
+                            <li>Quick access to booking details</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Your First Property
+                        </a>
+                        {% if has_connected_channels %}
+                            <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-sync me-2"></i>Sync Bookings
+                            </a>
+                        {% else %}
+                            <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-link me-2"></i>Connect Channels
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Block Date Modal -->

@@ -125,13 +125,38 @@
                             </table>
                         </div>
                     {% else %}
+                        <!-- Enhanced Empty State for Automation Rules -->
                         <div class="text-center py-5">
-                            <i class="fas fa-bell-slash text-muted mb-3" style="font-size: 4rem;"></i>
-                            <h5 class="text-muted">No automation rules yet</h5>
-                            <p class="text-muted">Create automated notifications to save time and improve guest communication.</p>
-                            <a href="{% url 'booking_vision_APP:notification_create' %}" class="btn btn-primary">
-                                <i class="fas fa-plus me-2"></i>Create Your First Rule
-                            </a>
+                            <div class="mb-4">
+                                <i class="fas fa-bell-slash text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                                <h5 class="text-muted mb-3">No automation rules yet</h5>
+                                <p class="text-muted mb-4">Create automated notifications to save time and improve guest communication with personalized messages.</p>
+                            </div>
+                            
+                            <div class="alert alert-info d-inline-block text-start mb-4">
+                                <h6 class="mb-2"><i class="fas fa-magic me-2"></i>Automate your guest communications:</h6>
+                                <ul class="mb-0 small">
+                                    <li>Welcome messages for new bookings</li>
+                                    <li>Check-in instructions and details</li>
+                                    <li>Check-out reminders and reviews</li>
+                                    <li>Custom messages for special occasions</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                <a href="{% url 'booking_vision_APP:notification_create' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Create Your First Rule
+                                </a>
+                                {% if has_bookings %}
+                                    <a href="{% url 'booking_vision_APP:booking_list' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-calendar me-2"></i>View Bookings
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-home me-2"></i>Add Property First
+                                    </a>
+                                {% endif %}
+                            </div>
                         </div>
                     {% endif %}
                 </div>
@@ -171,7 +196,19 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <p class="text-muted text-center">No notifications sent yet.</p>
+                        <!-- Enhanced Empty State for Recent Activity -->
+                        <div class="text-center py-4">
+                            <i class="fas fa-history text-muted mb-3" style="font-size: 2.5rem; opacity: 0.4;"></i>
+                            <h6 class="text-muted mb-2">No notifications sent yet</h6>
+                            <p class="text-muted small mb-3">Activity from your automation rules will appear here.</p>
+                            {% if not rules %}
+                                <a href="{% url 'booking_vision_APP:notification_create' %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-plus me-1"></i>Create Rule
+                                </a>
+                            {% else %}
+                                <small class="text-muted">Notifications will show as rules are triggered</small>
+                            {% endif %}
+                        </div>
                     {% endif %}
                 </div>
             </div>

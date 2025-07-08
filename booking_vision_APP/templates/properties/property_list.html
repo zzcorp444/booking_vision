@@ -142,13 +142,60 @@
             {% endfor %}
         {% else %}
             <div class="col-12">
+                <!-- Enhanced Empty State for Properties -->
                 <div class="text-center py-5">
-                    <i class="fas fa-home text-muted mb-3" style="font-size: 4rem;"></i>
-                    <h5 class="text-muted">No properties found</h5>
-                    <p class="text-muted">Start by adding your first property to begin managing your bookings.</p>
-                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Add Your First Property
-                    </a>
+                    <div class="mb-4">
+                        <i class="fas fa-home text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                        <h5 class="text-muted mb-3">No properties found</h5>
+                        <p class="text-muted mb-4">
+                            {% if current_search or current_type %}
+                                No properties match your current filters. Try clearing filters or adjusting your search criteria.
+                            {% else %}
+                                Start by adding your first property to begin managing your bookings and tracking performance.
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    {% if current_search or current_type %}
+                        <!-- Filtered Results Empty State -->
+                        <div class="alert alert-info d-inline-block mb-4">
+                            <i class="fas fa-filter me-2"></i>
+                            No properties match your current filters. Try a broader search or clear all filters.
+                        </div>
+                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            <a href="{% url 'booking_vision_APP:property_list' %}" class="btn btn-primary">
+                                <i class="fas fa-times me-2"></i>Clear All Filters
+                            </a>
+                            <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-2"></i>Add New Property
+                            </a>
+                        </div>
+                    {% else %}
+                        <!-- No Properties Empty State -->
+                        <div class="alert alert-info d-inline-block text-start mb-4">
+                            <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>Property management features:</h6>
+                            <ul class="mb-0 small">
+                                <li>Track occupancy rates and revenue</li>
+                                <li>Manage multiple properties in one place</li>
+                                <li>Analyze performance with AI insights</li>
+                                <li>Sync across all booking channels</li>
+                            </ul>
+                        </div>
+                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add Your First Property
+                            </a>
+                            {% if not has_connected_channels %}
+                                <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-link me-2"></i>Connect Channels First
+                                </a>
+                            {% else %}
+                                <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-sync me-2"></i>Sync Existing Properties
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         {% endif %}
