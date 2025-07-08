@@ -3,55 +3,60 @@
 
 {% block title %}Messages - Booking Vision{% endblock %}
 
-{% block breadcrumb %}
-    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
-    <li class="breadcrumb-item active">Messages</li>
-{% endblock %}
-
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
+    <!-- Header -->
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 text-primary-blue">
-                    <i class="fas fa-comments me-2"></i>Unified Messages Center
-                </h1>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 text-primary-blue">
+                        <i class="fas fa-comments me-2"></i>Messages
+                    </h1>
+                    <p class="text-muted mb-0">Communicate with your guests across all channels</p>
+                </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#composeModal">
-                        <i class="fas fa-pen me-2"></i>Compose
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-filter me-2"></i>Filter
                     </button>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
-                        <i class="fas fa-filter me-2"></i>Filters
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#composeModal">
+                        <i class="fas fa-edit me-2"></i>Compose
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Message Statistics -->
+    <!-- Filter Bar -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-primary">{{ message_stats.total }}</h4>
-                <p>Total Messages</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-warning">{{ message_stats.unread }}</h4>
-                <p>Unread Messages</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-info">{{ message_stats.guest_messages }}</h4>
-                <p>Guest Messages</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-success">{{ message_stats.automated }}</h4>
-                <p>Automated Responses</p>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body py-2">
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <span class="text-muted small">Filter by:</span>
+                        <select class="form-select form-select-sm" style="width: auto;">
+                            <option>All Channels</option>
+                            <option>Airbnb</option>
+                            <option>Booking.com</option>
+                            <option>VRBO</option>
+                        </select>
+                        <select class="form-select form-select-sm" style="width: auto;">
+                            <option>All Properties</option>
+                            {% for property in properties %}
+                                <option>{{ property.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <select class="form-select form-select-sm" style="width: auto;">
+                            <option>All Status</option>
+                            <option>Unread</option>
+                            <option>Read</option>
+                            <option>Replied</option>
+                        </select>
+                        <button class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -61,63 +66,55 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-inbox me-2"></i>All Messages
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Messages</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-envelope-open"></i> Mark All Read
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if messages %}
-                        <div class="messages-container">
-                            {% for msg_data in messages %}
-                            <div class="message-item border-bottom pb-3 mb-3">
-                                <div class="row">
-                                    <div class="col-lg-8">
-                                        <div class="d-flex align-items-start">
-                                            <div class="message-avatar me-3">
-                                                <i class="fas fa-{{ msg_data.message.sender|yesno:'user,home' }} fa-2x text-primary"></i>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <h6 class="mb-0 me-2">
-                                                        {% if msg_data.message.sender == 'guest' %}
-                                                            {{ msg_data.message.booking.guest.first_name }} {{ msg_data.message.booking.guest.last_name }}
-                                                        {% else %}
-                                                            You
-                                                        {% endif %}
-                                                    </h6>
-                                                    <span class="badge bg-{{ msg_data.message.sender|yesno:'info,primary' }} me-2">
-                                                        {{ msg_data.message.get_sender_display }}
-                                                    </span>
-                                                    {% if msg_data.sentiment %}
-                                                    <span class="badge bg-{{ msg_data.sentiment.sentiment|yesno:'success,danger,secondary' }}">
-                                                        {{ msg_data.sentiment.sentiment|title }}
-                                                    </span>
-                                                    {% endif %}
-                                                    {% if msg_data.message.is_automated %}
-                                                    <span class="badge bg-warning ms-2">
-                                                        <i class="fas fa-robot"></i> Automated
-                                                    </span>
-                                                    {% endif %}
-                                                </div>
-                                                <p class="mb-1">{{ msg_data.message.message|truncatewords:50 }}</p>
-                                                <small class="text-muted">
-                                                    <i class="fas fa-home me-1"></i>{{ msg_data.message.booking.rental_property.name }} |
-                                                    <i class="fas fa-link me-1"></i>{{ msg_data.message.booking.channel.name }} |
-                                                    <i class="fas fa-clock me-1"></i>{{ msg_data.message.created_at }}
-                                                </small>
-                                            </div>
+                        <div class="messages-list">
+                            {% for message in messages %}
+                            <div class="message-item {% if not message.is_read %}unread{% endif %} border-bottom py-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="avatar me-3">
+                                        <div class="avatar-circle bg-primary text-white">
+                                            {{ message.guest_name|first|upper }}
                                         </div>
                                     </div>
-                                    <div class="col-lg-4 text-end">
-                                        <div class="btn-group" role="group">
-                                            <a href="{% url 'booking_vision_APP:booking_detail' msg_data.message.booking.pk %}" 
-                                               class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-eye"></i> View Booking
-                                            </a>
-                                            <button class="btn btn-sm btn-outline-secondary" 
-                                                    onclick="replyToMessage({{ msg_data.message.booking.id }})">
-                                                <i class="fas fa-reply"></i> Reply
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <div>
+                                                <h6 class="mb-0 me-2">{{ message.guest_name }}</h6>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-home me-1"></i>{{ message.property.name }}
+                                                    <span class="mx-2">•</span>
+                                                    <i class="fas fa-calendar me-1"></i>{{ message.booking.check_in|date:"M j" }} - {{ message.booking.check_out|date:"M j" }}
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                <small class="text-muted">{{ message.created_at|timesince }} ago</small>
+                                                <br>
+                                                <span class="badge bg-{{ message.channel.color }}">{{ message.channel.name }}</span>
+                                            </div>
+                                        </div>
+                                        <p class="mb-1 text-truncate">{{ message.content }}</p>
+                                        <div class="d-flex gap-2 mt-2">
+                                            <button class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-reply me-1"></i>Reply
                                             </button>
+                                            {% if not message.is_read %}
+                                                <button class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-check me-1"></i>Mark Read
+                                                </button>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
@@ -125,10 +122,53 @@
                             {% endfor %}
                         </div>
                     {% else %}
+                        <!-- Enhanced Empty State for Messages -->
                         <div class="text-center py-5">
-                            <i class="fas fa-comments text-muted mb-3" style="font-size: 4rem;"></i>
-                            <h5 class="text-muted">No messages yet</h5>
-                            <p class="text-muted">Messages from all your connected channels will appear here.</p>
+                            <div class="mb-4">
+                                <i class="fas fa-comments text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                                <h5 class="text-muted mb-3">No messages yet</h5>
+                                <p class="text-muted mb-4">Messages from guests and automated communications will appear here.</p>
+                            </div>
+                            
+                            {% if not has_bookings %}
+                                <div class="alert alert-info d-inline-block text-start">
+                                    <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>To start receiving messages:</h6>
+                                    <ul class="mb-0 small">
+                                        <li>Connect your booking channels</li>
+                                        <li>Add your properties</li>
+                                        <li>Sync or receive new bookings</li>
+                                    </ul>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary me-2">
+                                        <i class="fas fa-link me-2"></i>Connect Channels
+                                    </a>
+                                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-home me-2"></i>Add Property
+                                    </a>
+                                </div>
+                            {% elif not has_properties %}
+                                <div class="alert alert-warning d-inline-block">
+                                    <i class="fas fa-home me-2"></i>Add properties to start receiving guest messages
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Add Your First Property
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-success d-inline-block">
+                                    <i class="fas fa-clock me-2"></i>Guest messages will appear here as bookings come in
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-primary me-2">
+                                        <i class="fas fa-sync me-2"></i>Sync Bookings
+                                    </a>
+                                    <a href="{% url 'booking_vision_APP:booking_list' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-calendar me-2"></i>View Bookings
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>
@@ -137,69 +177,113 @@
     </div>
 </div>
 
-<!-- Filter Modal -->
-<div class="modal fade" id="filterModal" tabindex="-1">
-    <div class="modal-dialog">
+<!-- Compose Modal -->
+<div class="modal fade" id="composeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Filter Messages</h5>
+                <h5 class="modal-title">Compose Message</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="get">
-                <div class="modal-body">
+            <div class="modal-body">
+                <form id="composeForm">
                     <div class="mb-3">
-                        <label for="channel" class="form-label">Channel</label>
-                        <select class="form-select" id="channel" name="channel">
-                            <option value="">All Channels</option>
-                            {% for channel in channels %}
-                            <option value="{{ channel.id }}" {% if channel.id|stringformat:"s" == current_channel %}selected{% endif %}>
-                                {{ channel.name }}
-                            </option>
+                        <label class="form-label">Booking</label>
+                        <select class="form-select" name="booking" required>
+                            <option value="">Select Booking</option>
+                            {% for booking in recent_bookings %}
+                                <option value="{{ booking.id }}">{{ booking.guest_name }} - {{ booking.property.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    
                     <div class="mb-3">
-                        <label for="property" class="form-label">Property</label>
-                        <select class="form-select" id="property" name="property">
-                            <option value="">All Properties</option>
-                            {% for prop in properties %}
-                            <option value="{{ prop.id }}" {% if prop.id|stringformat:"s" == current_property %}selected{% endif %}>
-                                {{ prop.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-control" name="subject" required>
                     </div>
-                    
                     <div class="mb-3">
-                        <label for="sender" class="form-label">Sender</label>
-                        <select class="form-select" id="sender" name="sender">
-                            <option value="">All Senders</option>
-                            <option value="guest" {% if current_sender == 'guest' %}selected{% endif %}>Guests</option>
-                            <option value="host" {% if current_sender == 'host' %}selected{% endif %}>You</option>
-                        </select>
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" name="message" rows="6" required></textarea>
                     </div>
-                    
                     <div class="mb-3">
-                        <label for="search" class="form-label">Search</label>
-                        <input type="text" class="form-control" id="search" name="search" 
-                               value="{{ current_search }}" placeholder="Search messages...">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="send_copy" id="sendCopy">
+                            <label class="form-check-label" for="sendCopy">
+                                Send a copy to my email
+                            </label>
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Apply Filters</button>
-                </div>
-            </form>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane me-2"></i>Send Message
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
+<style>
+.messages-list {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.message-item {
+    transition: background-color 0.2s;
+}
+
+.message-item:hover {
+    background-color: #f8f9fa;
+}
+
+.message-item.unread {
+    background-color: #f8f9fa;
+    border-left: 4px solid #0d6efd;
+}
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.text-truncate {
+    max-width: 500px;
+}
+
+@media (max-width: 768px) {
+    .text-truncate {
+        max-width: 200px;
+    }
+}
+</style>
+
 <script>
-function replyToMessage(bookingId) {
-    // Open compose modal with booking ID
-    // TODO: Implement reply functionality
-    alert('Reply functionality will open compose modal for booking ' + bookingId);
+function sendMessage() {
+    const form = document.getElementById('composeForm');
+    const formData = new FormData(form);
+    
+    fetch('{% url "booking_vision_APP:send_message" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error sending message: ' + data.error);
+        }
+    });
 }
 </script>
 {% endblock %}

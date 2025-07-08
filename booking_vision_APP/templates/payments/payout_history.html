@@ -3,63 +3,86 @@
 
 {% block title %}Payout History - Booking Vision{% endblock %}
 
-{% block breadcrumb %}
-    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
-    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:payments_list' %}">Payments</a></li>
-    <li class="breadcrumb-item active">Payout History</li>
-{% endblock %}
-
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 text-primary-blue">
-                    <i class="fas fa-history me-2"></i>Payout History
-                </h1>
-                <a href="{% url 'booking_vision_APP:payments_list' %}" class="btn btn-outline-primary">
-                    <i class="fas fa-arrow-left me-2"></i>Back to Payments
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Payout Statistics -->
+    <!-- Header -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-success">${{ payout_stats.total_payouts|floatformat:2 }}</h4>
-                <p>Total Payouts</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-warning">${{ payout_stats.pending_payouts|floatformat:2 }}</h4>
-                <p>Pending</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-info">{{ payout_stats.total_count }}</h4>
-                <p>Total Transactions</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-primary">{{ payout_stats.completed_count }}</h4>
-                <p>Completed</p>
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 text-primary-blue">
+                        <i class="fas fa-money-check me-2"></i>Payout History
+                    </h1>
+                    <p class="text-muted mb-0">Track your payout transactions and payment history</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-filter me-2"></i>Filter
+                    </button>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-download me-2"></i>Export
+                    </button>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-sync me-2"></i>Sync Payouts
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Payout List -->
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-wallet text-success mb-2" style="font-size: 2rem;"></i>
+                    <h4 class="mb-1">${{ total_payouts|floatformat:2 }}</h4>
+                    <p class="text-muted mb-0">Total Payouts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-calendar-month text-primary mb-2" style="font-size: 2rem;"></i>
+                    <h4 class="mb-1">${{ monthly_payouts|floatformat:2 }}</h4>
+                    <p class="text-muted mb-0">This Month</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-clock text-warning mb-2" style="font-size: 2rem;"></i>
+                    <h4 class="mb-1">${{ pending_payouts|floatformat:2 }}</h4>
+                    <p class="text-muted mb-0">Pending Payouts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payout History Table -->
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-money-bill-wave me-2"></i>All Payouts
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Payout Transactions</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" style="width: auto;">
+                                <option>All Channels</option>
+                                <option>Airbnb</option>
+                                <option>Booking.com</option>
+                                <option>VRBO</option>
+                            </select>
+                            <select class="form-select form-select-sm" style="width: auto;">
+                                <option>All Time</option>
+                                <option>This Month</option>
+                                <option>Last 30 Days</option>
+                                <option>This Year</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if payouts %}
@@ -67,30 +90,52 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Payout Date</th>
+                                        <th>Payout ID</th>
+                                        <th>Channel</th>
                                         <th>Amount</th>
-                                        <th>Payment Method</th>
                                         <th>Status</th>
-                                        <th>Completed</th>
+                                        <th>Payout Date</th>
+                                        <th>Period</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for payout in payouts %}
                                     <tr>
-                                        <td>{{ payout.payout_date }}</td>
-                                        <td><strong>${{ payout.amount|floatformat:2 }}</strong></td>
-                                        <td>{{ payout.payment_method }}</td>
                                         <td>
-                                            <span class="badge bg-{% if payout.status == 'completed' %}success{% elif payout.status == 'scheduled' %}info{% elif payout.status == 'processing' %}warning{% else %}danger{% endif %}">
-                                                {{ payout.get_status_display }}
-                                            </span>
+                                            <strong>{{ payout.payout_id }}</strong>
+                                            <br><small class="text-muted">{{ payout.reference_number }}</small>
                                         </td>
                                         <td>
-                                            {% if payout.completed_at %}
-                                                {{ payout.completed_at|date:"M d, Y H:i" }}
-                                            {% else %}
-                                                <span class="text-muted">-</span>
+                                            <span class="badge bg-{{ payout.channel.color }}">{{ payout.channel.name }}</span>
+                                        </td>
+                                        <td>
+                                            <strong class="text-success">${{ payout.amount|floatformat:2 }}</strong>
+                                            {% if payout.currency != 'USD' %}
+                                                <br><small class="text-muted">{{ payout.currency }}</small>
                                             {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ payout.status_color }}">{{ payout.status }}</span>
+                                        </td>
+                                        <td>
+                                            {{ payout.payout_date|date:"M j, Y" }}
+                                            <br><small class="text-muted">{{ payout.payout_date|time:"g:i A" }}</small>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ payout.period_start|date:"M j" }} - {{ payout.period_end|date:"M j" }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" title="Download Statement">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -98,10 +143,45 @@
                             </table>
                         </div>
                     {% else %}
+                        <!-- Enhanced Empty State for Payout History -->
                         <div class="text-center py-5">
-                            <i class="fas fa-money-check text-muted mb-3" style="font-size: 4rem;"></i>
-                            <h5 class="text-muted">No payout history yet</h5>
-                            <p class="text-muted">Your payout transactions will appear here.</p>
+                            <div class="mb-4">
+                                <i class="fas fa-money-check text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                                <h5 class="text-muted mb-3">No payout history yet</h5>
+                                <p class="text-muted mb-4">Your payout transactions and payment history will appear here once you start receiving payments.</p>
+                            </div>
+                            
+                            {% if not has_payments %}
+                                <div class="alert alert-info d-inline-block text-start">
+                                    <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>To start receiving payouts:</h6>
+                                    <ul class="mb-0 small">
+                                        <li>Set up payment processing with your channels</li>
+                                        <li>Receive bookings and process payments</li>
+                                        <li>Payout schedules vary by platform</li>
+                                        <li>Track all transactions in one place</li>
+                                    </ul>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{% url 'booking_vision_APP:payments_list' %}" class="btn btn-primary me-2">
+                                        <i class="fas fa-dollar-sign me-2"></i>View Payments
+                                    </a>
+                                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-cog me-2"></i>Channel Settings
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-success d-inline-block">
+                                    <i class="fas fa-clock me-2"></i>Payouts will appear here as they are processed by your channels
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{% url 'booking_vision_APP:payments_list' %}" class="btn btn-primary me-2">
+                                        <i class="fas fa-list me-2"></i>View All Payments
+                                    </a>
+                                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-cog me-2"></i>Payout Settings
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>
@@ -109,4 +189,16 @@
         </div>
     </div>
 </div>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
 {% endblock %}

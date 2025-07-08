@@ -1,69 +1,91 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Payments & Finance - Booking Vision{% endblock %}
-
-{% block breadcrumb %}
-    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
-    <li class="breadcrumb-item active">Payments</li>
-{% endblock %}
+{% block title %}Payments - Booking Vision{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
+    <!-- Header -->
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 text-primary-blue">
-                    <i class="fas fa-dollar-sign me-2"></i>Payments & Finance
-                </h1>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 text-primary-blue">
+                        <i class="fas fa-dollar-sign me-2"></i>Payments
+                    </h1>
+                    <p class="text-muted mb-0">Track payment transactions and revenue</p>
+                </div>
                 <div class="d-flex gap-2">
-                    <a href="{% url 'booking_vision_APP:payout_history' %}" class="btn btn-outline-primary">
-                        <i class="fas fa-history me-2"></i>Payout History
-                    </a>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
-                        <i class="fas fa-filter me-2"></i>Filters
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-filter me-2"></i>Filter
+                    </button>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-download me-2"></i>Export
+                    </button>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-sync me-2"></i>Sync Payments
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Financial Overview -->
+    <!-- Summary Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-success">${{ financial_stats.total_revenue|floatformat:2 }}</h4>
-                <p>Total Revenue</p>
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-money-bill-wave text-success mb-2" style="font-size: 2rem;"></i>
+                    <h4 class="mb-1">${{ total_revenue|floatformat:2 }}</h4>
+                    <p class="text-muted mb-0">Total Revenue</p>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-warning">${{ financial_stats.pending_payments|floatformat:2 }}</h4>
-                <p>Pending Payments</p>
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-calendar-check text-primary mb-2" style="font-size: 2rem;"></i>
+                    <h4 class="mb-1">${{ monthly_revenue|floatformat:2 }}</h4>
+                    <p class="text-muted mb-0">This Month</p>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-info">${{ financial_stats.monthly_revenue|floatformat:2 }}</h4>
-                <p>This Month</p>
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-clock text-warning mb-2" style="font-size: 2rem;"></i>
+                    <h4 class="mb-1">${{ pending_payments|floatformat:2 }}</h4>
+                    <p class="text-muted mb-0">Pending</p>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="stats-card">
-                <h4 class="text-primary">${{ financial_stats.net_revenue|floatformat:2 }}</h4>
-                <p>Net Revenue</p>
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-percentage text-info mb-2" style="font-size: 2rem;"></i>
+                    <h4 class="mb-1">{{ occupancy_rate|floatformat:1 }}%</h4>
+                    <p class="text-muted mb-0">Occupancy Rate</p>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- Payment List -->
+        <!-- Payment Transactions -->
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-list me-2"></i>Payment Transactions
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Payment Transactions</h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" style="width: auto;">
+                                <option>All Time</option>
+                                <option>This Month</option>
+                                <option>Last 30 Days</option>
+                                <option>This Year</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if payments %}
@@ -71,44 +93,57 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
                                         <th>Guest</th>
                                         <th>Property</th>
                                         <th>Amount</th>
-                                        <th>Method</th>
                                         <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Channel</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for payment in payments %}
                                     <tr>
                                         <td>
-                                            {% if payment.payment_date %}
-                                                {{ payment.payment_date|date:"M d, Y" }}
-                                            {% else %}
-                                                <span class="text-muted">Pending</span>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm me-2">
+                                                    <div class="avatar-circle bg-primary text-white">
+                                                        {{ payment.guest_name|first|upper }}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <strong>{{ payment.guest_name }}</strong>
+                                                    <br><small class="text-muted">{{ payment.booking.confirmation_code }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ payment.property.name }}</td>
+                                        <td>
+                                            <strong class="text-success">${{ payment.amount|floatformat:2 }}</strong>
+                                            {% if payment.currency != 'USD' %}
+                                                <br><small class="text-muted">{{ payment.currency }}</small>
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <strong>{{ payment.booking.guest.first_name }} {{ payment.booking.guest.last_name|slice:":1" }}.</strong>
-                                            <br><small class="text-muted">Booking #{{ payment.booking.id }}</small>
-                                        </td>
-                                        <td>{{ payment.booking.rental_property.name|truncatechars:30 }}</td>
-                                        <td>
-                                            <strong>${{ payment.amount|floatformat:2 }}</strong>
-                                            {% if payment.processing_fee > 0 %}
-                                                <br><small class="text-muted">Fee: ${{ payment.processing_fee|floatformat:2 }}</small>
-                                            {% endif %}
+                                            <span class="badge bg-{{ payment.status_color }}">{{ payment.status }}</span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-secondary">
-                                                {{ payment.get_payment_method_display }}
-                                            </span>
+                                            {{ payment.transaction_date|date:"M j, Y" }}
+                                            <br><small class="text-muted">{{ payment.transaction_date|time:"g:i A" }}</small>
                                         </td>
                                         <td>
-                                            <span class="badge bg-{% if payment.status == 'completed' %}success{% elif payment.status == 'pending' %}warning{% elif payment.status == 'failed' %}danger{% else %}info{% endif %}">
-                                                {{ payment.get_status_display }}
-                                            </span>
+                                            <span class="badge bg-{{ payment.channel.color }}">{{ payment.channel.name }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" title="Download Receipt">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -116,10 +151,54 @@
                             </table>
                         </div>
                     {% else %}
+                        <!-- Enhanced Empty State for Payments -->
                         <div class="text-center py-5">
-                            <i class="fas fa-money-check-alt text-muted mb-3" style="font-size: 4rem;"></i>
-                            <h5 class="text-muted">No payment transactions yet</h5>
-                            <p class="text-muted">Payment information will appear here as bookings are processed.</p>
+                            <div class="mb-4">
+                                <i class="fas fa-money-check-alt text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                                <h5 class="text-muted mb-3">No payment transactions yet</h5>
+                                <p class="text-muted mb-4">Payment information will appear here as bookings are processed and payments are received.</p>
+                            </div>
+                            
+                            {% if not has_bookings %}
+                                <div class="alert alert-info d-inline-block text-start">
+                                    <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>To start tracking payments:</h6>
+                                    <ul class="mb-0 small">
+                                        <li>Connect your booking platforms</li>
+                                        <li>Add your rental properties</li>
+                                        <li>Sync existing bookings or receive new ones</li>
+                                        <li>Payment data will sync automatically</li>
+                                    </ul>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary me-2">
+                                        <i class="fas fa-link me-2"></i>Connect Channels
+                                    </a>
+                                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-home me-2"></i>Add Property
+                                    </a>
+                                </div>
+                            {% elif not has_properties %}
+                                <div class="alert alert-warning d-inline-block">
+                                    <i class="fas fa-home me-2"></i>Add properties to start tracking payment data
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Add Your First Property
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-success d-inline-block">
+                                    <i class="fas fa-clock me-2"></i>Payment data will sync automatically as bookings are received
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-primary me-2">
+                                        <i class="fas fa-sync me-2"></i>Sync Bookings
+                                    </a>
+                                    <a href="{% url 'booking_vision_APP:booking_list' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-calendar me-2"></i>View Bookings
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>
@@ -131,23 +210,24 @@
             <!-- Payment Breakdown -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-chart-pie me-2"></i>Payment Status
-                    </h5>
+                    <h5 class="mb-0">Payment Breakdown</h5>
                 </div>
                 <div class="card-body">
                     {% if payment_breakdown %}
-                        {% for item in payment_breakdown %}
+                        {% for channel, amount in payment_breakdown.items %}
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>{{ item.status|title }}</span>
-                            <div class="text-end">
-                                <span class="badge bg-secondary">{{ item.count }}</span>
-                                <strong class="ms-2">${{ item.total|floatformat:2 }}</strong>
+                            <div>
+                                <i class="fas fa-circle text-{{ channel.color }} me-2"></i>
+                                {{ channel.name }}
                             </div>
+                            <strong>${{ amount|floatformat:2 }}</strong>
                         </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted text-center">No data available</p>
+                        <div class="text-center py-3">
+                            <i class="fas fa-chart-pie text-muted mb-2" style="font-size: 2rem; opacity: 0.4;"></i>
+                            <p class="text-muted small mb-0">Payment breakdown will appear here once you receive payments</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -155,20 +235,24 @@
             <!-- Revenue by Property -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-home me-2"></i>Top Properties by Revenue
-                    </h5>
+                    <h5 class="mb-0">Revenue by Property</h5>
                 </div>
                 <div class="card-body">
                     {% if revenue_by_property %}
-                        {% for property_name, revenue in revenue_by_property %}
+                        {% for property, revenue in revenue_by_property.items %}
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-truncate" style="max-width: 60%;">{{ property_name }}</span>
+                            <div class="text-truncate me-2">
+                                <i class="fas fa-home text-muted me-2"></i>
+                                {{ property.name }}
+                            </div>
                             <strong>${{ revenue|floatformat:2 }}</strong>
                         </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted text-center">No revenue data yet</p>
+                        <div class="text-center py-3">
+                            <i class="fas fa-home text-muted mb-2" style="font-size: 2rem; opacity: 0.4;"></i>
+                            <p class="text-muted small mb-0">Revenue by property will show here as payments are received</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -176,25 +260,26 @@
             <!-- Upcoming Payouts -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-money-bill-wave me-2"></i>Upcoming Payouts
-                    </h5>
+                    <h5 class="mb-0">Upcoming Payouts</h5>
                 </div>
                 <div class="card-body">
                     {% if upcoming_payouts %}
                         {% for payout in upcoming_payouts %}
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
-                                <strong>${{ payout.amount|floatformat:2 }}</strong>
-                                <br><small class="text-muted">{{ payout.payout_date }}</small>
+                                <div class="fw-bold">{{ payout.channel.name }}</div>
+                                <small class="text-muted">{{ payout.payout_date|date:"M j" }}</small>
                             </div>
-                            <span class="badge bg-{% if payout.status == 'scheduled' %}info{% else %}warning{% endif %}">
-                                {{ payout.get_status_display }}
+                            <span class="badge bg-success">
+                                ${{ payout.amount|floatformat:2 }}
                             </span>
                         </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted text-center">No upcoming payouts</p>
+                        <div class="text-center py-3">
+                            <i class="fas fa-calendar-plus text-muted mb-2" style="font-size: 2rem; opacity: 0.4;"></i>
+                            <p class="text-muted small mb-0">Upcoming payouts will be scheduled here based on your payment history</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -202,45 +287,26 @@
     </div>
 </div>
 
-<!-- Filter Modal -->
-<div class="modal fade" id="filterModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Filter Payments</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="get">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Payment Status</label>
-                        <select class="form-select" id="status" name="status">
-                            <option value="">All Statuses</option>
-                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-                            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
-                            <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
-                            <option value="refunded" {% if status_filter == 'refunded' %}selected{% endif %}>Refunded</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="property" class="form-label">Property</label>
-                        <select class="form-select" id="property" name="property">
-                            <option value="">All Properties</option>
-                            {% for prop in properties %}
-                            <option value="{{ prop.id }}" {% if prop.id|stringformat:"s" == property_filter %}selected{% endif %}>
-                                {{ prop.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Apply Filters</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<style>
+.avatar-sm .avatar-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.text-truncate {
+    max-width: 150px;
+}
+</style>
 {% endblock %}
