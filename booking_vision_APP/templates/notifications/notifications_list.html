@@ -16,12 +16,18 @@
                 <h1 class="h3 text-primary-blue">
                     <i class="fas fa-bell me-2"></i>Notifications & Automation
                 </h1>
+                {% if has_properties %}
                 <a href="{% url 'booking_vision_APP:notification_create' %}" class="btn btn-primary">
                     <i class="fas fa-plus me-2"></i>Create Rule
                 </a>
+                {% endif %}
             </div>
         </div>
     </div>
+
+    {% if not has_properties %}
+        {% include 'components/empty_state_generic.html' with icon='bell' title='Set Up Notifications' description='Add properties first to create automated notification rules for your guests.' action_url='booking_vision_APP:property_create' action_text='Add Properties' action_icon='home' %}
+    {% else %}
 
     <!-- Statistics -->
     <div class="row mb-4">
@@ -185,4 +191,5 @@ function toggleRule(ruleId, isActive) {
     console.log('Toggle rule', ruleId, 'to', isActive);
 }
 </script>
+{% endif %}
 {% endblock %}

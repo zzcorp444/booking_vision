@@ -16,6 +16,7 @@
                 <h1 class="h3 text-primary-blue">
                     <i class="fas fa-dollar-sign me-2"></i>Payments & Finance
                 </h1>
+                {% if has_revenue %}
                 <div class="d-flex gap-2">
                     <a href="{% url 'booking_vision_APP:payout_history' %}" class="btn btn-outline-primary">
                         <i class="fas fa-history me-2"></i>Payout History
@@ -24,9 +25,14 @@
                         <i class="fas fa-filter me-2"></i>Filters
                     </button>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
+
+    {% if not has_revenue %}
+        {% include 'components/empty_state_generic.html' with icon='dollar-sign' title='No Revenue Data Yet' description='Once you start receiving bookings and payments, your financial overview will appear here.' action_url='booking_vision_APP:bookings' action_text='View Bookings' action_icon='calendar-check' %}
+    {% else %}
 
     <!-- Financial Overview -->
     <div class="row mb-4">
@@ -243,4 +249,5 @@
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}

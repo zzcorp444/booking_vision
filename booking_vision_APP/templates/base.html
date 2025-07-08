@@ -157,16 +157,70 @@ Location: booking_vision_APP/templates/base.html
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
                     </li>
+                    
+                    <!-- Channels navigation - always available -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'booking_vision_APP:property_list' %}">
+                        <a class="nav-link" href="{% url 'booking_vision_APP:channel_management' %}">
+                            <i class="fas fa-link"></i> Channels
+                            {% if not has_connected_channels %}
+                            <span class="badge bg-warning text-dark ms-1">Setup</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    
+                    <!-- Properties navigation - show after channels connected -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if not has_connected_channels %}text-muted{% endif %}" 
+                           href="{% url 'booking_vision_APP:property_list' %}"
+                           {% if not has_connected_channels %}onclick="showSetupAlert('Connect channels first'); return false;"{% endif %}>
                             <i class="fas fa-home"></i> Properties
+                            {% if has_connected_channels and not has_properties %}
+                            <span class="badge bg-warning text-dark ms-1">Setup</span>
+                            {% endif %}
                         </a>
                     </li>
+                    
+                    <!-- Bookings navigation - show after properties added -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'booking_vision_APP:booking_list' %}">
+                        <a class="nav-link {% if not has_properties %}text-muted{% endif %}" 
+                           href="{% url 'booking_vision_APP:booking_list' %}"
+                           {% if not has_properties %}onclick="showSetupAlert('Add properties first'); return false;"{% endif %}>
                             <i class="fas fa-calendar"></i> Bookings
+                            {% if has_properties and not has_bookings %}
+                            <span class="badge bg-info ms-1">{{ sync_status.total_bookings }}</span>
+                            {% endif %}
                         </a>
                     </li>
+                    
+                    <!-- Advanced features - show after basic setup -->
+                    {% if has_properties %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="advancedDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cogs"></i> Management
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'booking_vision_APP:analytics' %}">
+                                <i class="fas fa-chart-bar me-2"></i>Analytics
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'booking_vision_APP:messages_list' %}">
+                                <i class="fas fa-comments me-2"></i>Messages
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'booking_vision_APP:notifications_list' %}">
+                                <i class="fas fa-bell me-2"></i>Notifications
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'booking_vision_APP:payments_list' %}">
+                                <i class="fas fa-dollar-sign me-2"></i>Payments
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'booking_vision_APP:activity_feed' %}">
+                                <i class="fas fa-stream me-2"></i>Activity Feed
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- AI Features - show after confirmed bookings -->
+                    {% if has_confirmed_bookings %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="aiDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-robot"></i> AI Features
@@ -178,27 +232,18 @@ Location: booking_vision_APP/templates/base.html
                             <li><a class="dropdown-item" href="{% url 'booking_vision_APP:business_intelligence' %}">Business Intelligence</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'booking_vision_APP:analytics' %}">
-                            <i class="fas fa-chart-bar"></i> Analytics
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'booking_vision_APP:messages_list' %}">
-                            <i class="fas fa-comments"></i> Messages
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'booking_vision_APP:notifications_list' %}">
-                            <i class="fas fa-bell"></i> Notifications
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'booking_vision_APP:payments_list' %}">
-                            <i class="fas fa-dollar-sign"></i> Payments
-                        </a>
-                    </li>
+                    {% endif %}
                 </ul>
+                
+                <!-- Setup Progress Indicator for new users -->
+                {% if show_onboarding %}
+                <div class="navbar-text me-3">
+                    <small class="text-light">
+                        Setup: {{ setup_progress.completed }}/{{ setup_progress.total }}
+                        <span class="badge bg-warning text-dark ms-1">{{ setup_progress.percentage|floatformat:0 }}%</span>
+                    </small>
+                </div>
+                {% endif %}
                 
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
@@ -221,6 +266,8 @@ Location: booking_vision_APP/templates/base.html
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{% url 'booking_vision_APP:profile' %}"><i class="fas fa-user-circle"></i> My Profile</a></li>
                                 <li><a class="dropdown-item" href="{% url 'booking_vision_APP:settings' %}"><i class="fas fa-cog"></i> Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'booking_vision_APP:documentation' %}"><i class="fas fa-book"></i> Help & Docs</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                             </ul>
@@ -439,6 +486,28 @@ Location: booking_vision_APP/templates/base.html
         } catch (e) {
             console.log('Could not play notification sound:', e);
         }
+    }
+
+    // Setup alert function for navigation
+    function showSetupAlert(message) {
+        const alertHtml = `
+            <div class="alert alert-warning alert-dismissible fade show position-fixed" 
+                 style="top: 80px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            const alert = document.querySelector('.alert:last-of-type');
+            if (alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+        }, 5000);
     }
     </script>
     
