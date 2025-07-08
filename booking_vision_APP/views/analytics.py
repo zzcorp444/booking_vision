@@ -14,7 +14,10 @@ from ..models.properties import Property
 from ..models.bookings import Booking
 from ..models.channels import Channel
 
-class AnalyticsView(LoginRequiredMixin, TemplateView):
+from ..mixins import DataResponsiveMixin
+
+
+class AnalyticsView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
     """Main analytics dashboard"""
     template_name = 'analytics/analytics.html'
 

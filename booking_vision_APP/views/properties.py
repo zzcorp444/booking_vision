@@ -16,8 +16,10 @@ from ..models.properties import Property, PropertyImage, Amenity, PropertyAmenit
 from ..models.bookings import Booking
 from ..models.channels import PropertyChannel
 
+from ..mixins import DataResponsiveMixin
 
-class PropertyListView(LoginRequiredMixin, ListView):
+
+class PropertyListView(DataResponsiveMixin, LoginRequiredMixin, ListView):
     """List all properties for the current user"""
     model = Property
     template_name = 'properties/property_list.html'
