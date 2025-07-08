@@ -191,7 +191,10 @@
                         </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted text-center">No data available</p>
+                        <div class="text-center py-3">
+                            <i class="fas fa-chart-pie text-muted mb-2" style="font-size: 2rem; opacity: 0.4;"></i>
+                            <p class="text-muted small mb-0">Payment breakdown will appear here once you receive payments</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -212,7 +215,10 @@
                         </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted text-center">No revenue data yet</p>
+                        <div class="text-center py-3">
+                            <i class="fas fa-home text-muted mb-2" style="font-size: 2rem; opacity: 0.4;"></i>
+                            <p class="text-muted small mb-0">Revenue by property will show here as payments are received</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -238,7 +244,10 @@
                         </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted text-center">No upcoming payouts</p>
+                        <div class="text-center py-3">
+                            <i class="fas fa-calendar-plus text-muted mb-2" style="font-size: 2rem; opacity: 0.4;"></i>
+                            <p class="text-muted small mb-0">Upcoming payouts will be scheduled here based on your payment history</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
