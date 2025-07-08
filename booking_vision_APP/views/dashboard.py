@@ -11,14 +11,12 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 
-from ..models.bookings import Guest, BookingMessage
-from ..models.channels import ChannelConnection
+from ..models.properties import Property
+from ..models.bookings import Booking, Guest, BookingMessage
+from ..models.channels import Channel, ChannelConnection
 from ..ai.pricing_engine import PricingEngine
 from ..ai.maintenance_predictor import MaintenancePredictor
-from ..models import Property, Booking, Channel, Notification, Payment
-from ..services.activity_service import ActivityService
 
 
 @login_required
