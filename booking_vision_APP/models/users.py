@@ -27,10 +27,6 @@ class CustomUser(AbstractUser):
     subscription_end_date = models.DateTimeField(null=True, blank=True)
     stripe_customer_id = models.CharField(max_length=255, blank=True)
 
-    class Meta:
-        db_table = 'auth_user'
-        swappable = 'AUTH_USER_MODEL'
-
     def is_admin_or_bookmaker(self):
         return self.user_type == 'admin'
 
@@ -88,3 +84,19 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} Profile"
+
+
+@receiver(post_save, sender=CustomUser)
+def create_user_profile(sender, instance, created, **kwargs):
+    """Create user profile when user is created"""
+    if created:
+        UserProfile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=CustomUser)
+def save_user_profile(sender, instance, **kwargs):
+    """Save user profile when user is saved"""
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
+    else:
+        UserProfile.objects.create(user=instance)
