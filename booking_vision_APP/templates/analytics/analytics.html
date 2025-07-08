@@ -16,14 +16,20 @@
                 <h1 class="h3 text-primary-blue">
                     <i class="fas fa-chart-bar me-2"></i>Analytics & Reports
                 </h1>
+                {% if has_revenue %}
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-outline-primary active" data-period="30days">30 Days</button>
                     <button type="button" class="btn btn-outline-primary" data-period="90days">90 Days</button>
                     <button type="button" class="btn btn-outline-primary" data-period="12months">12 Months</button>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
+
+    {% if empty_states.analytics %}
+        {% include 'components/empty_state_no_data.html' %}
+    {% else %}
 
     <!-- Revenue Statistics -->
     <div class="row mb-4">
@@ -294,4 +300,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+{% endif %}
 {% endblock %}

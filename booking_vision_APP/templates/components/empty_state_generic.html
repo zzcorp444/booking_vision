@@ -1,0 +1,46 @@
+<!-- 
+Generic Empty State Component
+This is a flexible empty state component that can be used throughout the application.
+-->
+<div class="empty-state text-center py-5">
+    <div class="empty-state-icon mb-4">
+        <i class="fas fa-{{ icon|default:'inbox' }} text-muted" style="font-size: 4rem; opacity: 0.6;"></i>
+    </div>
+    <h3 class="mb-3 text-primary-blue">{{ title|default:"No Items Found" }}</h3>
+    <p class="text-muted mb-4 max-width-500 mx-auto">
+        {{ description|default:"No items to display at this time." }}
+    </p>
+    
+    {% if action_url and action_text %}
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{{ action_url }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-{{ action_icon|default:'plus' }} me-2"></i>{{ action_text }}
+        </a>
+        {% if secondary_action_url and secondary_action_text %}
+        <a href="{{ secondary_action_url }}" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-{{ secondary_action_icon|default:'question-circle' }} me-2"></i>{{ secondary_action_text }}
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if extra_content %}
+    <div class="mt-4">
+        {{ extra_content|safe }}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.empty-state {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.max-width-500 {
+    max-width: 500px;
+}
+</style>

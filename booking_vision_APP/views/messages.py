@@ -13,9 +13,10 @@ import json
 from ..models.bookings import Booking, BookingMessage
 from ..models.channels import Channel
 from ..ai.sentiment_analysis import SentimentAnalyzer
+from ..mixins import DataResponsiveMixin
 
 
-class MessagesListView(LoginRequiredMixin, ListView):
+class MessagesListView(DataResponsiveMixin, LoginRequiredMixin, ListView):
     """Unified messages view across all channels"""
     model = BookingMessage
     template_name = 'messages/messages_list.html'

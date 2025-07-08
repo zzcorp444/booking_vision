@@ -217,37 +217,48 @@
 
 {% block content %}
 <div class="container-fluid" id="dashboard-container">
-    <!-- Welcome Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h2 mb-1">Welcome back, {{ user.first_name|default:user.username }}! 👋</h1>
-                    <p class="text-muted">Here's what's happening with your properties today.</p>
-                </div>
-                <div>
-                    <button class="btn btn-outline-primary me-2" onclick="startTour()">
-                        <i class="fas fa-question-circle me-2"></i>Take a Tour
-                    </button>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#quickActionModal">
-                        <i class="fas fa-plus me-2"></i>Quick Actions
-                    </button>
+    {% if empty_state == 'no_channels' %}
+        {% include 'components/empty_state_no_channels.html' %}
+    
+    {% elif empty_state == 'no_properties' %}
+        {% include 'components/empty_state_no_properties.html' %}
+    
+    {% elif empty_state == 'no_bookings' %}
+        {% include 'components/empty_state_no_bookings.html' %}
+    
+    {% else %}
+        <!-- Dashboard content for users with data -->
+        <!-- Welcome Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h2 mb-1">Welcome back, {{ user.first_name|default:user.username }}! 👋</h1>
+                        <p class="text-muted">Here's what's happening with your properties today.</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary me-2" onclick="startTour()">
+                            <i class="fas fa-question-circle me-2"></i>Take a Tour
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#quickActionModal">
+                            <i class="fas fa-plus me-2"></i>Quick Actions
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Key Metrics -->
-    <div class="dashboard-grid" id="metrics-section">
-        <a href="{% url 'booking_vision_APP:analytics' %}" class="text-decoration-none">
-            <div class="metric-card metric-card-hover" data-tour="revenue">
-                <div class="metric-label">Total Revenue</div>
-                <div class="metric-value">${{ total_revenue|floatformat:2 }}</div>
-                <div class="metric-change positive">
-                    <i class="fas fa-arrow-up"></i> 12.5% from last month
-                </div>
-                <canvas id="revenueSparkline" height="50"></canvas>
-                <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
+        <!-- Key Metrics -->
+        <div class="dashboard-grid" id="metrics-section">
+            <a href="{% url 'booking_vision_APP:analytics' %}" class="text-decoration-none">
+                <div class="metric-card metric-card-hover" data-tour="revenue">
+                    <div class="metric-label">Total Revenue</div>
+                    <div class="metric-value">${{ total_revenue|floatformat:2 }}</div>
+                    <div class="metric-change positive">
+                        <i class="fas fa-arrow-up"></i> 12.5% from last month
+                    </div>
+                    <canvas id="revenueSparkline" height="50"></canvas>
+                    <span class="view-link">View <i class="fas fa-arrow-right"></i></span>
             </div>
         </a>
         
@@ -737,4 +748,5 @@ function syncAllChannels() {
     });
 }
 </script>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,65 @@
+<!-- 
+Empty State Component - No Channels Connected
+This component displays when the user hasn't connected any channels yet.
+-->
+<div class="empty-state text-center py-5">
+    <div class="empty-state-icon mb-4">
+        <i class="fas fa-link text-muted" style="font-size: 4rem; opacity: 0.6;"></i>
+    </div>
+    <h3 class="mb-3 text-primary-blue">{{ title|default:"Connect Your First Channel" }}</h3>
+    <p class="text-muted mb-4 max-width-500 mx-auto">
+        {{ description|default:"To start managing bookings, you need to connect to at least one booking channel like Airbnb, Booking.com, or VRBO." }}
+    </p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus me-2"></i>{{ action_text|default:"Connect Channel" }}
+        </a>
+        {% if show_help|default:True %}
+        <a href="{% url 'booking_vision_APP:documentation' %}#connecting-channels" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-question-circle me-2"></i>How to Connect
+        </a>
+        {% endif %}
+    </div>
+
+    {% if show_progress|default:True %}
+    <!-- Setup Progress -->
+    <div class="mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="setup-progress-card">
+                    <h5 class="text-primary-blue mb-3">Setup Progress</h5>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: {{ setup_progress.percentage }}%"></div>
+                    </div>
+                    <p class="text-muted small">
+                        Step {{ setup_progress.completed|add:1 }} of {{ setup_progress.total }}: 
+                        {{ setup_progress.next_step.title }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.empty-state {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.max-width-500 {
+    max-width: 500px;
+}
+
+.setup-progress-card {
+    background: rgba(var(--light-blue-rgb, 240, 248, 255), 0.5);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-gray);
+}
+</style>

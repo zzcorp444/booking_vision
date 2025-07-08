@@ -1,0 +1,227 @@
+<!-- 
+Empty State Component - No Data/Analytics
+This component displays when there's no data for analytics/reports.
+-->
+<div class="empty-state text-center py-5">
+    <div class="empty-state-icon mb-4">
+        <i class="fas fa-chart-bar text-muted" style="font-size: 4rem; opacity: 0.6;"></i>
+    </div>
+    <h3 class="mb-3 text-primary-blue">{{ title|default:"No Analytics Data Yet" }}</h3>
+    <p class="text-muted mb-4 max-width-500 mx-auto">
+        {{ description|default:"Once you have bookings and revenue, detailed analytics and insights will appear here." }}
+    </p>
+    
+    <!-- What's Missing -->
+    <div class="requirements-section mb-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="requirements-card">
+                    <h6 class="text-primary-blue mb-3">To see analytics, you need:</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="requirement-item">
+                                <div class="d-flex align-items-center">
+                                    {% if has_connected_channels %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-muted me-2"></i>
+                                    {% endif %}
+                                    <span class="{% if has_connected_channels %}text-success{% else %}text-muted{% endif %}">
+                                        Connected channels
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="requirement-item">
+                                <div class="d-flex align-items-center">
+                                    {% if has_properties %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-muted me-2"></i>
+                                    {% endif %}
+                                    <span class="{% if has_properties %}text-success{% else %}text-muted{% endif %}">
+                                        Added properties
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="requirement-item">
+                                <div class="d-flex align-items-center">
+                                    {% if has_bookings %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-muted me-2"></i>
+                                    {% endif %}
+                                    <span class="{% if has_bookings %}text-success{% else %}text-muted{% endif %}">
+                                        Received bookings
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="requirement-item">
+                                <div class="d-flex align-items-center">
+                                    {% if has_revenue %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-muted me-2"></i>
+                                    {% endif %}
+                                    <span class="{% if has_revenue %}text-success{% else %}text-muted{% endif %}">
+                                        Generated revenue
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        {% if not has_connected_channels %}
+            <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-link me-2"></i>Connect Channels
+            </a>
+        {% elif not has_properties %}
+            <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-home me-2"></i>Add Properties
+            </a>
+        {% elif not has_bookings %}
+            <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-sync me-2"></i>Sync Bookings
+            </a>
+            <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-plus me-2"></i>Add Manual Booking
+            </a>
+        {% else %}
+            <a href="{% url 'booking_vision_APP:dashboard' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-tachometer-alt me-2"></i>View Dashboard
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Sample Analytics Preview -->
+    {% if show_preview|default:True %}
+    <div class="preview-section mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="preview-card">
+                    <h6 class="text-primary-blue mb-3">
+                        <i class="fas fa-eye me-2"></i>Preview: What You'll See
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="preview-stat">
+                                <div class="stat-icon">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h4 class="text-primary">$0</h4>
+                                    <p class="small text-muted mb-0">Total Revenue</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="preview-stat">
+                                <div class="stat-icon">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h4 class="text-primary">0</h4>
+                                    <p class="small text-muted mb-0">Total Bookings</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="preview-stat">
+                                <div class="stat-icon">
+                                    <i class="fas fa-bed"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h4 class="text-primary">0%</h4>
+                                    <p class="small text-muted mb-0">Occupancy Rate</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="preview-stat">
+                                <div class="stat-icon">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h4 class="text-primary">-</h4>
+                                    <p class="small text-muted mb-0">Avg Rating</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.empty-state {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.max-width-500 {
+    max-width: 500px;
+}
+
+.requirements-card {
+    background: rgba(var(--warning-orange-rgb, 255, 193, 7), 0.1);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(var(--warning-orange-rgb, 255, 193, 7), 0.3);
+}
+
+.requirement-item {
+    padding: 0.5rem;
+    font-weight: 500;
+}
+
+.preview-card {
+    background: rgba(var(--light-blue-rgb, 240, 248, 255), 0.5);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-gray);
+}
+
+.preview-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-gray);
+    height: 100%;
+}
+
+.stat-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: rgba(var(--primary-blue-rgb, 13, 110, 253), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-blue);
+    flex-shrink: 0;
+}
+
+.stat-info {
+    flex-grow: 1;
+}
+</style>

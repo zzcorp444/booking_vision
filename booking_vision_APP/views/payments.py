@@ -12,9 +12,10 @@ from decimal import Decimal
 
 from ..models.payments import Payment, Payout
 from ..models.bookings import Booking
+from ..mixins import DataResponsiveMixin
 
 
-class PaymentsListView(LoginRequiredMixin, TemplateView):
+class PaymentsListView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
     """Financial overview and payments tracking"""
     template_name = 'payments/payments_list.html'
 
@@ -104,7 +105,7 @@ class PaymentsListView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class PayoutHistoryView(LoginRequiredMixin, ListView):
+class PayoutHistoryView(DataResponsiveMixin, LoginRequiredMixin, ListView):
     """Payout history view"""
     model = Payout
     template_name = 'payments/payout_history.html'

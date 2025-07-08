@@ -8,8 +8,10 @@ from django.http import JsonResponse
 from django.utils import timezone
 import json
 
+from ..mixins import DataResponsiveMixin
+
 # For now, return empty view until activity models are created
-class ActivityView(LoginRequiredMixin, ListView):
+class ActivityView(DataResponsiveMixin, LoginRequiredMixin, ListView):
     """Activity feed view"""
     template_name = 'activities/activity_feed.html'
 

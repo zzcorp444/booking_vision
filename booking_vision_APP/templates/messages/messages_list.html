@@ -16,6 +16,7 @@
                 <h1 class="h3 text-primary-blue">
                     <i class="fas fa-comments me-2"></i>Unified Messages Center
                 </h1>
+                {% if has_messages %}
                 <div class="d-flex gap-2">
                     <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#composeModal">
                         <i class="fas fa-pen me-2"></i>Compose
@@ -24,9 +25,14 @@
                         <i class="fas fa-filter me-2"></i>Filters
                     </button>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
+
+    {% if empty_states.messages %}
+        {% include 'components/empty_state_generic.html' with icon='comments' title='No Messages Yet' description='Guest messages will appear here when you receive them through your connected channels.' action_url='booking_vision_APP:channel_management' action_text='Connect Channels' action_icon='link' %}
+    {% else %}
 
     <!-- Message Statistics -->
     <div class="row mb-4">
@@ -202,4 +208,5 @@ function replyToMessage(bookingId) {
     alert('Reply functionality will open compose modal for booking ' + bookingId);
 }
 </script>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,93 @@
+<!-- 
+Empty State Component - No Properties Added
+This component displays when the user has connected channels but no properties.
+-->
+<div class="empty-state text-center py-5">
+    <div class="empty-state-icon mb-4">
+        <i class="fas fa-home text-muted" style="font-size: 4rem; opacity: 0.6;"></i>
+    </div>
+    <h3 class="mb-3 text-primary-blue">{{ title|default:"Add Your First Property" }}</h3>
+    <p class="text-muted mb-4 max-width-500 mx-auto">
+        {{ description|default:"Great! You've connected your channels. Now add your rental properties to start managing bookings." }}
+    </p>
+    
+    {% if sync_status.channels_connected > 0 %}
+    <div class="connected-channels-info mb-4">
+        <div class="d-flex justify-content-center align-items-center gap-2 text-success">
+            <i class="fas fa-check-circle"></i>
+            <span>{{ sync_status.channels_connected }} channel{{ sync_status.channels_connected|pluralize }} connected</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus me-2"></i>{{ action_text|default:"Add Property" }}
+        </a>
+        {% if show_help|default:True %}
+        <a href="{% url 'booking_vision_APP:documentation' %}#creating-properties" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-question-circle me-2"></i>Property Guide
+        </a>
+        {% endif %}
+    </div>
+
+    {% if show_progress|default:True %}
+    <!-- Setup Progress -->
+    <div class="mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="setup-progress-card">
+                    <h5 class="text-primary-blue mb-3">Setup Progress</h5>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: {{ setup_progress.percentage }}%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between text-small">
+                        <span class="text-success">
+                            <i class="fas fa-check me-1"></i>Channels Connected
+                        </span>
+                        <span class="text-muted">
+                            <i class="fas fa-arrow-right me-1"></i>Add Properties
+                        </span>
+                        <span class="text-muted">
+                            <i class="fas fa-arrow-right me-1"></i>Get Bookings
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.empty-state {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.max-width-500 {
+    max-width: 500px;
+}
+
+.setup-progress-card {
+    background: rgba(var(--light-blue-rgb, 240, 248, 255), 0.5);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-gray);
+}
+
+.connected-channels-info {
+    background: rgba(25, 135, 84, 0.1);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    display: inline-block;
+}
+
+.text-small {
+    font-size: 0.875rem;
+}
+</style>

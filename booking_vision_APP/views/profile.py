@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from ..models.users import UserProfile
+from ..mixins import DataResponsiveMixin
 
 User = get_user_model()
 
@@ -60,7 +61,7 @@ class ProfileForm(forms.ModelForm):
         return profile
 
 
-class ProfileView(LoginRequiredMixin, UpdateView):
+class ProfileView(DataResponsiveMixin, LoginRequiredMixin, UpdateView):
     """Enhanced user profile view"""
     model = UserProfile
     form_class = ProfileForm
@@ -107,7 +108,7 @@ class ProfileView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class EnhancedSettingsView(LoginRequiredMixin, TemplateView):
+class EnhancedSettingsView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
     """Enhanced settings view with working password reset"""
     template_name = 'profile/settings.html'
     

@@ -1,0 +1,156 @@
+<!-- 
+Empty State Component - No Bookings Yet
+This component displays when the user has channels and properties but no bookings.
+-->
+<div class="empty-state text-center py-5">
+    <div class="empty-state-icon mb-4">
+        <i class="fas fa-calendar-alt text-muted" style="font-size: 4rem; opacity: 0.6;"></i>
+    </div>
+    <h3 class="mb-3 text-primary-blue">{{ title|default:"No Bookings Yet" }}</h3>
+    <p class="text-muted mb-4 max-width-500 mx-auto">
+        {{ description|default:"Your channels are connected and properties are set up. Bookings will appear here automatically, or you can add one manually." }}
+    </p>
+    
+    <!-- Status Summary -->
+    <div class="status-summary mb-4">
+        <div class="row justify-content-center">
+            <div class="col-auto">
+                <div class="status-item text-success">
+                    <i class="fas fa-check-circle"></i>
+                    <span>{{ sync_status.channels_connected }} Channel{{ sync_status.channels_connected|pluralize }}</span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="status-item text-success">
+                    <i class="fas fa-check-circle"></i>
+                    <span>{{ sync_status.properties_added }} Propert{{ sync_status.properties_added|pluralize:"y,ies" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{% url 'booking_vision_APP:sync_bookings' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-sync me-2"></i>{{ action_text|default:"Sync Bookings" }}
+        </a>
+        <a href="{% url 'booking_vision_APP:booking_create' %}" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-plus me-2"></i>Add Manual Booking
+        </a>
+        {% if show_help|default:True %}
+        <a href="{% url 'booking_vision_APP:documentation' %}#booking-management" class="btn btn-outline-secondary">
+            <i class="fas fa-question-circle me-2"></i>Learn More
+        </a>
+        {% endif %}
+    </div>
+
+    {% if show_tips|default:True %}
+    <!-- Tips Section -->
+    <div class="tips-section mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="tips-card">
+                    <h6 class="text-primary-blue mb-3">
+                        <i class="fas fa-lightbulb me-2"></i>Tips to Get Your First Booking
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="tip-item">
+                                <i class="fas fa-camera text-primary mb-2"></i>
+                                <p class="small mb-0">Add high-quality photos to your property listings</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="tip-item">
+                                <i class="fas fa-dollar-sign text-primary mb-2"></i>
+                                <p class="small mb-0">Set competitive pricing for your market</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="tip-item">
+                                <i class="fas fa-calendar-check text-primary mb-2"></i>
+                                <p class="small mb-0">Keep your availability calendar updated</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if show_progress|default:True %}
+    <!-- Setup Progress -->
+    <div class="mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="setup-progress-card">
+                    <h5 class="text-primary-blue mb-3">Setup Progress</h5>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: {{ setup_progress.percentage }}%"></div>
+                    </div>
+                    <p class="text-muted small">
+                        Step {{ setup_progress.completed|add:1 }} of {{ setup_progress.total }}: 
+                        {{ setup_progress.next_step.title }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.empty-state {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.max-width-500 {
+    max-width: 500px;
+}
+
+.setup-progress-card {
+    background: rgba(var(--light-blue-rgb, 240, 248, 255), 0.5);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-gray);
+}
+
+.status-summary {
+    background: rgba(25, 135, 84, 0.1);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    display: inline-block;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.tips-card {
+    background: rgba(var(--secondary-blue-rgb, 33, 150, 243), 0.05);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(var(--secondary-blue-rgb, 33, 150, 243), 0.2);
+}
+
+.tip-item {
+    text-align: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    height: 100%;
+    border: 1px solid var(--border-gray);
+}
+
+.tip-item i {
+    font-size: 1.5rem;
+}
+</style>

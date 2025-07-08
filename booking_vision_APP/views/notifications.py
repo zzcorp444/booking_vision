@@ -10,6 +10,7 @@ from django.contrib import messages
 from django import forms
 
 from ..models.notifications import NotificationRule, NotificationLog
+from ..mixins import DataResponsiveMixin
 
 
 class NotificationRuleForm(forms.ModelForm):
@@ -32,7 +33,7 @@ class NotificationRuleForm(forms.ModelForm):
             self.fields['properties'].queryset = Property.objects.filter(owner=user)
 
 
-class NotificationListView(LoginRequiredMixin, ListView):
+class NotificationListView(DataResponsiveMixin, LoginRequiredMixin, ListView):
     """List all notification rules"""
     model = NotificationRule
     template_name = 'notifications/notifications_list.html'

@@ -16,6 +16,7 @@
                 <h1 class="h3 text-primary-blue">
                     <i class="fas fa-stream me-2"></i>Activity Feed
                 </h1>
+                {% if has_activities %}
                 <div>
                     <button class="btn btn-outline-primary me-2" onclick="markAllAsRead()">
                         <i class="fas fa-check-double me-2"></i>Mark All Read
@@ -24,9 +25,14 @@
                         <i class="fas fa-cog me-2"></i>Preferences
                     </button>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
+
+    {% if empty_states.activities %}
+        {% include 'components/empty_state_generic.html' with icon='stream' title='No Activity Yet' description='Your activity feed will show booking updates, messages, and other important events.' action_url='booking_vision_APP:dashboard' action_text='Go to Dashboard' action_icon='tachometer-alt' %}
+    {% else %}
 
     <!-- Activity Stats -->
     <div class="row mb-4">
@@ -311,4 +317,5 @@ function savePreferences() {
     });
 }
 </script>
+{% endif %}
 {% endblock %}

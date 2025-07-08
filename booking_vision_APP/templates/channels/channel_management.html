@@ -13,10 +13,40 @@
                 <i class="fas fa-link me-2"></i>Channel Management - No API Required
             </h1>
             
+            {% if show_onboarding %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Welcome!</strong> Start by connecting your first channel. No API keys needed with our innovative sync technology.
+            </div>
+            {% else %}
             <div class="alert alert-success">
                 <i class="fas fa-check-circle me-2"></i>
                 <strong>Revolutionary Sync Technology!</strong> Connect your channels without any API keys using our innovative multi-method synchronization.
             </div>
+            {% endif %}
+
+            <!-- Setup Progress for New Users -->
+            {% if show_onboarding %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary-blue">
+                                <i class="fas fa-chart-line me-2"></i>Setup Progress
+                            </h5>
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ setup_progress.percentage }}%"></div>
+                            </div>
+                            <p class="mb-0">
+                                Step {{ setup_progress.completed|add:1 }} of {{ setup_progress.total }}: 
+                                {{ setup_progress.next_step.title }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
     

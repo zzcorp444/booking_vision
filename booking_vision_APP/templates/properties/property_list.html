@@ -16,17 +16,29 @@
                 <h1 class="h3 text-primary-blue">
                     <i class="fas fa-home me-2"></i>Property Management
                 </h1>
+                {% if has_properties or has_connected_channels %}
                 <div class="d-flex gap-2">
                     <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary">
                         <i class="fas fa-plus me-2"></i>Add Property
                     </a>
+                    {% if has_properties %}
                     <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
                         <i class="fas fa-filter me-2"></i>Filters
                     </button>
+                    {% endif %}
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
+
+    {% if empty_state == 'no_channels' %}
+        {% include 'components/empty_state_no_channels.html' %}
+    
+    {% elif empty_state == 'no_properties' %}
+        {% include 'components/empty_state_no_properties.html' %}
+    
+    {% else %}
 
     <!-- Property Statistics -->
     <div class="row mb-4">
@@ -289,4 +301,5 @@
     gap: 0.5rem;
 }
 </style>
+{% endif %}
 {% endblock %}

@@ -19,35 +19,13 @@
             </div>
 
             {% if empty_state == 'no_channels' %}
-                <!-- No Channels Connected State -->
-                <div class="empty-state text-center py-5">
-                    <div class="empty-state-icon mb-4">
-                        <i class="fas fa-link text-muted" style="font-size: 4rem;"></i>
-                    </div>
-                    <h3 class="mb-3">Connect Your First Channel</h3>
-                    <p class="text-muted mb-4">
-                        Start by connecting your booking channels (Airbnb, Booking.com, etc.) 
-                        to begin importing your reservations automatically.
-                    </p>
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="{% url 'booking_vision_APP:channel_management' %}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-link me-2"></i>Connect Channels
-                        </a>
-                    </div>
-                </div>
+                {% include 'components/empty_state_no_channels.html' %}
 
             {% elif empty_state == 'no_properties' %}
-                <!-- No Properties Added State -->
-                <div class="empty-state text-center py-5">
-                    <div class="empty-state-icon mb-4">
-                        <i class="fas fa-home text-muted" style="font-size: 4rem;"></i>
-                    </div>
-                    <h3 class="mb-3">Add Your First Property</h3>
-                    <p class="text-muted mb-4">
-                        You've connected channels but need to add your properties 
-                        to start managing bookings.
-                    </p>
-                    <a href="{% url 'booking_vision_APP:property_create' %}" class="btn btn-primary btn-lg">
+                {% include 'components/empty_state_no_properties.html' %}
+
+            {% elif empty_state == 'no_bookings' %}
+                {% include 'components/empty_state_no_bookings.html' %}
                         <i class="fas fa-plus me-2"></i>Add Property
                     </a>
                 </div>
@@ -74,9 +52,9 @@
                 </div>
 
             {% else %}
-                <!-- Show YOUR EXISTING booking functionality -->
+                <!-- Show existing booking functionality when data is available -->
                 
-                <!-- Sync Status Card (NEW ADDITION) -->
+                <!-- Sync Status Card -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-body">
                         <div class="row text-center">
