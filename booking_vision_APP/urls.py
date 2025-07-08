@@ -62,7 +62,7 @@ urlpatterns = [
 
     # Profile URLs
     path('profile/', profile.ProfileView.as_view(), name='profile'),
-    path('settings/', profile.SettingsView.as_view(), name='settings'),
+    path('settings/', profile.EnhancedSettingsView.as_view(), name='settings'),
 
     # Activity URLs
     path('activities/', activities.ActivityView.as_view(), name='activity'),
