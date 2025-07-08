@@ -43,6 +43,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'booking_vision_APP.middleware.SessionManagementMiddleware',
+    'booking_vision_APP.middleware.RestrictAdminMiddleware',
 ]
 
 ROOT_URLCONF = 'booking_vision.urls'
@@ -153,6 +155,17 @@ LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
+# Session settings
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_SECURE = not DEBUG  # HTTPS only in production
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Remember me functionality
+SESSION_REMEMBER_DURATION = 2592000  # 30 days
+
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
@@ -232,3 +245,5 @@ LOGGING = {
         },
     },
 }
+
+AUTH_USER_MODEL = 'booking_vision_APP.CustomUser'
