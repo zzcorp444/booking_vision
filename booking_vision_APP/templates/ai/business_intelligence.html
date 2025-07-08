@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}Business Intelligence - Booking Vision{% endblock %}
 
@@ -16,186 +17,343 @@
                 <h1 class="h3 text-primary-blue">
                     <i class="fas fa-chart-bar me-2"></i>Business Intelligence
                 </h1>
+                {% if has_connected_channels %}
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh Data
+                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-filter me-2"></i>Time Period
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="?period=7">Last 7 days</a></li>
+                                <li><a class="dropdown-item" href="?period=30">Last 30 days</a></li>
+                                <li><a class="dropdown-item" href="?period=90">Last 90 days</a></li>
+                                <li><a class="dropdown-item" href="?period=365">Last year</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Market Analysis -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-globe me-2"></i>Market Analysis
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if market_analysis %}
-                        <div class="row">
-                            {% for location, data in market_analysis.items %}
-                            <div class="col-lg-6 mb-4">
-                                <div class="ai-feature-card">
-                                    <h6 class="fw-bold text-primary-blue mb-3">
-                                        <i class="fas fa-map-marker-alt me-2"></i>{{ location }}
-                                    </h6>
-                                    
-                                    <div class="row mb-3">
-                                        <div class="col-6">
-                                            <small class="text-muted">Avg Daily Rate</small>
-                                            <h5 class="mb-0">${{ data.average_daily_rate }}</h5>
+    {% if not has_connected_channels %}
+        <!-- No Channels Connected State -->
+        <div class="row">
+            <div class="col-12">
+                {% include 'components/empty_state.html' with empty_state='no_channels' %}
+            </div>
+        </div>
+    {% elif not has_properties %}
+        <!-- No Properties State -->
+        <div class="row">
+            <div class="col-12">
+                {% include 'components/empty_state.html' with empty_state='no_properties' connected_channels_count=connected_channels_count %}
+            </div>
+        </div>
+    {% elif not has_bookings %}
+        <!-- No Bookings State -->
+        <div class="row">
+            <div class="col-12">
+                {% include 'components/empty_state.html' with empty_state='no_bookings' properties_count=properties_count connected_channels_count=connected_channels_count %}
+            </div>
+        </div>
+    {% else %}
+        <!-- Data Available - Show Full BI Dashboard -->
+        <!-- Market Analysis -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-globe me-2"></i>Market Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if market_analysis %}
+                            <div class="row">
+                                {% for location, data in market_analysis.items %}
+                                <div class="col-lg-6 mb-4">
+                                    <div class="ai-feature-card">
+                                        <h6 class="fw-bold text-primary-blue mb-3">
+                                            <i class="fas fa-map-marker-alt me-2"></i>{{ location }}
+                                        </h6>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-6">
+                                                <small class="text-muted">Avg Daily Rate</small>
+                                                <h5 class="mb-0">${{ data.average_daily_rate|floatformat:0 }}</h5>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Occupancy Rate</small>
+                                                <h5 class="mb-0">{{ data.occupancy_rate|floatformat:1 }}%</h5>
+                                            </div>
                                         </div>
-                                        <div class="col-6">
-                                            <small class="text-muted">Occupancy Rate</small>
-                                            <h5 class="mb-0">{{ data.occupancy_rate }}%</h5>
+                                        
+                                        <div class="mb-3">
+                                            <small class="text-muted">Market Demand</small>
+                                            <span class="badge bg-{% if data.market_demand == 'high' %}success{% elif data.market_demand == 'medium' %}warning{% else %}danger{% endif %} ms-2">
+                                                {{ data.market_demand|title }}
+                                            </span>
                                         </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <small class="text-muted">Market Demand</small>
-                                        <span class="badge bg-{{ data.market_demand|yesno:'success,warning,danger' }} ms-2">
-                                            {{ data.market_demand|title }}
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <small class="text-muted">Price Trend</small>
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-arrow-{{ data.price_trend|yesno:'up,down,right' }} text-{{ data.price_trend|yesno:'success,danger,secondary' }} me-2"></i>
-                                            <span class="text-capitalize">{{ data.price_trend }}</span>
+                                        
+                                        <div class="mb-3">
+                                            <small class="text-muted">Price Trend</small>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-arrow-{% if data.price_trend == 'up' %}up text-success{% elif data.price_trend == 'down' %}down text-danger{% else %}right text-secondary{% endif %} me-2"></i>
+                                                <span class="text-capitalize">{{ data.price_trend }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-chart-line text-muted mb-3" style="font-size: 3rem;"></i>
-                            <h5 class="text-muted">No market data available</h5>
-                            <p class="text-muted">Market analysis will appear as data is collected.</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Competitor Analysis -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-users me-2"></i>Competitor Analysis
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="competitorChart"></canvas>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-chart-line text-muted mb-3" style="font-size: 3rem;"></i>
+                                <h5 class="text-muted">Analyzing Market Data</h5>
+                                <p class="text-muted">Market analysis will appear as more booking data is collected from your connected channels.</p>
+                                <div class="spinner-border text-primary mt-3" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- ROI Analysis -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-dollar-sign me-2"></i>ROI Analysis
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if roi_analysis %}
-                        {% for item in roi_analysis %}
-                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
-                            <div>
-                                <h6 class="mb-0">{{ item.property.name }}</h6>
-                                <small class="text-muted">{{ item.payback_period }} years payback</small>
-                            </div>
-                            <div class="text-end">
-                                <h6 class="mb-0 text-{{ item.roi|floatformat:0|yesno:'success,danger' }}">
-                                    {{ item.roi|floatformat:1 }}%
-                                </h6>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-muted text-center">No ROI data available yet.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Trends and Forecasts -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-crystal-ball me-2"></i>Trends & Forecasts
-                    </h5>
+        <!-- Key Metrics Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-dollar-sign text-success mb-2" style="font-size: 2rem;"></i>
+                        <h4 class="mb-0">${{ total_revenue|floatformat:0|default:"0" }}</h4>
+                        <small class="text-muted">Total Revenue</small>
+                    </div>
                 </div>
-                <div class="card-body">
-                    {% if trends %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6 class="text-primary-blue">Booking Trends</h6>
-                                <div class="d-flex align-items-center mb-3">
-                                    <i class="fas fa-arrow-{{ trends.booking_trend|yesno:'up,down' }} text-{{ trends.booking_trend|yesno:'success,danger' }} me-2"></i>
-                                    <span>{{ trends.booking_change }}% vs last month</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="text-primary-blue">Revenue Trends</h6>
-                                <div class="d-flex align-items-center mb-3">
-                                    <i class="fas fa-arrow-{{ trends.revenue_trend|yesno:'up,down' }} text-{{ trends.revenue_trend|yesno:'success,danger' }} me-2"></i>
-                                    <span>{{ trends.revenue_change }}% vs last month</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {% if trends.insights %}
-                        <div class="mt-4">
-                            <h6 class="text-primary-blue">AI Insights</h6>
-                            <ul class="list-unstyled">
-                                {% for insight in trends.insights %}
-                                <li class="mb-2">
-                                    <i class="fas fa-lightbulb text-warning me-2"></i>
-                                    {{ insight }}
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                    {% else %}
-                        <p class="text-muted text-center">Trend analysis will appear as more data is collected.</p>
-                    {% endif %}
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-percentage text-info mb-2" style="font-size: 2rem;"></i>
+                        <h4 class="mb-0">{{ avg_occupancy_rate|floatformat:1|default:"0" }}%</h4>
+                        <small class="text-muted">Avg Occupancy</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-bed text-primary mb-2" style="font-size: 2rem;"></i>
+                        <h4 class="mb-0">${{ avg_daily_rate|floatformat:0|default:"0" }}</h4>
+                        <small class="text-muted">Avg Daily Rate</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-chart-line text-warning mb-2" style="font-size: 2rem;"></i>
+                        <h4 class="mb-0">{{ revenue_growth|floatformat:1|default:"0" }}%</h4>
+                        <small class="text-muted">Revenue Growth</small>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Competitor Analysis & ROI Analysis -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users me-2"></i>Competitor Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if competitor_data %}
+                            <div class="chart-container" style="height: 300px;">
+                                <canvas id="competitorChart"></canvas>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-users text-muted mb-3" style="font-size: 2.5rem;"></i>
+                                <h6 class="text-muted">Competitor Analysis Loading</h6>
+                                <p class="text-muted small">Analyzing competitor data from your market area...</p>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 45%"></div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ROI Analysis -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-dollar-sign me-2"></i>ROI Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if roi_analysis %}
+                            {% for item in roi_analysis %}
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                <div>
+                                    <h6 class="mb-0">{{ item.property.name }}</h6>
+                                    <small class="text-muted">{{ item.payback_period|floatformat:1 }} years payback</small>
+                                </div>
+                                <div class="text-end">
+                                    <h6 class="mb-0 {% if item.roi > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ item.roi|floatformat:1 }}%
+                                    </h6>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-calculator text-muted mb-3" style="font-size: 2.5rem;"></i>
+                                <h6 class="text-muted">Calculating ROI</h6>
+                                <p class="text-muted small">ROI analysis will appear as revenue data accumulates.</p>
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trends and Forecasts -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-crystal-ball me-2"></i>Trends & Forecasts
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if trends %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary-blue">Booking Trends</h6>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-arrow-{% if trends.booking_trend %}up text-success{% else %}down text-danger{% endif %} me-2"></i>
+                                        <span>{{ trends.booking_change|floatformat:1|default:"0" }}% vs last month</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-primary-blue">Revenue Trends</h6>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-arrow-{% if trends.revenue_trend %}up text-success{% else %}down text-danger{% endif %} me-2"></i>
+                                        <span>{{ trends.revenue_change|floatformat:1|default:"0" }}% vs last month</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if trends.insights %}
+                            <div class="mt-4">
+                                <h6 class="text-primary-blue">AI Insights</h6>
+                                <ul class="list-unstyled">
+                                    {% for insight in trends.insights %}
+                                    <li class="mb-2">
+                                        <i class="fas fa-lightbulb text-warning me-2"></i>
+                                        {{ insight }}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-crystal-ball text-muted mb-3" style="font-size: 2.5rem;"></i>
+                                <h6 class="text-muted">Analyzing Trends</h6>
+                                <p class="text-muted small">Trend analysis will appear as more historical data is collected over time.</p>
+                                <div class="row mt-4">
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3 bg-light rounded">
+                                            <i class="fas fa-calendar-week text-primary mb-2"></i>
+                                            <div class="small text-muted">Need 7+ days for weekly trends</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3 bg-light rounded">
+                                            <i class="fas fa-calendar-alt text-primary mb-2"></i>
+                                            <div class="small text-muted">Need 30+ days for monthly trends</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center p-3 bg-light rounded">
+                                            <i class="fas fa-chart-line text-primary mb-2"></i>
+                                            <div class="small text-muted">Need 90+ days for seasonal trends</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 </div>
+
+<style>
+.ai-feature-card {
+    background: #f8f9fa;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border-left: 4px solid var(--primary-blue);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+    .ai-feature-card {
+        margin-bottom: 1rem;
+    }
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize competitor chart if element exists
+    // Initialize competitor chart if element exists and data is available
     const competitorCtx = document.getElementById('competitorChart');
-    if (competitorCtx) {
+    if (competitorCtx && {{ competitor_data|yesno:"true,false" }}) {
+        const competitorData = {{ competitor_data|default:"null" }};
+        
         new Chart(competitorCtx, {
             type: 'radar',
             data: {
                 labels: ['Pricing', 'Reviews', 'Occupancy', 'Response Time', 'Amenities'],
                 datasets: [{
                     label: 'Your Properties',
-                    data: [8, 9, 7, 9, 8],
+                    data: competitorData ? competitorData.your_scores : [0, 0, 0, 0, 0],
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.2)',
                     pointBackgroundColor: '#3b82f6'
                 }, {
                     label: 'Market Average',
-                    data: [6, 7, 8, 6, 7],
+                    data: competitorData ? competitorData.market_scores : [0, 0, 0, 0, 0],
                     borderColor: '#ef4444',
                     backgroundColor: 'rgba(239, 68, 68, 0.2)',
                     pointBackgroundColor: '#ef4444'
@@ -220,5 +378,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+function refreshData() {
+    // Show loading state
+    const refreshBtn = document.querySelector('[onclick="refreshData()"]');
+    const originalHtml = refreshBtn.innerHTML;
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...';
+    refreshBtn.disabled = true;
+    
+    // Simulate refresh (replace with actual AJAX call)
+    setTimeout(() => {
+        location.reload();
+    }, 2000);
+}
 </script>
 {% endblock %}
