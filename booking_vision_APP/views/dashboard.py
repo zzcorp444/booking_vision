@@ -11,6 +11,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 
 from ..models.properties import Property
 from ..models.bookings import Booking, Guest, BookingMessage
@@ -306,7 +307,7 @@ class DashboardView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
                                 'property': property,
                                 'message': f"Consider adjusting {property.name} price to ${recommendation['suggested_price']:.2f} (potential {recommendation['revenue_increase']:.1f}% revenue increase)",
                                 'priority': 'high' if recommendation['revenue_increase'] > 10 else 'medium',
-                                'action_url': f"{% url 'booking_vision_APP:smart_pricing' %}?property_id={property.id}",
+                                'action_url': reverse('booking_vision_APP:smart_pricing') + f"?property_id={property.id}",
                                 'confidence': recommendation.get('confidence', 75)
                             })
             except Exception as e:
@@ -322,7 +323,7 @@ class DashboardView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
                     'property': alert['property'],
                     'message': alert['message'],
                     'priority': alert['priority'],
-                    'action_url': f"{% url 'booking_vision_APP:predictive_maintenance' %}?property_id={alert['property'].id}",
+                    'action_url': reverse('booking_vision_APP:predictive_maintenance') + f"?property_id={alert['property'].id}",
                     'confidence': alert.get('confidence', 80)
                 })
         except Exception as e:
@@ -357,7 +358,7 @@ class DashboardView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
                         'property': property,
                         'message': f"{property.name} has low occupancy ({occupancy_rate:.1f}%). Consider adjusting pricing or marketing strategy.",
                         'priority': 'medium',
-                        'action_url': f"{% url 'booking_vision_APP:property_detail' property.id %}",
+                        'action_url': reverse('booking_vision_APP:property_detail', args=[property.id]),
                         'confidence': 85
                     })
 
@@ -380,7 +381,7 @@ class DashboardView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
                 'property': None,
                 'message': f"You have {repeat_guests.count()} repeat guests! Consider implementing a loyalty program.",
                 'priority': 'low',
-                'action_url': "{% url 'booking_vision_APP:guest_experience' %}",
+                'action_url': reverse('booking_vision_APP:guest_experience'),
                 'confidence': 90
             })
 
@@ -401,7 +402,7 @@ class DashboardView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
                     'description': f'{booking.rental_property.name} - {booking.check_in_date}',
                     'time_ago': self._time_ago(booking.created_at),
                     'timestamp': booking.created_at,
-                    'url': f"{% url 'booking_vision_APP:booking_detail' booking.id %}"
+                    'url': reverse('booking_vision_APP:booking_detail', args=[booking.id])
                 })
 
         # Recent messages (if any exist)
@@ -418,7 +419,7 @@ class DashboardView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
                 'description': message.message[:50] + '...' if len(message.message) > 50 else message.message,
                 'time_ago': self._time_ago(message.created_at),
                 'timestamp': message.created_at,
-                'url': f"{% url 'booking_vision_APP:messages_list' %}?booking_id={message.booking.id}"
+                'url': reverse('booking_vision_APP:messages_list') + f"?booking_id={message.booking.id}"
             })
 
         # Recent property additions
@@ -435,7 +436,7 @@ class DashboardView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
                 'description': f'{property.property_type} in {property.city}',
                 'time_ago': self._time_ago(property.created_at),
                 'timestamp': property.created_at,
-                'url': f"{% url 'booking_vision_APP:property_detail' property.id %}"
+                'url': reverse('booking_vision_APP:property_detail', args=[property.id])
             })
 
         # Sort by timestamp and return
@@ -464,7 +465,7 @@ class DashboardView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
                     'due_date': booking.check_in_date,
                     'priority': priority,
                     'type': 'checkin',
-                    'url': f"{% url 'booking_vision_APP:booking_detail' booking.id %}"
+                    'url': reverse('booking_vision_APP:booking_detail', args=[booking.id])
                 })
 
         # Maintenance tasks (if any exist)
@@ -482,7 +483,7 @@ class DashboardView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
                     'due_date': task.scheduled_date or 'ASAP',
                     'priority': task.priority,
                     'type': 'maintenance',
-                    'url': f"{% url 'booking_vision_APP:predictive_maintenance' %}?task_id={task.id}"
+                    'url': reverse('booking_vision_APP:predictive_maintenance') + f"?task_id={task.id}"
                 })
         except ImportError:
             pass
@@ -501,7 +502,7 @@ class DashboardView(DataResponsiveMixin, LoginRequiredMixin, TemplateView):
                 'due_date': 'Overdue',
                 'priority': 'medium',
                 'type': 'sync',
-                'url': "{% url 'booking_vision_APP:channel_management' %}"
+                'url': reverse('booking_vision_APP:channel_management')
             })
 
         return tasks
