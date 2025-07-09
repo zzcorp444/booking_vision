@@ -8,14 +8,17 @@ from django.views.generic import TemplateView
 from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
+from decimal import Decimal
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 from ..models.properties import Property
-from ..models.bookings import Booking, Guest
+from ..models import Booking, Property, Payment, Guest
 from ..models.channels import Channel, ChannelConnection
 from ..models.payments import Payment
 from ..mixins import AnalyticsDataMixin
+import json
 
 
 class AnalyticsView(AnalyticsDataMixin, LoginRequiredMixin, TemplateView):
@@ -362,3 +365,248 @@ def analytics_api(request):
 
     # Implementation for API response
     return JsonResponse({'status': 'success'})
+
+
+@method_decorator(login_required, name='dispatch')
+class RevenueAnalyticsView(TemplateView):
+    template_name = 'analytics/revenue_analytics.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # Get user's properties
+        properties = Property.objects.filter(owner=user)
+
+        # Get date range from request or default to last 12 months
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=365)
+
+        # Parse date filters from request
+        date_filter = self.request.GET.get('date_range', '12_months')
+        if date_filter == '30_days':
+            start_date = end_date - timedelta(days=30)
+        elif date_filter == '90_days':
+            start_date = end_date - timedelta(days=90)
+        elif date_filter == '6_months':
+            start_date = end_date - timedelta(days=180)
+        elif date_filter == '12_months':
+            start_date = end_date - timedelta(days=365)
+
+        # Get bookings in date range
+        bookings = Booking.objects.filter(
+            property__owner=user,
+            check_in__range=[start_date, end_date]
+        )
+
+        # Get payments
+        payments = Payment.objects.filter(
+            booking__property__owner=user,
+            payment_date__range=[start_date, end_date]
+        )
+
+        # Calculate basic metrics
+        total_revenue = payments.filter(status='completed').aggregate(
+            total=Sum('amount')
+        )['total'] or Decimal('0.00')
+
+        total_bookings = bookings.count()
+
+        # Calculate average booking value
+        avg_booking_value = bookings.aggregate(
+            avg=Avg('total_amount')
+        )['avg'] or Decimal('0.00')
+
+        # Calculate occupancy rate
+        total_possible_nights = 0
+        total_booked_nights = 0
+
+        for property in properties:
+            days_in_range = (end_date - start_date).days
+            total_possible_nights += days_in_range
+
+            property_bookings = bookings.filter(property=property)
+            for booking in property_bookings:
+                nights = (booking.check_out - booking.check_in).days
+                total_booked_nights += nights
+
+        occupancy_rate = (total_booked_nights / total_possible_nights * 100) if total_possible_nights > 0 else 0
+
+        # Monthly revenue breakdown
+        monthly_revenue = []
+        monthly_bookings = []
+        current_date = start_date
+
+        while current_date <= end_date:
+            month_start = current_date.replace(day=1)
+            if current_date.month == 12:
+                month_end = current_date.replace(year=current_date.year + 1, month=1, day=1) - timedelta(days=1)
+            else:
+                month_end = current_date.replace(month=current_date.month + 1, day=1) - timedelta(days=1)
+
+            month_revenue = payments.filter(
+                payment_date__range=[month_start, month_end],
+                status='completed'
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+            month_bookings_count = bookings.filter(
+                check_in__range=[month_start, month_end]
+            ).count()
+
+            monthly_revenue.append({
+                'month': current_date.strftime('%Y-%m'),
+                'month_name': current_date.strftime('%B %Y'),
+                'revenue': float(month_revenue),
+                'bookings': month_bookings_count
+            })
+
+            if current_date.month == 12:
+                current_date = current_date.replace(year=current_date.year + 1, month=1)
+            else:
+                current_date = current_date.replace(month=current_date.month + 1)
+
+        # Property performance
+        property_performance = []
+        for property in properties:
+            property_bookings = bookings.filter(property=property)
+            property_revenue = payments.filter(
+                booking__property=property,
+                status='completed'
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+            property_nights = sum(
+                (booking.check_out - booking.check_in).days
+                for booking in property_bookings
+            )
+
+            property_performance.append({
+                'property': property,
+                'revenue': property_revenue,
+                'bookings': property_bookings.count(),
+                'nights': property_nights,
+                'avg_rate': property_revenue / property_nights if property_nights > 0 else Decimal('0.00')
+            })
+
+        # Channel performance
+        channel_performance = {}
+        for booking in bookings:
+            channel = booking.channel or 'Direct'
+            if channel not in channel_performance:
+                channel_performance[channel] = {
+                    'bookings': 0,
+                    'revenue': Decimal('0.00'),
+                    'nights': 0
+                }
+
+            channel_performance[channel]['bookings'] += 1
+            booking_revenue = payments.filter(
+                booking=booking,
+                status='completed'
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+            channel_performance[channel]['revenue'] += booking_revenue
+            channel_performance[channel]['nights'] += (booking.check_out - booking.check_in).days
+
+        # Revenue by booking source
+        revenue_by_source = []
+        for channel, data in channel_performance.items():
+            revenue_by_source.append({
+                'channel': channel,
+                'revenue': float(data['revenue']),
+                'bookings': data['bookings'],
+                'percentage': (float(data['revenue']) / float(total_revenue) * 100) if total_revenue > 0 else 0
+            })
+
+        # Seasonal trends
+        seasonal_data = {}
+        for booking in bookings:
+            season = self._get_season(booking.check_in)
+            if season not in seasonal_data:
+                seasonal_data[season] = {
+                    'bookings': 0,
+                    'revenue': Decimal('0.00'),
+                    'nights': 0
+                }
+
+            seasonal_data[season]['bookings'] += 1
+            booking_revenue = payments.filter(
+                booking=booking,
+                status='completed'
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+            seasonal_data[season]['revenue'] += booking_revenue
+            seasonal_data[season]['nights'] += (booking.check_out - booking.check_in).days
+
+        # Revenue growth comparison
+        previous_period_start = start_date - (end_date - start_date)
+        previous_period_end = start_date
+
+        previous_revenue = Payment.objects.filter(
+            booking__property__owner=user,
+            payment_date__range=[previous_period_start, previous_period_end],
+            status='completed'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+        revenue_growth = ((total_revenue - previous_revenue) / previous_revenue * 100) if previous_revenue > 0 else 0
+
+        # Top performing months
+        top_months = sorted(monthly_revenue, key=lambda x: x['revenue'], reverse=True)[:3]
+
+        # Average daily rate (ADR)
+        total_nights = sum(
+            (booking.check_out - booking.check_in).days
+            for booking in bookings
+        )
+        adr = total_revenue / total_nights if total_nights > 0 else Decimal('0.00')
+
+        # Revenue per available room (RevPAR)
+        revpar = total_revenue / total_possible_nights if total_possible_nights > 0 else Decimal('0.00')
+
+        context.update({
+            'properties': properties,
+            'has_data': total_bookings > 0,
+            'date_range': date_filter,
+            'start_date': start_date,
+            'end_date': end_date,
+
+            # Key metrics
+            'total_revenue': total_revenue,
+            'total_bookings': total_bookings,
+            'avg_booking_value': avg_booking_value,
+            'occupancy_rate': round(occupancy_rate, 2),
+            'revenue_growth': round(revenue_growth, 2),
+            'adr': adr,
+            'revpar': revpar,
+
+            # Chart data
+            'monthly_revenue': json.dumps(monthly_revenue),
+            'revenue_by_source': json.dumps(revenue_by_source),
+            'seasonal_data': json.dumps([
+                {'season': season, 'revenue': float(data['revenue'])}
+                for season, data in seasonal_data.items()
+            ]),
+
+            # Performance data
+            'property_performance': property_performance,
+            'channel_performance': channel_performance,
+            'top_months': top_months,
+
+            # Comparison data
+            'previous_revenue': previous_revenue,
+            'total_nights': total_nights,
+            'total_possible_nights': total_possible_nights,
+        })
+
+        return context
+
+    def _get_season(self, date):
+        """Determine season based on date"""
+        month = date.month
+        if month in [12, 1, 2]:
+            return 'Winter'
+        elif month in [3, 4, 5]:
+            return 'Spring'
+        elif month in [6, 7, 8]:
+            return 'Summer'
+        else:
+            return 'Fall'
