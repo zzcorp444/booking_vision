@@ -4,392 +4,803 @@
 
 {% block title %}Business Intelligence - Booking Vision{% endblock %}
 
-{% block breadcrumb %}
-    <li class="breadcrumb-item"><a href="{% url 'booking_vision_APP:dashboard' %}">Dashboard</a></li>
-    <li class="breadcrumb-item active">Business Intelligence</li>
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+<style>
+    .bi-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 3rem;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .bi-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.1; }
+        50% { transform: scale(1.05); opacity: 0.2; }
+    }
+    
+    .intelligence-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .intelligence-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .intelligence-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+    
+    .insight-metric {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    
+    .insight-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .insight-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+    
+    .trend-indicator {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .trend-up {
+        background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        color: #155724;
+    }
+    
+    .trend-down {
+        background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+        color: #721c24;
+    }
+    
+    .trend-stable {
+        background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+        color: #0c5460;
+    }
+    
+    .prediction-card {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .prediction-card::before {
+        content: '🔮';
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 2rem;
+        opacity: 0.3;
+    }
+    
+    .ai-insight {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #2196f3;
+    }
+    
+    .competitive-analysis {
+        background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .opportunity-card {
+        background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #4caf50;
+    }
+    
+    .risk-alert {
+        background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #f44336;
+    }
+    
+    .kpi-dashboard {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .kpi-item {
+        text-align: center;
+        padding: 1rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .kpi-item:hover {
+        transform: scale(1.05);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .advanced-chart {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .empty-state-icon {
+        font-size: 5rem;
+        color: #dee2e6;
+        margin-bottom: 2rem;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+    
+    .action-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+    }
+    
+    .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .intelligence-section {
+        margin-bottom: 3rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 1.5rem;
+        position: relative;
+        padding-left: 1rem;
+    }
+    
+    .section-title::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 2px;
+    }
+    
+    .recommendation-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .heatmap-container {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .performance-indicator {
+        width: 100%;
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+    
+    .performance-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 4px;
+        transition: width 1s ease;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 text-primary-blue">
-                    <i class="fas fa-chart-bar me-2"></i>Business Intelligence
-                </h1>
-                {% if has_connected_channels %}
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-outline-primary" onclick="refreshData()">
-                            <i class="fas fa-sync-alt me-2"></i>Refresh Data
-                        </button>
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-filter me-2"></i>Time Period
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="?period=7">Last 7 days</a></li>
-                                <li><a class="dropdown-item" href="?period=30">Last 30 days</a></li>
-                                <li><a class="dropdown-item" href="?period=90">Last 90 days</a></li>
-                                <li><a class="dropdown-item" href="?period=365">Last year</a></li>
-                            </ul>
-                        </div>
+    <!-- Header -->
+    <div class="bi-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0">
+                        <i class="fas fa-brain me-3"></i>
+                        Business Intelligence Dashboard
+                    </h1>
+                    <p class="mb-0 mt-3 opacity-75" style="font-size: 1.1rem;">
+                        AI-powered insights and predictive analytics for your vacation rental business
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="d-flex flex-column align-items-end">
+                        <span class="small opacity-75">Last Updated</span>
+                        <strong>{{ current_time|date:"M j, Y H:i" }}</strong>
                     </div>
-                {% endif %}
+                </div>
             </div>
         </div>
     </div>
 
-    {% if not has_connected_channels %}
-        <!-- No Channels Connected State -->
-        <div class="row">
-            <div class="col-12">
-                {% include 'components/empty_state.html' with empty_state='no_channels' %}
+    {% if not has_data %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-robot"></i>
             </div>
-        </div>
-    {% elif not has_properties %}
-        <!-- No Properties State -->
-        <div class="row">
-            <div class="col-12">
-                {% include 'components/empty_state.html' with empty_state='no_properties' connected_channels_count=connected_channels_count %}
-            </div>
-        </div>
-    {% elif not has_bookings %}
-        <!-- No Bookings State -->
-        <div class="row">
-            <div class="col-12">
-                {% include 'components/empty_state.html' with empty_state='no_bookings' properties_count=properties_count connected_channels_count=connected_channels_count %}
-            </div>
-        </div>
-    {% else %}
-        <!-- Data Available - Show Full BI Dashboard -->
-        <!-- Market Analysis -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-globe me-2"></i>Market Analysis
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        {% if market_analysis %}
-                            <div class="row">
-                                {% for location, data in market_analysis.items %}
-                                <div class="col-lg-6 mb-4">
-                                    <div class="ai-feature-card">
-                                        <h6 class="fw-bold text-primary-blue mb-3">
-                                            <i class="fas fa-map-marker-alt me-2"></i>{{ location }}
-                                        </h6>
-                                        
-                                        <div class="row mb-3">
-                                            <div class="col-6">
-                                                <small class="text-muted">Avg Daily Rate</small>
-                                                <h5 class="mb-0">${{ data.average_daily_rate|floatformat:0 }}</h5>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Occupancy Rate</small>
-                                                <h5 class="mb-0">{{ data.occupancy_rate|floatformat:1 }}%</h5>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="mb-3">
-                                            <small class="text-muted">Market Demand</small>
-                                            <span class="badge bg-{% if data.market_demand == 'high' %}success{% elif data.market_demand == 'medium' %}warning{% else %}danger{% endif %} ms-2">
-                                                {{ data.market_demand|title }}
-                                            </span>
-                                        </div>
-                                        
-                                        <div class="mb-3">
-                                            <small class="text-muted">Price Trend</small>
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-arrow-{% if data.price_trend == 'up' %}up text-success{% elif data.price_trend == 'down' %}down text-danger{% else %}right text-secondary{% endif %} me-2"></i>
-                                                <span class="text-capitalize">{{ data.price_trend }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="text-center py-5">
-                                <i class="fas fa-chart-line text-muted mb-3" style="font-size: 3rem;"></i>
-                                <h5 class="text-muted">Analyzing Market Data</h5>
-                                <p class="text-muted">Market analysis will appear as more booking data is collected from your connected channels.</p>
-                                <div class="spinner-border text-primary mt-3" role="status">
-                                    <span class="visually-hidden">Loading...</span>
+            <h2>AI Business Intelligence Awaits Your Data</h2>
+            <p class="text-muted mb-4" style="font-size: 1.1rem;">
+                Our AI-powered business intelligence system is ready to analyze your vacation rental performance, 
+                predict trends, and provide actionable insights. You need some data to get started.
+            </p>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-10">
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-home text-primary mb-3" style="font-size: 3rem;"></i>
+                                    <h4>Add Properties</h4>
+                                    <p class="text-muted">Add your vacation rental properties so our AI can analyze market positioning and performance potential.</p>
+                                    <a href="{% url 'property_create' %}" class="action-button">
+                                        <i class="fas fa-plus me-2"></i>Add Property
+                                    </a>
                                 </div>
                             </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Key Metrics Row -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <i class="fas fa-dollar-sign text-success mb-2" style="font-size: 2rem;"></i>
-                        <h4 class="mb-0">${{ total_revenue|floatformat:0|default:"0" }}</h4>
-                        <small class="text-muted">Total Revenue</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <i class="fas fa-percentage text-info mb-2" style="font-size: 2rem;"></i>
-                        <h4 class="mb-0">{{ avg_occupancy_rate|floatformat:1|default:"0" }}%</h4>
-                        <small class="text-muted">Avg Occupancy</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <i class="fas fa-bed text-primary mb-2" style="font-size: 2rem;"></i>
-                        <h4 class="mb-0">${{ avg_daily_rate|floatformat:0|default:"0" }}</h4>
-                        <small class="text-muted">Avg Daily Rate</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <i class="fas fa-chart-line text-warning mb-2" style="font-size: 2rem;"></i>
-                        <h4 class="mb-0">{{ revenue_growth|floatformat:1|default:"0" }}%</h4>
-                        <small class="text-muted">Revenue Growth</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Competitor Analysis & ROI Analysis -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-users me-2"></i>Competitor Analysis
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        {% if competitor_data %}
-                            <div class="chart-container" style="height: 300px;">
-                                <canvas id="competitorChart"></canvas>
-                            </div>
-                        {% else %}
-                            <div class="text-center py-4">
-                                <i class="fas fa-users text-muted mb-3" style="font-size: 2.5rem;"></i>
-                                <h6 class="text-muted">Competitor Analysis Loading</h6>
-                                <p class="text-muted small">Analyzing competitor data from your market area...</p>
-                                <div class="progress" style="height: 4px;">
-                                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 45%"></div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-calendar-check text-success mb-3" style="font-size: 3rem;"></i>
+                                    <h4>Generate Bookings</h4>
+                                    <p class="text-muted">Create bookings to enable revenue analysis, seasonal trends, and predictive forecasting.</p>
+                                    <a href="{% url 'booking_create' %}" class="action-button">
+                                        <i class="fas fa-plus me-2"></i>Add Booking
+                                    </a>
                                 </div>
                             </div>
-                        {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line text-warning mb-3" style="font-size: 3rem;"></i>
+                                    <h4>View Analytics</h4>
+                                    <p class="text-muted">Check your current analytics and revenue data to understand your business performance.</p>
+                                    <a href="{% url 'analytics' %}" class="action-button">
+                                        <i class="fas fa-chart-bar me-2"></i>View Analytics
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- ROI Analysis -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-dollar-sign me-2"></i>ROI Analysis
-                        </h5>
+            <div class="mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-info" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: none; border-radius: 15px;">
+                            <h5><i class="fas fa-lightbulb me-2"></i>What You'll Get</h5>
+                            <ul class="mb-0">
+                                <li><strong>Predictive Analytics:</strong> Forecast demand, revenue, and occupancy rates</li>
+                                <li><strong>Market Intelligence:</strong> Competitive analysis and positioning insights</li>
+                                <li><strong>Performance Optimization:</strong> AI-powered recommendations for improvement</li>
+                                <li><strong>Risk Assessment:</strong> Early warning system for potential issues</li>
+                                <li><strong>Opportunity Detection:</strong> Identify new revenue streams and growth opportunities</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        {% if roi_analysis %}
-                            {% for item in roi_analysis %}
-                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
-                                <div>
-                                    <h6 class="mb-0">{{ item.property.name }}</h6>
-                                    <small class="text-muted">{{ item.payback_period|floatformat:1 }} years payback</small>
-                                </div>
-                                <div class="text-end">
-                                    <h6 class="mb-0 {% if item.roi > 0 %}text-success{% else %}text-danger{% endif %}">
-                                        {{ item.roi|floatformat:1 }}%
-                                    </h6>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="text-center py-4">
-                                <i class="fas fa-calculator text-muted mb-3" style="font-size: 2.5rem;"></i>
-                                <h6 class="text-muted">Calculating ROI</h6>
-                                <p class="text-muted small">ROI analysis will appear as revenue data accumulates.</p>
-                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                            </div>
-                        {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Main Dashboard Content -->
+        
+        <!-- Key Performance Indicators -->
+        <div class="intelligence-section">
+            <h2 class="section-title">
+                <i class="fas fa-tachometer-alt me-2"></i>
+                Key Performance Intelligence
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-3 mb-4">
+                    <div class="insight-metric">
+                        <div class="insight-value">{{ revenue_score }}/100</div>
+                        <div class="insight-label">Revenue Performance Score</div>
+                        <div class="performance-indicator">
+                            <div class="performance-bar" style="width: {{ revenue_score }}%"></div>
+                        </div>
+                        <div class="trend-indicator trend-{{ revenue_trend }}">
+                            <i class="fas fa-arrow-{{ revenue_trend == 'up' and 'up' or 'down' }} me-1"></i>
+                            {{ revenue_trend|title }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="insight-metric">
+                        <div class="insight-value">{{ market_position }}/10</div>
+                        <div class="insight-label">Market Position Index</div>
+                        <div class="performance-indicator">
+                            <div class="performance-bar" style="width: {{ market_position }}0%"></div>
+                        </div>
+                        <div class="trend-indicator trend-{{ market_trend }}">
+                            <i class="fas fa-arrow-{{ market_trend == 'up' and 'up' or 'down' }} me-1"></i>
+                            {{ market_trend|title }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="insight-metric">
+                        <div class="insight-value">{{ efficiency_score }}%</div>
+                        <div class="insight-label">Operational Efficiency</div>
+                        <div class="performance-indicator">
+                            <div class="performance-bar" style="width: {{ efficiency_score }}%"></div>
+                        </div>
+                        <div class="trend-indicator trend-{{ efficiency_trend }}">
+                            <i class="fas fa-arrow-{{ efficiency_trend == 'up' and 'up' or 'down' }} me-1"></i>
+                            {{ efficiency_trend|title }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="insight-metric">
+                        <div class="insight-value">{{ growth_potential }}%</div>
+                        <div class="insight-label">Growth Potential</div>
+                        <div class="performance-indicator">
+                            <div class="performance-bar" style="width: {{ growth_potential }}%"></div>
+                        </div>
+                        <div class="trend-indicator trend-up">
+                            <i class="fas fa-rocket me-1"></i>
+                            Potential
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Trends and Forecasts -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-crystal-ball me-2"></i>Trends & Forecasts
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        {% if trends %}
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="text-primary-blue">Booking Trends</h6>
-                                    <div class="d-flex align-items-center mb-3">
-                                        <i class="fas fa-arrow-{% if trends.booking_trend %}up text-success{% else %}down text-danger{% endif %} me-2"></i>
-                                        <span>{{ trends.booking_change|floatformat:1|default:"0" }}% vs last month</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6 class="text-primary-blue">Revenue Trends</h6>
-                                    <div class="d-flex align-items-center mb-3">
-                                        <i class="fas fa-arrow-{% if trends.revenue_trend %}up text-success{% else %}down text-danger{% endif %} me-2"></i>
-                                        <span>{{ trends.revenue_change|floatformat:1|default:"0" }}% vs last month</span>
-                                    </div>
-                                </div>
+        <!-- AI Predictions -->
+        <div class="intelligence-section">
+            <h2 class="section-title">
+                <i class="fas fa-crystal-ball me-2"></i>
+                AI Predictions & Forecasts
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="prediction-card">
+                        <div class="recommendation-badge">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Revenue Forecast
+                        </div>
+                        <h4>Next 30 Days Prediction</h4>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h3 class="mb-0">${{ predicted_revenue|floatformat:2 }}</h3>
+                                <small class="text-muted">Expected Revenue</small>
                             </div>
-                            
-                            {% if trends.insights %}
-                            <div class="mt-4">
-                                <h6 class="text-primary-blue">AI Insights</h6>
-                                <ul class="list-unstyled">
-                                    {% for insight in trends.insights %}
-                                    <li class="mb-2">
-                                        <i class="fas fa-lightbulb text-warning me-2"></i>
-                                        {{ insight }}
-                                    </li>
-                                    {% endfor %}
-                                </ul>
+                            <div class="text-end">
+                                <span class="badge bg-success">+{{ revenue_growth_prediction }}%</span>
+                                <br>
+                                <small class="text-muted">vs last month</small>
                             </div>
-                            {% endif %}
-                        {% else %}
-                            <div class="text-center py-4">
-                                <i class="fas fa-crystal-ball text-muted mb-3" style="font-size: 2.5rem;"></i>
-                                <h6 class="text-muted">Analyzing Trends</h6>
-                                <p class="text-muted small">Trend analysis will appear as more historical data is collected over time.</p>
-                                <div class="row mt-4">
-                                    <div class="col-md-4">
-                                        <div class="text-center p-3 bg-light rounded">
-                                            <i class="fas fa-calendar-week text-primary mb-2"></i>
-                                            <div class="small text-muted">Need 7+ days for weekly trends</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="text-center p-3 bg-light rounded">
-                                            <i class="fas fa-calendar-alt text-primary mb-2"></i>
-                                            <div class="small text-muted">Need 30+ days for monthly trends</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="text-center p-3 bg-light rounded">
-                                            <i class="fas fa-chart-line text-primary mb-2"></i>
-                                            <div class="small text-muted">Need 90+ days for seasonal trends</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
+                        </div>
+                        <div class="advanced-chart">
+                            <canvas id="revenueForecastChart" height="100"></canvas>
+                        </div>
                     </div>
                 </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="prediction-card">
+                        <div class="recommendation-badge">
+                            <i class="fas fa-bed me-2"></i>
+                            Occupancy Forecast
+                        </div>
+                        <h4>Occupancy Predictions</h4>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h3 class="mb-0">{{ predicted_occupancy }}%</h3>
+                                <small class="text-muted">Expected Occupancy</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-info">{{ occupancy_confidence }}%</span>
+                                <br>
+                                <small class="text-muted">confidence</small>
+                            </div>
+                        </div>
+                        <div class="advanced-chart">
+                            <canvas id="occupancyForecastChart" height="100"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Business Insights -->
+        <div class="intelligence-section">
+            <h2 class="section-title">
+                <i class="fas fa-lightbulb me-2"></i>
+                AI-Powered Business Insights
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="intelligence-card">
+                        <h4><i class="fas fa-chart-pie me-2"></i>Revenue Optimization</h4>
+                        {% for insight in revenue_insights %}
+                        <div class="ai-insight">
+                            <h6><i class="fas fa-{{ insight.icon }} me-2"></i>{{ insight.title }}</h6>
+                            <p class="mb-2">{{ insight.description }}</p>
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-primary">{{ insight.impact }}</span>
+                                <small class="text-muted">{{ insight.confidence }}% confidence</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="intelligence-card">
+                        <h4><i class="fas fa-users me-2"></i>Guest Experience Intelligence</h4>
+                        {% for insight in guest_insights %}
+                        <div class="ai-insight">
+                            <h6><i class="fas fa-{{ insight.icon }} me-2"></i>{{ insight.title }}</h6>
+                            <p class="mb-2">{{ insight.description }}</p>
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-success">{{ insight.impact }}</span>
+                                <small class="text-muted">{{ insight.priority }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Opportunities & Risks -->
+        <div class="intelligence-section">
+            <h2 class="section-title">
+                <i class="fas fa-balance-scale me-2"></i>
+                Opportunities & Risk Assessment
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="intelligence-card">
+                        <h4><i class="fas fa-seedling me-2"></i>Growth Opportunities</h4>
+                        {% for opportunity in opportunities %}
+                        <div class="opportunity-card">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6><i class="fas fa-{{ opportunity.icon }} me-2"></i>{{ opportunity.title }}</h6>
+                                <span class="badge bg-success">${{ opportunity.potential_value }}</span>
+                            </div>
+                            <p class="mb-2">{{ opportunity.description }}</p>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Effort: {{ opportunity.effort }}</small>
+                                <small class="text-muted">Timeline: {{ opportunity.timeline }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="intelligence-card">
+                        <h4><i class="fas fa-exclamation-triangle me-2"></i>Risk Alerts</h4>
+                        {% for risk in risks %}
+                        <div class="risk-alert">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6><i class="fas fa-{{ risk.icon }} me-2"></i>{{ risk.title }}</h6>
+                                <span class="badge bg-danger">{{ risk.severity }}</span>
+                            </div>
+                            <p class="mb-2">{{ risk.description }}</p>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Impact: {{ risk.impact }}</small>
+                                <small class="text-muted">Probability: {{ risk.probability }}%</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Analytics -->
+        <div class="intelligence-section">
+            <h2 class="section-title">
+                <i class="fas fa-microscope me-2"></i>
+                Advanced Analytics
+            </h2>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="advanced-chart">
+                        <h4>Market Trends Analysis</h4>
+                        <canvas id="marketTrendsChart" height="150"></canvas>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="advanced-chart">
+                        <h4>Competitive Position</h4>
+                        <canvas id="competitiveChart" height="150"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="heatmap-container">
+                        <h4>Performance Heatmap</h4>
+                        <canvas id="performanceHeatmap" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="intelligence-section">
+            <h2 class="section-title">
+                <i class="fas fa-magic me-2"></i>
+                AI Recommendations
+            </h2>
+            
+            <div class="row">
+                {% for recommendation in recommendations %}
+                <div class="col-md-4 mb-4">
+                    <div class="intelligence-card">
+                        <div class="recommendation-badge">
+                            <i class="fas fa-{{ recommendation.icon }} me-2"></i>
+                            {{ recommendation.category }}
+                        </div>
+                        <h5>{{ recommendation.title }}</h5>
+                        <p class="mb-3">{{ recommendation.description }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-primary">{{ recommendation.impact }}</span>
+                                <span class="badge bg-secondary">{{ recommendation.difficulty }}</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
     {% endif %}
 </div>
+{% endblock %}
 
-<style>
-.ai-feature-card {
-    background: #f8f9fa;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    border-left: 4px solid var(--primary-blue);
-}
-
-.chart-container {
-    position: relative;
-    height: 300px;
-}
-
-.progress {
-    border-radius: 10px;
-}
-
-.progress-bar {
-    border-radius: 10px;
-}
-
-@media (max-width: 768px) {
-    .ai-feature-card {
-        margin-bottom: 1rem;
-    }
-}
-</style>
-
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+{% if has_data %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize competitor chart if element exists and data is available
-    const competitorCtx = document.getElementById('competitorChart');
-    if (competitorCtx && {{ competitor_data|yesno:"true,false" }}) {
-        const competitorData = {{ competitor_data|default:"null" }};
-        
-        new Chart(competitorCtx, {
-            type: 'radar',
-            data: {
-                labels: ['Pricing', 'Reviews', 'Occupancy', 'Response Time', 'Amenities'],
-                datasets: [{
-                    label: 'Your Properties',
-                    data: competitorData ? competitorData.your_scores : [0, 0, 0, 0, 0],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                    pointBackgroundColor: '#3b82f6'
-                }, {
-                    label: 'Market Average',
-                    data: competitorData ? competitorData.market_scores : [0, 0, 0, 0, 0],
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                    pointBackgroundColor: '#ef4444'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Competitive Position'
-                    }
-                },
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        max: 10
+    // Revenue Forecast Chart
+    const revenueForecastCtx = document.getElementById('revenueForecastChart').getContext('2d');
+    new Chart(revenueForecastCtx, {
+        type: 'line',
+        data: {
+            labels: {{ forecast_labels|safe }},
+            datasets: [{
+                label: 'Predicted Revenue',
+                data: {{ forecast_data|safe }},
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
                     }
                 }
             }
-        });
-    }
-});
+        }
+    });
 
-function refreshData() {
-    // Show loading state
-    const refreshBtn = document.querySelector('[onclick="refreshData()"]');
-    const originalHtml = refreshBtn.innerHTML;
-    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...';
-    refreshBtn.disabled = true;
-    
-    // Simulate refresh (replace with actual AJAX call)
-    setTimeout(() => {
-        location.reload();
-    }, 2000);
-}
+    // Occupancy Forecast Chart
+    const occupancyForecastCtx = document.getElementById('occupancyForecastChart').getContext('2d');
+    new Chart(occupancyForecastCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Predicted Occupancy', 'Available'],
+            datasets: [{
+                data: [{{ predicted_occupancy }}, {{ 100|add:predicted_occupancy|floatformat:0 }}],
+                backgroundColor: ['#667eea', '#e9ecef']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // Market Trends Chart
+    const marketTrendsCtx = document.getElementById('marketTrendsChart').getContext('2d');
+    new Chart(marketTrendsCtx, {
+        type: 'radar',
+        data: {
+            labels: {{ market_labels|safe }},
+            datasets: [{
+                label: 'Your Performance',
+                data: {{ market_data|safe }},
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.2)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // Competitive Position Chart
+    const competitiveCtx = document.getElementById('competitiveChart').getContext('2d');
+    new Chart(competitiveCtx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Market Position',
+                data: {{ competitive_data|safe }},
+                backgroundColor: '#667eea'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { title: { display: true, text: 'Price Competitiveness' } },
+                y: { title: { display: true, text: 'Service Quality' } }
+            }
+        }
+    });
+
+    // Performance Heatmap
+    const performanceHeatmapCtx = document.getElementById('performanceHeatmap').getContext('2d');
+    new Chart(performanceHeatmapCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ heatmap_labels|safe }},
+            datasets: [{
+                label: 'Performance Score',
+                data: {{ heatmap_data|safe }},
+                backgroundColor: function(context) {
+                    const value = context.parsed.y;
+                    return value > 75 ? '#4caf50' : value > 50 ? '#ff9800' : '#f44336';
+                }
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
 </script>
+{% endif %}
 {% endblock %}
