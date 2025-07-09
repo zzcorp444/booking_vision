@@ -36,7 +36,7 @@ class Review(models.Model):
         null=True,
         blank=True
     )
-    property = models.ForeignKey(
+    review_property = models.ForeignKey(  # Changed from 'property' to 'review_property'
         Property,
         on_delete=models.CASCADE,
         related_name='reviews'
@@ -138,14 +138,14 @@ class Review(models.Model):
     class Meta:
         ordering = ['-review_date']
         indexes = [
-            models.Index(fields=['property', 'review_date']),
+            models.Index(fields=['review_property', 'review_date']),
             models.Index(fields=['platform', 'review_date']),
             models.Index(fields=['normalized_rating']),
             models.Index(fields=['sentiment']),
         ]
 
     def __str__(self):
-        return f"{self.guest_name} - {self.property.name} ({self.normalized_rating}/5)"
+        return f"{self.guest_name} - {self.review_property.name} ({self.normalized_rating}/5)"
 
     def save(self, *args, **kwargs):
         # Normalize rating to 5-star scale
@@ -165,24 +165,32 @@ class Review(models.Model):
 
         super().save(*args, **kwargs)
 
+    # Add property as a method to maintain backward compatibility
+    def get_property(self):
+        """Get the property for this review"""
+        return self.review_property
+
+    # Add property as a Python property for backward compatibility
     @property
-    def rating_display(self):
+    def property(self):
+        """Backward compatibility property"""
+        return self.review_property
+
+    def get_rating_display(self):
         """Display rating in original scale format"""
         if self.rating_scale == '10_point':
             return f"{self.raw_rating}/10"
         else:
             return f"{self.raw_rating}/5"
 
-    @property
-    def response_time(self):
+    def get_response_time(self):
         """Calculate response time in hours"""
         if self.response_date:
             diff = self.response_date - self.review_date
             return diff.total_seconds() / 3600  # Convert to hours
         return None
 
-    @property
-    def is_recent(self):
+    def get_is_recent(self):
         """Check if review is from last 30 days"""
         thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
         return self.review_date >= thirty_days_ago
