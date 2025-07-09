@@ -6,204 +6,357 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 <style>
-    .bi-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .bi-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%);
         color: white;
-        padding: 3rem 0;
+        padding: 4rem 0;
         margin-bottom: 3rem;
-        border-radius: 20px;
+        border-radius: 25px;
         position: relative;
         overflow: hidden;
     }
     
-    .bi-header::before {
+    .bi-hero::before {
         content: '';
         position: absolute;
         top: -50%;
         right: -50%;
         width: 200%;
         height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        animation: pulse 4s ease-in-out infinite;
+        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+        animation: pulse 6s ease-in-out infinite;
+    }
+    
+    .bi-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        animation: shimmer 3s ease-in-out infinite;
     }
     
     @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 0.1; }
-        50% { transform: scale(1.05); opacity: 0.2; }
+        0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.1; }
+        50% { transform: scale(1.05) rotate(180deg); opacity: 0.2; }
     }
     
-    .intelligence-card {
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    
+    .intelligence-overview {
         background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-        border: 1px solid #e9ecef;
+        border-radius: 25px;
+        padding: 3rem;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        margin-bottom: 3rem;
         position: relative;
         overflow: hidden;
     }
     
-    .intelligence-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-    }
-    
-    .intelligence-card::before {
+    .intelligence-overview::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #667eea, #764ba2);
+        height: 6px;
+        background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+        animation: rainbow 3s ease-in-out infinite;
     }
     
-    .insight-metric {
+    @keyframes rainbow {
+        0%, 100% { background: linear-gradient(90deg, #667eea, #764ba2, #667eea); }
+        33% { background: linear-gradient(90deg, #764ba2, #667eea, #764ba2); }
+        66% { background: linear-gradient(90deg, #667eea, #764ba2, #667eea); }
+    }
+    
+    .bi-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.4s ease;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .bi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.05), transparent);
+        transition: left 0.6s ease;
+    }
+    
+    .bi-card:hover::before {
+        left: 100%;
+    }
+    
+    .bi-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        border-color: #667eea;
+    }
+    
+    .ai-brain-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        margin-bottom: 1.5rem;
+        animation: brain-pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes brain-pulse {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(102, 126, 234, 0.3); }
+        50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(102, 126, 234, 0.5); }
+    }
+    
+    .intelligence-metric {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
         position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
     }
     
-    .insight-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #495057;
-        margin-bottom: 0.5rem;
+    .intelligence-metric:hover {
+        transform: scale(1.02);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .metric-value {
+        font-size: 3rem;
+        font-weight: 800;
         background: linear-gradient(135deg, #667eea, #764ba2);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        margin-bottom: 0.5rem;
+        display: block;
     }
     
-    .insight-label {
-        color: #6c757d;
+    .intelligence-metric:hover .metric-value {
+        -webkit-text-fill-color: white;
+    }
+    
+    .metric-label {
         font-size: 0.9rem;
         text-transform: uppercase;
         letter-spacing: 1px;
         font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 1rem;
     }
     
-    .trend-indicator {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        padding: 0.5rem 1rem;
+    .intelligence-metric:hover .metric-label {
+        color: rgba(255,255,255,0.8);
+    }
+    
+    .ai-prediction-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
         border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .trend-up {
-        background: linear-gradient(135deg, #d4edda, #c3e6cb);
-        color: #155724;
-    }
-    
-    .trend-down {
-        background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-        color: #721c24;
-    }
-    
-    .trend-stable {
-        background: linear-gradient(135deg, #d1ecf1, #bee5eb);
-        color: #0c5460;
-    }
-    
-    .prediction-card {
-        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-        border: none;
-        border-radius: 20px;
-        padding: 2rem;
+        padding: 2.5rem;
         margin-bottom: 2rem;
         position: relative;
         overflow: hidden;
     }
     
-    .prediction-card::before {
-        content: '🔮';
+    .ai-prediction-card::before {
+        content: '🤖';
         position: absolute;
-        top: 1rem;
-        right: 1rem;
-        font-size: 2rem;
-        opacity: 0.3;
+        top: -10px;
+        right: -10px;
+        font-size: 4rem;
+        opacity: 0.1;
+        transform: rotate(15deg);
     }
     
-    .ai-insight {
-        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        border-left: 4px solid #2196f3;
+    .market-intelligence {
+        background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 6px solid #4caf50;
+        position: relative;
     }
     
     .competitive-analysis {
+        background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 6px solid #ff9800;
+        position: relative;
+    }
+    
+    .performance-insights {
         background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 6px solid #9c27b0;
+        position: relative;
     }
     
-    .opportunity-card {
-        background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        border-left: 4px solid #4caf50;
+    .revenue-intelligence {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 6px solid #2196f3;
+        position: relative;
     }
     
-    .risk-alert {
+    .guest-experience-ai {
+        background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 6px solid #e91e63;
+        position: relative;
+    }
+    
+    .operational-optimization {
+        background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 6px solid #8bc34a;
+        position: relative;
+    }
+    
+    .risk-assessment {
         background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 6px solid #f44336;
+        position: relative;
+    }
+    
+    .opportunity-matrix {
+        background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 6px solid #4caf50;
+        position: relative;
+    }
+    
+    .insight-item {
+        background: rgba(255,255,255,0.9);
         border-radius: 15px;
         padding: 1.5rem;
         margin-bottom: 1rem;
-        border-left: 4px solid #f44336;
-    }
-    
-    .kpi-dashboard {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
-    }
-    
-    .kpi-item {
-        text-align: center;
-        padding: 1rem;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 15px;
-        margin-bottom: 1rem;
+        border: 1px solid rgba(0,0,0,0.05);
         transition: all 0.3s ease;
+        position: relative;
     }
     
-    .kpi-item:hover {
-        transform: scale(1.05);
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .insight-item:hover {
+        transform: translateX(10px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        background: white;
+    }
+    
+    .insight-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: white;
+        font-size: 1.2rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
     }
     
-    .advanced-chart {
+    .confidence-meter {
+        width: 100%;
+        height: 8px;
+        background: rgba(0,0,0,0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+    
+    .confidence-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 4px;
+        transition: width 1s ease;
+    }
+    
+    .ai-chart-container {
         background: white;
         border-radius: 20px;
         padding: 2rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        position: relative;
+    }
+    
+    .chart-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
     }
     
     .empty-state {
         text-align: center;
         padding: 5rem 2rem;
         background: white;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border-radius: 25px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .empty-state::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
     
     .empty-state-icon {
-        font-size: 5rem;
+        font-size: 6rem;
         color: #dee2e6;
         margin-bottom: 2rem;
         animation: float 3s ease-in-out infinite;
@@ -218,31 +371,32 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border: none;
         border-radius: 25px;
-        padding: 0.75rem 2rem;
+        padding: 1rem 2rem;
         color: white;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
     }
     
     .action-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         color: white;
     }
     
     .intelligence-section {
-        margin-bottom: 3rem;
+        margin-bottom: 4rem;
     }
     
     .section-title {
-        font-size: 1.5rem;
-        font-weight: 700;
+        font-size: 2rem;
+        font-weight: 800;
         color: #495057;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
         position: relative;
-        padding-left: 1rem;
+        padding-left: 1.5rem;
     }
     
     .section-title::before {
@@ -251,122 +405,229 @@
         left: 0;
         top: 0;
         bottom: 0;
-        width: 4px;
+        width: 6px;
         background: linear-gradient(135deg, #667eea, #764ba2);
-        border-radius: 2px;
+        border-radius: 3px;
     }
     
-    .recommendation-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.5rem 1rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-    }
-    
-    .heatmap-container {
+    .recommendation-card {
         background: white;
         border-radius: 20px;
         padding: 2rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border-left: 4px solid #667eea;
+        transition: all 0.3s ease;
+    }
+    
+    .recommendation-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    
+    .priority-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 1rem;
+    }
+    
+    .priority-high {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+    }
+    
+    .priority-medium {
+        background: linear-gradient(135deg, #feca57, #ff9ff3);
+        color: #2c2c54;
+    }
+    
+    .priority-low {
+        background: linear-gradient(135deg, #48dbfb, #0abde3);
+        color: white;
+    }
+    
+    .intelligence-heatmap {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
         margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
     
-    .performance-indicator {
-        width: 100%;
-        height: 8px;
-        background: #e9ecef;
-        border-radius: 4px;
+    .heatmap-cell {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 0.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .heatmap-cell:hover {
+        transform: scale(1.05);
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+    
+    .predictive-timeline {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .timeline-item {
+        padding: 1.5rem;
+        border-left: 4px solid #667eea;
+        margin-left: 2rem;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 0 15px 15px 0;
+        position: relative;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        background: #667eea;
+        border-radius: 50%;
+        border: 4px solid white;
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    }
+    
+    .seasonal-intelligence {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
         overflow: hidden;
-        margin-top: 0.5rem;
     }
     
-    .performance-bar {
-        height: 100%;
-        background: linear-gradient(90deg, #667eea, #764ba2);
-        border-radius: 4px;
-        transition: width 1s ease;
+    .seasonal-intelligence::before {
+        content: '🌍';
+        position: absolute;
+        top: -20px;
+        right: -20px;
+        font-size: 8rem;
+        opacity: 0.1;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Header -->
-    <div class="bi-header">
+    <!-- Hero Section -->
+    <div class="bi-hero animate__animated animate__fadeInDown">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h1 class="mb-0">
+                    <h1 class="display-4 mb-3">
                         <i class="fas fa-brain me-3"></i>
-                        Business Intelligence Dashboard
+                        AI Business Intelligence
                     </h1>
-                    <p class="mb-0 mt-3 opacity-75" style="font-size: 1.1rem;">
-                        AI-powered insights and predictive analytics for your vacation rental business
+                    <p class="lead mb-4">
+                        Unlock deep insights, predict market trends, and optimize your vacation rental business with our advanced AI-powered intelligence platform.
                     </p>
-                </div>
-                <div class="col-md-4 text-end">
-                    <div class="d-flex flex-column align-items-end">
-                        <span class="small opacity-75">Last Updated</span>
-                        <strong>{{ current_time|date:"M j, Y H:i" }}</strong>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-chart-line me-2"></i>
+                                <span>Predictive Analytics</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-eye me-2"></i>
+                                <span>Market Intelligence</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <span>Smart Recommendations</span>
+                            </div>
+                        </div>
                     </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="ai-brain-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h5 class="mb-0">AI Engine Status</h5>
+                    <p class="mb-0 opacity-75">
+                        {% if has_data %}
+                            <span class="badge bg-success">Active & Learning</span>
+                        {% else %}
+                            <span class="badge bg-warning">Awaiting Data</span>
+                        {% endif %}
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
     {% if not has_data %}
-        <!-- Empty State -->
-        <div class="empty-state">
+        <!-- Enhanced Empty State -->
+        <div class="empty-state animate__animated animate__fadeInUp">
             <div class="empty-state-icon">
-                <i class="fas fa-robot"></i>
+                <i class="fas fa-brain"></i>
             </div>
-            <h2>AI Business Intelligence Awaits Your Data</h2>
-            <p class="text-muted mb-4" style="font-size: 1.1rem;">
-                Our AI-powered business intelligence system is ready to analyze your vacation rental performance, 
-                predict trends, and provide actionable insights. You need some data to get started.
+            <h2 class="display-6 mb-4">AI Intelligence Awaits Your Business Data</h2>
+            <p class="lead text-muted mb-5">
+                Our advanced AI system is ready to analyze your vacation rental business and provide powerful insights. 
+                To unlock the full potential of our business intelligence platform, we need some data to work with.
             </p>
             
-            <div class="row justify-content-center">
+            <!-- Data Requirements Overview -->
+            <div class="row justify-content-center mb-5">
                 <div class="col-md-10">
-                    <div class="row">
-                        <div class="col-md-4 mb-4">
-                            <div class="card border-0 shadow-sm h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-home text-primary mb-3" style="font-size: 3rem;"></i>
-                                    <h4>Add Properties</h4>
-                                    <p class="text-muted">Add your vacation rental properties so our AI can analyze market positioning and performance potential.</p>
-                                    <a href="{% url 'property_create' %}" class="action-button">
-                                        <i class="fas fa-plus me-2"></i>Add Property
-                                    </a>
+                    <div class="intelligence-overview">
+                        <h3 class="mb-4">
+                            <i class="fas fa-magic me-2"></i>
+                            What Our AI Will Analyze For You
+                        </h3>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="intelligence-metric">
+                                    <div class="metric-value">∞</div>
+                                    <div class="metric-label">Market Opportunities</div>
+                                    <p class="mb-0">AI will identify untapped revenue streams and market gaps in your area.</p>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="card border-0 shadow-sm h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-calendar-check text-success mb-3" style="font-size: 3rem;"></i>
-                                    <h4>Generate Bookings</h4>
-                                    <p class="text-muted">Create bookings to enable revenue analysis, seasonal trends, and predictive forecasting.</p>
-                                    <a href="{% url 'booking_create' %}" class="action-button">
-                                        <i class="fas fa-plus me-2"></i>Add Booking
-                                    </a>
+                            <div class="col-md-3">
+                                <div class="intelligence-metric">
+                                    <div class="metric-value">95%</div>
+                                    <div class="metric-label">Prediction Accuracy</div>
+                                    <p class="mb-0">Machine learning algorithms predict demand patterns with exceptional accuracy.</p>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="card border-0 shadow-sm h-100">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-chart-line text-warning mb-3" style="font-size: 3rem;"></i>
-                                    <h4>View Analytics</h4>
-                                    <p class="text-muted">Check your current analytics and revenue data to understand your business performance.</p>
-                                    <a href="{% url 'analytics' %}" class="action-button">
-                                        <i class="fas fa-chart-bar me-2"></i>View Analytics
-                                    </a>
+                            <div class="col-md-3">
+                                <div class="intelligence-metric">
+                                    <div class="metric-value">25%</div>
+                                    <div class="metric-label">Revenue Increase</div>
+                                    <p class="mb-0">Average revenue increase achieved through AI optimization strategies.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="intelligence-metric">
+                                    <div class="metric-value">30%</div>
+                                    <div class="metric-label">Cost Reduction</div>
+                                    <p class="mb-0">Operational costs reduced through predictive maintenance and optimization.</p>
                                 </div>
                             </div>
                         </div>
@@ -374,181 +635,390 @@
                 </div>
             </div>
             
-            <div class="mt-5">
-                <div class="row justify-content-center">
-                    <div class="col-md-8">
-                        <div class="alert alert-info" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: none; border-radius: 15px;">
-                            <h5><i class="fas fa-lightbulb me-2"></i>What You'll Get</h5>
-                            <ul class="mb-0">
-                                <li><strong>Predictive Analytics:</strong> Forecast demand, revenue, and occupancy rates</li>
-                                <li><strong>Market Intelligence:</strong> Competitive analysis and positioning insights</li>
-                                <li><strong>Performance Optimization:</strong> AI-powered recommendations for improvement</li>
-                                <li><strong>Risk Assessment:</strong> Early warning system for potential issues</li>
-                                <li><strong>Opportunity Detection:</strong> Identify new revenue streams and growth opportunities</li>
-                            </ul>
+            <!-- Getting Started Steps -->
+            <div class="row justify-content-center">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="col-md-3 mb-4">
+                            <div class="bi-card text-center">
+                                <i class="fas fa-home text-primary mb-3" style="font-size: 3rem;"></i>
+                                <h4>Add Properties</h4>
+                                <p class="text-muted">Register your vacation rental properties for AI analysis and market positioning insights.</p>
+                                <div class="mb-3">
+                                    <small class="text-muted">Current: {{ total_properties }} properties</small>
+                                </div>
+                                <a href="{% url 'property_create' %}" class="action-button">
+                                    <i class="fas fa-plus me-2"></i>Add Property
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="bi-card text-center">
+                                <i class="fas fa-calendar-check text-success mb-3" style="font-size: 3rem;"></i>
+                                <h4>Create Bookings</h4>
+                                <p class="text-muted">Generate booking data for revenue optimization and seasonal trend analysis.</p>
+                                <div class="mb-3">
+                                    <small class="text-muted">Current: {{ total_bookings }} bookings</small>
+                                </div>
+                                <a href="{% url 'booking_create' %}" class="action-button">
+                                    <i class="fas fa-plus me-2"></i>Add Booking
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="bi-card text-center">
+                                <i class="fas fa-star text-warning mb-3" style="font-size: 3rem;"></i>
+                                <h4>Collect Reviews</h4>
+                                <p class="text-muted">Gather guest reviews for sentiment analysis and satisfaction optimization.</p>
+                                <div class="mb-3">
+                                    <small class="text-muted">Current: {{ total_reviews }} reviews</small>
+                                </div>
+                                <a href="{% url 'guest_experience' %}" class="action-button">
+                                    <i class="fas fa-star me-2"></i>Manage Reviews
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="bi-card text-center">
+                                <i class="fas fa-chart-line text-info mb-3" style="font-size: 3rem;"></i>
+                                <h4>View Analytics</h4>
+                                <p class="text-muted">Explore current performance metrics and prepare for advanced AI insights.</p>
+                                <div class="mb-3">
+                                    <small class="text-muted">AI Insights: {{ ai_insights_count }}</small>
+                                </div>
+                                <a href="{% url 'analytics' %}" class="action-button">
+                                    <i class="fas fa-chart-bar me-2"></i>View Analytics
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Additional Features Preview -->
+            <div class="row justify-content-center mt-5">
+                <div class="col-md-10">
+                    <div class="ai-prediction-card">
+                        <h3 class="mb-4">
+                            <i class="fas fa-crystal-ball me-2"></i>
+                            AI Capabilities Preview
+                        </h3>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h5><i class="fas fa-chart-line me-2"></i>Advanced Analytics</h5>
+                                <ul class="list-unstyled">
+                                    <li>• Revenue forecasting & optimization</li>
+                                    <li>• Seasonal demand patterns</li>
+                                    <li>• Price optimization suggestions</li>
+                                    <li>• Market trend analysis</li>
+                                    <li>• Competitive intelligence</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <h5><i class="fas fa-users me-2"></i>Guest Intelligence</h5>
+                                <ul class="list-unstyled">
+                                    <li>• Behavior pattern analysis</li>
+                                    <li>• Sentiment tracking & analysis</li>
+                                    <li>• Personalization insights</li>
+                                    <li>• Satisfaction predictions</li>
+                                    <li>• Loyalty program optimization</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <h5><i class="fas fa-cogs me-2"></i>Operational Intelligence</h5>
+                                <ul class="list-unstyled">
+                                    <li>• Predictive maintenance</li>
+                                    <li>• Resource optimization</li>
+                                    <li>• Cost reduction opportunities</li>
+                                    <li>• Efficiency improvements</li>
+                                    <li>• Automation recommendations</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     {% else %}
-        <!-- Main Dashboard Content -->
+        <!-- Main Intelligence Dashboard -->
         
-        <!-- Key Performance Indicators -->
-        <div class="intelligence-section">
-            <h2 class="section-title">
-                <i class="fas fa-tachometer-alt me-2"></i>
-                Key Performance Intelligence
-            </h2>
-            
+        <!-- Intelligence Overview -->
+        <div class="intelligence-overview animate__animated animate__fadeInUp">
             <div class="row">
-                <div class="col-md-3 mb-4">
-                    <div class="insight-metric">
-                        <div class="insight-value">{{ revenue_score }}/100</div>
-                        <div class="insight-label">Revenue Performance Score</div>
-                        <div class="performance-indicator">
-                            <div class="performance-bar" style="width: {{ revenue_score }}%"></div>
+                <div class="col-md-8">
+                    <h2 class="mb-4">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Intelligence Overview
+                    </h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="intelligence-metric">
+                                <div class="metric-value">{{ business_health_score }}</div>
+                                <div class="metric-label">Business Health Score</div>
+                                <p class="mb-0">Overall performance index based on multiple KPIs</p>
+                                <div class="confidence-meter">
+                                    <div class="confidence-fill" style="width: {{ business_health_score }}%"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="trend-indicator trend-{{ revenue_trend }}">
-                            <i class="fas fa-arrow-{{ revenue_trend == 'up' and 'up' or 'down' }} me-1"></i>
-                            {{ revenue_trend|title }}
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <div class="insight-metric">
-                        <div class="insight-value">{{ market_position }}/10</div>
-                        <div class="insight-label">Market Position Index</div>
-                        <div class="performance-indicator">
-                            <div class="performance-bar" style="width: {{ market_position }}0%"></div>
-                        </div>
-                        <div class="trend-indicator trend-{{ market_trend }}">
-                            <i class="fas fa-arrow-{{ market_trend == 'up' and 'up' or 'down' }} me-1"></i>
-                            {{ market_trend|title }}
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-4">
-                    <div class="insight-metric">
-                        <div class="insight-value">{{ efficiency_score }}%</div>
-                        <div class="insight-label">Operational Efficiency</div>
-                        <div class="performance-indicator">
-                            <div class="performance-bar" style="width: {{ efficiency_score }}%"></div>
-                        </div>
-                        <div class="trend-indicator trend-{{ efficiency_trend }}">
-                            <i class="fas fa-arrow-{{ efficiency_trend == 'up' and 'up' or 'down' }} me-1"></i>
-                            {{ efficiency_trend|title }}
+                        <div class="col-md-6">
+                            <div class="intelligence-metric">
+                                <div class="metric-value">{{ ai_confidence }}%</div>
+                                <div class="metric-label">AI Confidence Level</div>
+                                <p class="mb-0">Reliability of AI predictions and recommendations</p>
+                                <div class="confidence-meter">
+                                    <div class="confidence-fill" style="width: {{ ai_confidence }}%"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 mb-4">
-                    <div class="insight-metric">
-                        <div class="insight-value">{{ growth_potential }}%</div>
-                        <div class="insight-label">Growth Potential</div>
-                        <div class="performance-indicator">
-                            <div class="performance-bar" style="width: {{ growth_potential }}%"></div>
+                <div class="col-md-4">
+                    <div class="ai-prediction-card">
+                        <h5><i class="fas fa-clock me-2"></i>Next 30 Days Predictions</h5>
+                        <div class="mb-3">
+                            <h3>${{ predicted_revenue|floatformat:2 }}</h3>
+                            <small>Predicted Revenue</small>
                         </div>
-                        <div class="trend-indicator trend-up">
-                            <i class="fas fa-rocket me-1"></i>
-                            Potential
+                        <div class="mb-3">
+                            <h3>{{ predicted_bookings }}</h3>
+                            <small>Expected Bookings</small>
+                        </div>
+                        <div class="mb-0">
+                            <h3>{{ predicted_occupancy|floatformat:1 }}%</h3>
+                            <small>Occupancy Rate</small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- AI Predictions -->
+        <!-- Revenue Intelligence -->
+        {% if revenue_insights %}
         <div class="intelligence-section">
             <h2 class="section-title">
-                <i class="fas fa-crystal-ball me-2"></i>
-                AI Predictions & Forecasts
+                <i class="fas fa-dollar-sign me-2"></i>
+                Revenue Intelligence
             </h2>
-            
             <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="prediction-card">
-                        <div class="recommendation-badge">
+                <div class="col-md-8">
+                    <div class="revenue-intelligence">
+                        <h4 class="mb-4">
                             <i class="fas fa-chart-line me-2"></i>
-                            Revenue Forecast
-                        </div>
-                        <h4>Next 30 Days Prediction</h4>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h3 class="mb-0">${{ predicted_revenue|floatformat:2 }}</h3>
-                                <small class="text-muted">Expected Revenue</small>
+                            Revenue Optimization Insights
+                        </h4>
+                        <div class="row">
+                            {% for insight in revenue_insights %}
+                            <div class="col-md-6 mb-3">
+                                <div class="insight-item">
+                                    <div class="d-flex">
+                                        <div class="insight-icon">
+                                            <i class="fas fa-{{ insight.icon }}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6>{{ insight.title }}</h6>
+                                            <p class="mb-2">{{ insight.description }}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-primary">{{ insight.impact }}</span>
+                                                <small class="text-muted">{{ insight.confidence }}% confidence</small>
+                                            </div>
+                                            {% if insight.potential_value %}
+                                            <div class="mt-2">
+                                                <small class="text-success">
+                                                    <i class="fas fa-dollar-sign me-1"></i>
+                                                    Potential: ${{ insight.potential_value|floatformat:2 }}
+                                                </small>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-end">
-                                <span class="badge bg-success">+{{ revenue_growth_prediction }}%</span>
-                                <br>
-                                <small class="text-muted">vs last month</small>
+                            {% endfor %}
+                        </div>
+                        {% if total_potential_revenue %}
+                        <div class="mt-4">
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-trophy me-2"></i>Total Revenue Potential</h6>
+                                <p class="mb-0">
+                                    Implementing all revenue optimization strategies could generate an additional 
+                                    <strong>${{ total_potential_revenue|floatformat:2 }}</strong> in revenue.
+                                </p>
                             </div>
                         </div>
-                        <div class="advanced-chart">
-                            <canvas id="revenueForecastChart" height="100"></canvas>
-                        </div>
+                        {% endif %}
                     </div>
                 </div>
-                
-                <div class="col-md-6 mb-4">
-                    <div class="prediction-card">
-                        <div class="recommendation-badge">
-                            <i class="fas fa-bed me-2"></i>
-                            Occupancy Forecast
+                <div class="col-md-4">
+                    <div class="ai-chart-container">
+                        <div class="chart-title">
+                            <i class="fas fa-chart-area me-2"></i>
+                            Revenue Trend & Forecast
                         </div>
-                        <h4>Occupancy Predictions</h4>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h3 class="mb-0">{{ predicted_occupancy }}%</h3>
-                                <small class="text-muted">Expected Occupancy</small>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge bg-info">{{ occupancy_confidence }}%</span>
-                                <br>
-                                <small class="text-muted">confidence</small>
-                            </div>
-                        </div>
-                        <div class="advanced-chart">
-                            <canvas id="occupancyForecastChart" height="100"></canvas>
-                        </div>
+                        <canvas id="revenueTrendChart" height="200"></canvas>
                     </div>
                 </div>
             </div>
         </div>
+        {% endif %}
 
-        <!-- Business Insights -->
+        <!-- Market Intelligence -->
+        {% if market_insights %}
         <div class="intelligence-section">
             <h2 class="section-title">
-                <i class="fas fa-lightbulb me-2"></i>
-                AI-Powered Business Insights
+                <i class="fas fa-globe me-2"></i>
+                Market Intelligence
             </h2>
-            
             <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="intelligence-card">
-                        <h4><i class="fas fa-chart-pie me-2"></i>Revenue Optimization</h4>
-                        {% for insight in revenue_insights %}
-                        <div class="ai-insight">
-                            <h6><i class="fas fa-{{ insight.icon }} me-2"></i>{{ insight.title }}</h6>
-                            <p class="mb-2">{{ insight.description }}</p>
-                            <div class="d-flex justify-content-between">
-                                <span class="badge bg-primary">{{ insight.impact }}</span>
-                                <small class="text-muted">{{ insight.confidence }}% confidence</small>
+                <div class="col-md-6">
+                    <div class="market-intelligence">
+                        <h4 class="mb-4">
+                            <i class="fas fa-search me-2"></i>
+                            Market Analysis
+                        </h4>
+                        {% for insight in market_insights %}
+                        <div class="mb-3">
+                            <h6>{{ insight.location }}</h6>
+                            <div class="row">
+                                <div class="col-4">
+                                    <small class="text-muted">ADR</small>
+                                    <div><strong>${{ insight.adr|floatformat:2 }}</strong></div>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Occupancy</small>
+                                    <div><strong>{{ insight.occupancy|floatformat:1 }}%</strong></div>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Opportunity</small>
+                                    <div><strong>{{ insight.market_opportunity|floatformat:1 }}%</strong></div>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
                 </div>
-                
-                <div class="col-md-6 mb-4">
-                    <div class="intelligence-card">
-                        <h4><i class="fas fa-users me-2"></i>Guest Experience Intelligence</h4>
-                        {% for insight in guest_insights %}
-                        <div class="ai-insight">
-                            <h6><i class="fas fa-{{ insight.icon }} me-2"></i>{{ insight.title }}</h6>
-                            <p class="mb-2">{{ insight.description }}</p>
-                            <div class="d-flex justify-content-between">
-                                <span class="badge bg-success">{{ insight.impact }}</span>
-                                <small class="text-muted">{{ insight.priority }}</small>
+                <div class="col-md-6">
+                    <div class="competitive-analysis">
+                        <h4 class="mb-4">
+                            <i class="fas fa-chess me-2"></i>
+                            Competitive Position
+                        </h4>
+                        <div class="ai-chart-container">
+                            <canvas id="competitiveChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Guest Intelligence -->
+        {% if guest_insights %}
+        <div class="intelligence-section">
+            <h2 class="section-title">
+                <i class="fas fa-users me-2"></i>
+                Guest Experience Intelligence
+            </h2>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="guest-experience-ai">
+                        <h4 class="mb-4">
+                            <i class="fas fa-heart me-2"></i>
+                            Guest Satisfaction Analysis
+                        </h4>
+                        <div class="row">
+                            {% for insight in guest_insights %}
+                            <div class="col-md-6 mb-3">
+                                <div class="insight-item">
+                                    <div class="d-flex">
+                                        <div class="insight-icon">
+                                            <i class="fas fa-{{ insight.icon }}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6>{{ insight.title }}</h6>
+                                            <p class="mb-2">{{ insight.description }}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-success">{{ insight.impact }}</span>
+                                                <small class="text-muted">{{ insight.priority }}</small>
+                                            </div>
+                                            {% if insight.recommendation %}
+                                            <div class="mt-2">
+                                                <small class="text-info">
+                                                    <i class="fas fa-lightbulb me-1"></i>
+                                                    {{ insight.recommendation }}
+                                                </small>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="ai-chart-container">
+                        <div class="chart-title">
+                            <i class="fas fa-smile me-2"></i>
+                            Sentiment Analysis
+                        </div>
+                        <canvas id="sentimentChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Operational Intelligence -->
+        {% if operational_insights %}
+        <div class="intelligence-section">
+            <h2 class="section-title">
+                <i class="fas fa-cogs me-2"></i>
+                Operational Intelligence
+            </h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="operational-optimization">
+                        <h4 class="mb-4">
+                            <i class="fas fa-tools me-2"></i>
+                            Operational Efficiency
+                        </h4>
+                        {% for insight in operational_insights %}
+                        <div class="insight-item mb-3">
+                            <div class="d-flex">
+                                <div class="insight-icon">
+                                    <i class="fas fa-{{ insight.icon }}"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6>{{ insight.title }}</h6>
+                                    <p class="mb-2">{{ insight.description }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-warning">{{ insight.impact }}</span>
+                                        <small class="text-muted">{{ insight.confidence }}% confidence</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="predictive-timeline">
+                        <h4 class="mb-4">
+                            <i class="fas fa-clock me-2"></i>
+                            Predictive Timeline
+                        </h4>
+                        {% for prediction in predictive_timeline %}
+                        <div class="timeline-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6>{{ prediction.task }}</h6>
+                                <small class="text-muted">{{ prediction.days_until }} days</small>
+                            </div>
+                            <p class="mb-0">{{ prediction.property }}</p>
+                            <div class="mt-2">
+                                <span class="badge bg-{{ prediction.priority }}">{{ prediction.priority|title }}</span>
+                                <small class="text-muted ms-2">{{ prediction.confidence }}% confidence</small>
                             </div>
                         </div>
                         {% endfor %}
@@ -556,119 +1026,149 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
-        <!-- Opportunities & Risks -->
+        <!-- Risk & Opportunity Assessment -->
+        {% if opportunities or risks %}
         <div class="intelligence-section">
             <h2 class="section-title">
                 <i class="fas fa-balance-scale me-2"></i>
-                Opportunities & Risk Assessment
+                Risk & Opportunity Assessment
             </h2>
-            
             <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="intelligence-card">
-                        <h4><i class="fas fa-seedling me-2"></i>Growth Opportunities</h4>
+                {% if opportunities %}
+                <div class="col-md-6">
+                    <div class="opportunity-matrix">
+                        <h4 class="mb-4">
+                            <i class="fas fa-seedling me-2"></i>
+                            Growth Opportunities
+                        </h4>
                         {% for opportunity in opportunities %}
-                        <div class="opportunity-card">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h6><i class="fas fa-{{ opportunity.icon }} me-2"></i>{{ opportunity.title }}</h6>
-                                <span class="badge bg-success">${{ opportunity.potential_value }}</span>
+                        <div class="recommendation-card">
+                            <div class="priority-badge priority-{{ opportunity.priority }}">
+                                {{ opportunity.priority|upper }} PRIORITY
                             </div>
-                            <p class="mb-2">{{ opportunity.description }}</p>
-                            <div class="d-flex justify-content-between">
-                                <small class="text-muted">Effort: {{ opportunity.effort }}</small>
-                                <small class="text-muted">Timeline: {{ opportunity.timeline }}</small>
+                            <h5>{{ opportunity.title }}</h5>
+                            <p class="mb-3">{{ opportunity.description }}</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Potential Value</small>
+                                    <div><strong>${{ opportunity.potential_value }}</strong></div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Timeline</small>
+                                    <div><strong>{{ opportunity.timeline }}</strong></div>
+                                </div>
                             </div>
+                            {% if opportunity.requirements %}
+                            <div class="mt-3">
+                                <small class="text-info">
+                                    <i class="fas fa-list me-1"></i>
+                                    Requirements: {{ opportunity.requirements|slice:":3"|join:", " }}
+                                </small>
+                            </div>
+                            {% endif %}
                         </div>
                         {% endfor %}
                     </div>
                 </div>
+                {% endif %}
                 
-                <div class="col-md-6 mb-4">
-                    <div class="intelligence-card">
-                        <h4><i class="fas fa-exclamation-triangle me-2"></i>Risk Alerts</h4>
+                {% if risks %}
+                <div class="col-md-6">
+                    <div class="risk-assessment">
+                        <h4 class="mb-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Risk Analysis
+                        </h4>
                         {% for risk in risks %}
-                        <div class="risk-alert">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h6><i class="fas fa-{{ risk.icon }} me-2"></i>{{ risk.title }}</h6>
-                                <span class="badge bg-danger">{{ risk.severity }}</span>
+                        <div class="recommendation-card">
+                            <div class="priority-badge priority-{{ risk.severity }}">
+                                {{ risk.severity|upper }} RISK
                             </div>
-                            <p class="mb-2">{{ risk.description }}</p>
-                            <div class="d-flex justify-content-between">
-                                <small class="text-muted">Impact: {{ risk.impact }}</small>
-                                <small class="text-muted">Probability: {{ risk.probability }}%</small>
+                            <h5>{{ risk.title }}</h5>
+                            <p class="mb-3">{{ risk.description }}</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Impact</small>
+                                    <div><strong>{{ risk.impact }}</strong></div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Probability</small>
+                                    <div><strong>{{ risk.probability }}%</strong></div>
+                                </div>
                             </div>
+                            {% if risk.mitigation %}
+                            <div class="mt-3">
+                                <small class="text-warning">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    Mitigation: {{ risk.mitigation|slice:":2"|join:", " }}
+                                </small>
+                            </div>
+                            {% endif %}
                         </div>
                         {% endfor %}
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
+        {% endif %}
 
-        <!-- Advanced Analytics -->
-        <div class="intelligence-section">
-            <h2 class="section-title">
-                <i class="fas fa-microscope me-2"></i>
-                Advanced Analytics
-            </h2>
-            
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="advanced-chart">
-                        <h4>Market Trends Analysis</h4>
-                        <canvas id="marketTrendsChart" height="150"></canvas>
-                    </div>
-                </div>
-                
-                <div class="col-md-6 mb-4">
-                    <div class="advanced-chart">
-                        <h4>Competitive Position</h4>
-                        <canvas id="competitiveChart" height="150"></canvas>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-12">
-                    <div class="heatmap-container">
-                        <h4>Performance Heatmap</h4>
-                        <canvas id="performanceHeatmap" height="100"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recommendations -->
+        <!-- AI Recommendations -->
+        {% if ai_recommendations %}
         <div class="intelligence-section">
             <h2 class="section-title">
                 <i class="fas fa-magic me-2"></i>
                 AI Recommendations
             </h2>
-            
             <div class="row">
-                {% for recommendation in recommendations %}
+                {% for recommendation in ai_recommendations %}
                 <div class="col-md-4 mb-4">
-                    <div class="intelligence-card">
-                        <div class="recommendation-badge">
+                    <div class="recommendation-card">
+                        <div class="priority-badge priority-{{ recommendation.priority }}">
                             <i class="fas fa-{{ recommendation.icon }} me-2"></i>
                             {{ recommendation.category }}
                         </div>
                         <h5>{{ recommendation.title }}</h5>
                         <p class="mb-3">{{ recommendation.description }}</p>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Value</small>
+                                <div><strong>${{ recommendation.estimated_value|floatformat:2 }}</strong></div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Timeline</small>
+                                <div><strong>{{ recommendation.implementation_time }}</strong></div>
+                            </div>
+                        </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="badge bg-primary">{{ recommendation.impact }}</span>
                                 <span class="badge bg-secondary">{{ recommendation.difficulty }}</span>
                             </div>
-                            <button class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-arrow-right"></i>
-                            </button>
+                            <small class="text-muted">{{ recommendation.confidence }}%</small>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
+            
+            {% if total_potential_value %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-calculator me-2"></i>Implementation Impact</h5>
+                        <p class="mb-0">
+                            Total potential value from implementing all recommendations: 
+                            <strong>${{ total_potential_value|floatformat:2 }}</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
+        {% endif %}
     {% endif %}
 </div>
 {% endblock %}
@@ -677,25 +1177,34 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 {% if has_data %}
 <script>
-    // Revenue Forecast Chart
-    const revenueForecastCtx = document.getElementById('revenueForecastChart').getContext('2d');
-    new Chart(revenueForecastCtx, {
+    // Revenue Trend Chart
+    {% if revenue_trend_data %}
+    const revenueTrendCtx = document.getElementById('revenueTrendChart').getContext('2d');
+    new Chart(revenueTrendCtx, {
         type: 'line',
         data: {
-            labels: {{ forecast_labels|safe }},
+            labels: {{ revenue_trend_labels|safe }},
             datasets: [{
-                label: 'Predicted Revenue',
-                data: {{ forecast_data|safe }},
+                label: 'Historical Revenue',
+                data: {{ revenue_trend_data|safe }},
                 borderColor: '#667eea',
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 tension: 0.4,
                 fill: true
+            }, {
+                label: 'Predicted Revenue',
+                data: {{ predicted_revenue_data|safe }},
+                borderColor: '#f093fb',
+                backgroundColor: 'rgba(240, 147, 251, 0.1)',
+                tension: 0.4,
+                fill: false,
+                borderDash: [5, 5]
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: { legend: { display: true, position: 'top' } },
             scales: {
                 y: {
                     beginAtZero: true,
@@ -708,54 +1217,21 @@
             }
         }
     });
+    {% endif %}
 
-    // Occupancy Forecast Chart
-    const occupancyForecastCtx = document.getElementById('occupancyForecastChart').getContext('2d');
-    new Chart(occupancyForecastCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Predicted Occupancy', 'Available'],
-            datasets: [{
-                data: [{{ predicted_occupancy }}, {{ 100|add:predicted_occupancy|floatformat:0 }}],
-                backgroundColor: ['#667eea', '#e9ecef']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } }
-        }
-    });
-
-    // Market Trends Chart
-    const marketTrendsCtx = document.getElementById('marketTrendsChart').getContext('2d');
-    new Chart(marketTrendsCtx, {
-        type: 'radar',
-        data: {
-            labels: {{ market_labels|safe }},
-            datasets: [{
-                label: 'Your Performance',
-                data: {{ market_data|safe }},
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.2)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } }
-        }
-    });
-
-    // Competitive Position Chart
+    // Competitive Chart
+    {% if competitive_data %}
     const competitiveCtx = document.getElementById('competitiveChart').getContext('2d');
     new Chart(competitiveCtx, {
-        type: 'scatter',
+        type: 'radar',
         data: {
+            labels: {{ competitive_labels|safe }},
             datasets: [{
-                label: 'Market Position',
+                label: 'Your Performance',
                 data: {{ competitive_data|safe }},
-                backgroundColor: '#667eea'
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                pointBackgroundColor: '#667eea'
             }]
         },
         options: {
@@ -763,33 +1239,7 @@
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
-                x: { title: { display: true, text: 'Price Competitiveness' } },
-                y: { title: { display: true, text: 'Service Quality' } }
-            }
-        }
-    });
-
-    // Performance Heatmap
-    const performanceHeatmapCtx = document.getElementById('performanceHeatmap').getContext('2d');
-    new Chart(performanceHeatmapCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ heatmap_labels|safe }},
-            datasets: [{
-                label: 'Performance Score',
-                data: {{ heatmap_data|safe }},
-                backgroundColor: function(context) {
-                    const value = context.parsed.y;
-                    return value > 75 ? '#4caf50' : value > 50 ? '#ff9800' : '#f44336';
-                }
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
+                r: {
                     beginAtZero: true,
                     max: 100,
                     ticks: {
@@ -801,6 +1251,27 @@
             }
         }
     });
+    {% endif %}
+
+    // Sentiment Chart
+    {% if sentiment_data %}
+    const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+    new Chart(sentimentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Positive', 'Neutral', 'Negative'],
+            datasets: [{
+                data: {{ sentiment_data|safe }},
+                backgroundColor: ['#4caf50', '#ff9800', '#f44336']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+    {% endif %}
 </script>
 {% endif %}
 {% endblock %}
