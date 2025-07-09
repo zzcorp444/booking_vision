@@ -14,20 +14,21 @@ from ..models import (
     AIInsight, PredictiveModel, BusinessMetric, ReviewSentiment, CompetitorAnalysis
 )
 
+
 @method_decorator(login_required, name='dispatch')
 class BusinessIntelligenceView(TemplateView):
     template_name = 'ai/business_intelligence.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        
+
         # Get user's comprehensive data
         properties = Property.objects.filter(owner=user)
         bookings = Booking.objects.filter(property__owner=user)
         payments = Payment.objects.filter(booking__property__owner=user)
         reviews = Review.objects.filter(property__owner=user)
-        
+
         # Get AI-specific data
         pricing_rules = PricingRule.objects.filter(rental_property__owner=user)
         maintenance_tasks = MaintenanceTask.objects.filter(rental_property__owner=user)
@@ -37,14 +38,14 @@ class BusinessIntelligenceView(TemplateView):
             location__in=properties.values_list('city', flat=True).distinct()
         )
         competitor_analyses = CompetitorAnalysis.objects.filter(property__owner=user)
-        
+
         # Check if user has sufficient data
         has_data = (
-            properties.exists() and 
-            bookings.exists() and 
-            payments.exists()
+                properties.exists() and
+                bookings.exists() and
+                payments.exists()
         )
-        
+
         context.update({
             'has_data': has_data,
             'current_time': timezone.now(),
@@ -58,10 +59,11 @@ class BusinessIntelligenceView(TemplateView):
             'market_data_points': market_data.count(),
             'tracked_competitors': competitor_analyses.count(),
         })
-        
+
         if has_data:
             # Comprehensive business intelligence analysis
-            self._calculate_advanced_business_health(context, user, properties, bookings, payments, reviews, business_metrics, ai_insights)
+            self._calculate_advanced_business_health(context, user, properties, bookings, payments, reviews,
+                                                     business_metrics, ai_insights)
             self._generate_comprehensive_revenue_intelligence(context, user, bookings, payments, pricing_rules)
             self._analyze_advanced_market_intelligence(context, user, properties, market_data, competitor_analyses)
             self._generate_sophisticated_guest_intelligence(context, user, bookings, reviews)
@@ -79,90 +81,92 @@ class BusinessIntelligenceView(TemplateView):
             self._calculate_performance_benchmarking(context, user, business_metrics, market_data)
             self._generate_growth_opportunity_intelligence(context, user, properties, bookings, market_data)
             self._analyze_operational_efficiency_intelligence(context, user, properties, bookings, maintenance_tasks)
-        
+
         return context
-    
-    def _calculate_advanced_business_health(self, context, user, properties, bookings, payments, reviews, business_metrics, ai_insights):
+
+    def _calculate_advanced_business_health(self, context, user, properties, bookings, payments, reviews,
+                                            business_metrics, ai_insights):
         """Calculate comprehensive business health score with AI enhancement"""
-        
+
         # Revenue health analysis (30%)
         total_revenue = payments.filter(status='completed').aggregate(
             total=Sum('amount')
         )['total'] or Decimal('0.00')
-        
+
         # Get revenue trends
         thirty_days_ago = timezone.now() - timedelta(days=30)
         sixty_days_ago = timezone.now() - timedelta(days=60)
-        
+
         recent_revenue = payments.filter(
             status='completed',
             payment_date__gte=thirty_days_ago
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-        
+
         previous_revenue = payments.filter(
             status='completed',
             payment_date__gte=sixty_days_ago,
             payment_date__lt=thirty_days_ago
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-        
+
         revenue_growth = ((recent_revenue - previous_revenue) / previous_revenue * 100) if previous_revenue > 0 else 0
-        
+
         # Occupancy health analysis (25%)
         total_possible_nights = 0
         total_booked_nights = 0
-        
-        for property in properties:
+
+        for property_obj in properties:
             days_in_year = 365
             total_possible_nights += days_in_year
-            
-            property_bookings = bookings.filter(property=property)
+
+            property_bookings = bookings.filter(property=property_obj)
             for booking in property_bookings:
                 nights = (booking.check_out - booking.check_in).days
                 total_booked_nights += nights
-        
+
         occupancy_rate = (total_booked_nights / total_possible_nights * 100) if total_possible_nights > 0 else 0
-        
+
         # Guest satisfaction health using real review data (25%)
         avg_rating = reviews.aggregate(avg_rating=Avg('normalized_rating'))['avg_rating'] or 0
         review_count = reviews.count()
-        
+
         # Sentiment analysis enhancement
         positive_reviews = reviews.filter(sentiment='positive').count() if reviews.exists() else 0
         satisfaction_rate = (positive_reviews / review_count * 100) if review_count > 0 else 0
-        
+
         # Market position health using real market data (20%)
-        market_position = self._calculate_advanced_market_position(properties, reviews, market_data if 'market_data' in locals() else None)
-        
+        market_position = self._calculate_advanced_market_position(properties, reviews,
+                                                                   market_data if 'market_data' in locals() else None)
+
         # AI enhancement factor
         ai_implementation_score = self._calculate_ai_implementation_score(ai_insights)
         pricing_optimization_score = self._calculate_pricing_optimization_score(user)
         operational_efficiency_score = self._calculate_operational_efficiency_score(user)
-        
+
         # Calculate weighted business health score with AI boost
         revenue_score = min(100, (float(total_revenue) / 50000) * 100)  # $50k = 100%
         occupancy_score = min(100, occupancy_rate)
         satisfaction_score = (avg_rating / 5) * 100 if avg_rating > 0 else 0
         market_score = market_position
-        
+
         base_health_score = (
-            revenue_score * 0.30 +
-            occupancy_score * 0.25 +
-            satisfaction_score * 0.25 +
-            market_score * 0.20
+                revenue_score * 0.30 +
+                occupancy_score * 0.25 +
+                satisfaction_score * 0.25 +
+                market_score * 0.20
         )
-        
+
         # AI enhancement (up to 15% boost)
         ai_boost = (ai_implementation_score + pricing_optimization_score + operational_efficiency_score) / 3 * 0.15
-        
+
         business_health_score = min(100, base_health_score + ai_boost)
-        
+
         # AI confidence calculation
         data_quality_score = self._calculate_data_quality_score(bookings, payments, reviews)
         model_performance_score = self._calculate_model_performance_score()
         market_intelligence_score = self._calculate_market_intelligence_score(user)
-        
+
         ai_confidence = (data_quality_score + model_performance_score + market_intelligence_score) / 3
-        
+
         context.update({
             'business_health_score': round(business_health_score),
             'ai_confidence': round(ai_confidence),
@@ -182,161 +186,161 @@ class BusinessIntelligenceView(TemplateView):
             'pricing_optimization_score': round(pricing_optimization_score),
             'operational_efficiency_score': round(operational_efficiency_score),
         })
-    
+
     def _calculate_advanced_market_position(self, properties, reviews, market_data):
         """Calculate advanced market position using multiple data sources"""
         if not reviews.exists():
             return random.randint(60, 80)
-        
+
         # Rating-based positioning
         avg_rating = reviews.aggregate(avg_rating=Avg('normalized_rating'))['avg_rating'] or 0
         review_count = reviews.count()
-        
+
         # Market data comparison if available
         market_boost = 0
         if market_data and market_data.exists():
             latest_market = market_data.order_by('-date').first()
             # Compare with market averages (simplified)
             market_boost = 10 if avg_rating > 4.2 else 5 if avg_rating > 3.8 else 0
-        
+
         # Calculate position score
         rating_score = (avg_rating / 5) * 60  # Max 60 points for rating
         review_score = min(25, review_count * 0.3)  # Max 25 points for review count
-        
+
         return min(95, rating_score + review_score + market_boost)
-    
+
     def _calculate_ai_implementation_score(self, ai_insights):
         """Calculate AI implementation effectiveness score"""
         if not ai_insights.exists():
             return 0
-        
+
         implemented_insights = ai_insights.filter(is_implemented=True)
         high_impact_implemented = implemented_insights.filter(impact_level__in=['high', 'very_high'])
-        
+
         implementation_rate = (implemented_insights.count() / ai_insights.count()) * 100
         impact_score = high_impact_implemented.count() * 10
-        
+
         return min(100, implementation_rate * 0.7 + impact_score)
-    
+
     def _calculate_pricing_optimization_score(self, user):
         """Calculate pricing optimization effectiveness"""
         active_rules = PricingRule.objects.filter(
             rental_property__owner=user,
             is_active=True
         ).count()
-        
+
         # Score based on number of active rules and their sophistication
         base_score = min(60, active_rules * 15)
-        
+
         # Bonus for advanced features
         advanced_rules = PricingRule.objects.filter(
             rental_property__owner=user,
             is_active=True,
             high_demand_threshold__gt=0
         ).count()
-        
+
         advanced_bonus = min(40, advanced_rules * 10)
-        
+
         return base_score + advanced_bonus
-    
+
     def _calculate_operational_efficiency_score(self, user):
         """Calculate operational efficiency score"""
         total_tasks = MaintenanceTask.objects.filter(rental_property__owner=user)
-        
+
         if not total_tasks.exists():
             return 70  # Default score
-        
+
         completed_tasks = total_tasks.filter(status='completed')
         ai_predicted_tasks = total_tasks.filter(predicted_by_ai=True)
-        
+
         completion_rate = (completed_tasks.count() / total_tasks.count()) * 100
         ai_utilization = (ai_predicted_tasks.count() / total_tasks.count()) * 100
-        
+
         return min(100, completion_rate * 0.6 + ai_utilization * 0.4)
-    
+
     def _calculate_data_quality_score(self, bookings, payments, reviews):
         """Calculate data quality score"""
         booking_completeness = min(100, bookings.count() * 2)
         payment_completeness = min(100, payments.count() * 3)
         review_completeness = min(100, reviews.count() * 5)
-        
+
         return (booking_completeness + payment_completeness + review_completeness) / 3
-    
+
     def _calculate_model_performance_score(self):
         """Calculate AI model performance score"""
         active_models = PredictiveModel.objects.filter(is_active=True)
-        
+
         if not active_models.exists():
             return 60  # Default score
-        
+
         avg_accuracy = active_models.aggregate(avg=Avg('accuracy_score'))['avg'] or 0
         avg_success_rate = sum(model.success_rate for model in active_models) / active_models.count()
-        
+
         return (float(avg_accuracy) * 100 + avg_success_rate) / 2
-    
+
     def _calculate_market_intelligence_score(self, user):
         """Calculate market intelligence score"""
         market_data_count = MarketData.objects.filter(
             location__in=Property.objects.filter(owner=user).values_list('city', flat=True)
         ).count()
-        
+
         competitor_data_count = CompetitorAnalysis.objects.filter(
             property__owner=user
         ).count()
-        
+
         return min(100, market_data_count * 10 + competitor_data_count * 5)
-    
+
     def _generate_comprehensive_revenue_intelligence(self, context, user, bookings, payments, pricing_rules):
         """Generate comprehensive revenue intelligence insights"""
-        
+
         # Advanced revenue trend analysis
         current_month = timezone.now().month
         current_year = timezone.now().year
-        
+
         # Monthly revenue for the last 12 months with predictions
         monthly_revenue = []
         revenue_trend_labels = []
         revenue_trend_data = []
         predicted_revenue_data = []
-        
+
         for i in range(12):
             month = current_month - i
             year = current_year
-            
+
             if month <= 0:
                 month += 12
                 year -= 1
-            
+
             month_start = datetime(year, month, 1)
             if month == 12:
                 month_end = datetime(year + 1, 1, 1) - timedelta(days=1)
             else:
                 month_end = datetime(year, month + 1, 1) - timedelta(days=1)
-            
+
             month_revenue = payments.filter(
                 payment_date__range=[month_start, month_end],
                 status='completed'
             ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-            
+
             monthly_revenue.append(float(month_revenue))
             revenue_trend_labels.append(f"{month:02d}/{year}")
             revenue_trend_data.append(float(month_revenue))
-            
+
             # Add prediction for future months
             if i <= 2:  # Next 3 months
                 predicted_value = float(month_revenue) * random.uniform(1.05, 1.25)
                 predicted_revenue_data.append(predicted_value)
             else:
                 predicted_revenue_data.append(None)
-        
+
         # Reverse to show chronological order
         revenue_trend_labels.reverse()
         revenue_trend_data.reverse()
         predicted_revenue_data.reverse()
-        
+
         # Advanced pricing analysis
         pricing_performance = self._analyze_pricing_performance(pricing_rules, bookings, payments)
-        
+
         # Revenue optimization opportunities
         revenue_insights = [
             {
@@ -385,10 +389,10 @@ class BusinessIntelligenceView(TemplateView):
                 'implementation': 'High'
             }
         ]
-        
+
         # Revenue forecasting with confidence intervals
         next_month_forecast = self._calculate_revenue_forecast(revenue_trend_data, payments)
-        
+
         context.update({
             'revenue_insights': revenue_insights,
             'revenue_trend_labels': json.dumps(revenue_trend_labels),
@@ -398,25 +402,25 @@ class BusinessIntelligenceView(TemplateView):
             'next_month_forecast': next_month_forecast,
             'total_potential_revenue': sum(insight['potential_value'] for insight in revenue_insights),
         })
-    
+
     def _analyze_pricing_performance(self, pricing_rules, bookings, payments):
         """Analyze pricing rule performance"""
         performance_data = []
-        
+
         for rule in pricing_rules.filter(is_active=True):
             affected_bookings = bookings.filter(
                 property=rule.rental_property,
                 check_in__gte=rule.created_at
             )
-            
+
             if affected_bookings.exists():
                 total_revenue = payments.filter(
                     booking__in=affected_bookings,
                     status='completed'
                 ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-                
+
                 avg_rate = affected_bookings.aggregate(avg=Avg('total_amount'))['avg'] or 0
-                
+
                 performance_data.append({
                     'rule_name': rule.name,
                     'property': rule.rental_property.name,
@@ -425,57 +429,58 @@ class BusinessIntelligenceView(TemplateView):
                     'avg_rate': float(avg_rate),
                     'effectiveness': min(100, (float(avg_rate) / 200) * 100),  # Simplified calculation
                 })
-        
+
         return performance_data
-    
+
     def _calculate_revenue_forecast(self, historical_data, payments):
         """Calculate revenue forecast using trend analysis"""
         if len(historical_data) < 3:
             return {'amount': 0, 'confidence': 50, 'range': {'min': 0, 'max': 0}}
-        
+
         # Simple trend analysis
         recent_trend = historical_data[-3:]
         growth_rate = (recent_trend[-1] - recent_trend[0]) / recent_trend[0] if recent_trend[0] > 0 else 0
-        
+
         base_forecast = recent_trend[-1] * (1 + growth_rate)
         confidence = 75 + min(20, len(historical_data))  # Higher confidence with more data
-        
+
         forecast_range = {
             'min': base_forecast * 0.85,
             'max': base_forecast * 1.15
         }
-        
+
         return {
             'amount': round(base_forecast, 2),
             'confidence': confidence,
             'range': forecast_range
         }
-    
+
     def _analyze_advanced_market_intelligence(self, context, user, properties, market_data, competitor_analyses):
         """Analyze comprehensive market intelligence"""
-        
+
         market_insights = []
         competitive_landscape = []
-        
+
         # Analyze market data for each property location
         property_locations = properties.values_list('city', flat=True).distinct()
-        
+
         for location in property_locations:
             location_market_data = market_data.filter(location__icontains=location).order_by('-date')
             location_competitors = competitor_analyses.filter(property__city__icontains=location)
-            
+
             if location_market_data.exists():
                 latest_data = location_market_data.first()
-                
+
                 # Market trend analysis
                 if location_market_data.count() > 1:
                     previous_data = location_market_data[1]
-                    adr_growth = ((latest_data.average_daily_rate - previous_data.average_daily_rate) / previous_data.average_daily_rate) * 100
+                    adr_growth = ((
+                                              latest_data.average_daily_rate - previous_data.average_daily_rate) / previous_data.average_daily_rate) * 100
                     occupancy_change = latest_data.occupancy_rate - previous_data.occupancy_rate
                 else:
                     adr_growth = 0
                     occupancy_change = 0
-                
+
                 market_insights.append({
                     'location': location,
                     'adr': float(latest_data.average_daily_rate),
@@ -490,178 +495,182 @@ class BusinessIntelligenceView(TemplateView):
                     'competitor_count': location_competitors.count(),
                     'market_opportunity': self._calculate_market_opportunity(latest_data, location_competitors)
                 })
-        
+
         # Competitive positioning analysis
-        for property in properties:
-            property_competitors = competitor_analyses.filter(property=property)
-            
+        for property_obj in properties:
+            property_competitors = competitor_analyses.filter(property=property_obj)
+
             if property_competitors.exists():
                 avg_competitor_rate = property_competitors.aggregate(avg=Avg('average_rate'))['avg']
                 avg_competitor_rating = property_competitors.aggregate(avg=Avg('average_rating'))['avg']
-                
+
                 competitive_landscape.append({
-                    'property': property.name,
+                    'property': property_obj.name,
                     'competitor_count': property_competitors.count(),
                     'avg_competitor_rate': float(avg_competitor_rate or 0),
                     'avg_competitor_rating': float(avg_competitor_rating or 0),
-                    'rate_advantage': self._calculate_rate_advantage(property, avg_competitor_rate),
-                    'rating_advantage': self._calculate_rating_advantage(property, avg_competitor_rating),
-                    'market_share_estimate': self._estimate_market_share(property, property_competitors),
-                    'competitive_strengths': self._identify_competitive_strengths(property, property_competitors),
-                    'improvement_opportunities': self._identify_improvement_opportunities(property, property_competitors)
+                    'rate_advantage': self._calculate_rate_advantage(property_obj, avg_competitor_rate),
+                    'rating_advantage': self._calculate_rating_advantage(property_obj, avg_competitor_rating),
+                    'market_share_estimate': self._estimate_market_share(property_obj, property_competitors),
+                    'competitive_strengths': self._identify_competitive_strengths(property_obj, property_competitors),
+                    'improvement_opportunities': self._identify_improvement_opportunities(property_obj,
+                                                                                          property_competitors)
                 })
-        
+
         # Market intelligence labels and data for charts
-        market_labels = ['Price Competitiveness', 'Service Quality', 'Location Score', 'Amenities', 'Guest Satisfaction', 'Market Presence']
+        market_labels = ['Price Competitiveness', 'Service Quality', 'Location Score', 'Amenities',
+                         'Guest Satisfaction', 'Market Presence']
         market_data_chart = []
-        
-        for property in properties:
-            property_scores = self._calculate_market_scores(property, competitor_analyses.filter(property=property))
+
+        for property_obj in properties:
+            property_scores = self._calculate_market_scores(property_obj,
+                                                            competitor_analyses.filter(property=property_obj))
             market_data_chart.append(property_scores)
-        
+
         # Average scores across all properties
         if market_data_chart:
-            avg_scores = [sum(scores[i] for scores in market_data_chart) / len(market_data_chart) for i in range(len(market_labels))]
+            avg_scores = [sum(scores[i] for scores in market_data_chart) / len(market_data_chart) for i in
+                          range(len(market_labels))]
         else:
             avg_scores = [random.randint(60, 90) for _ in market_labels]
-        
+
         context.update({
             'market_insights': market_insights,
             'competitive_landscape': competitive_landscape,
-            'market_labels': json.dumps(market_labels),
-            'market_data_chart': json.dumps(avg_scores),
+            'competitive_labels': json.dumps(market_labels),
+            'competitive_data': json.dumps(avg_scores),
             'total_competitors': competitor_analyses.count(),
             'market_coverage': len(property_locations),
         })
-    
+
     def _calculate_market_opportunity(self, market_data, competitors):
         """Calculate market opportunity score"""
         # High occupancy + low competition = high opportunity
         occupancy_factor = float(market_data.occupancy_rate) / 100
         competition_factor = max(0.1, 1 - (competitors.count() / 50))  # Assume 50 is highly competitive
         search_factor = min(1.0, market_data.search_volume / 1000)  # Normalize search volume
-        
+
         opportunity_score = (occupancy_factor * 0.4 + competition_factor * 0.4 + search_factor * 0.2) * 100
         return round(opportunity_score, 1)
-    
-    def _calculate_rate_advantage(self, property, competitor_avg_rate):
+
+    def _calculate_rate_advantage(self, property_obj, competitor_avg_rate):
         """Calculate rate advantage vs competitors"""
-        if not competitor_avg_rate or not hasattr(property, 'base_price'):
+        if not competitor_avg_rate or not hasattr(property_obj, 'base_price'):
             return 0
-        
-        property_rate = getattr(property, 'base_price', 0)
+
+        property_rate = getattr(property_obj, 'base_price', 0)
         if property_rate > 0:
             return ((competitor_avg_rate - property_rate) / competitor_avg_rate) * 100
         return 0
-    
-    def _calculate_rating_advantage(self, property, competitor_avg_rating):
+
+    def _calculate_rating_advantage(self, property_obj, competitor_avg_rating):
         """Calculate rating advantage vs competitors"""
         if not competitor_avg_rating:
             return 0
-        
-        property_reviews = Review.objects.filter(property=property)
+
+        property_reviews = Review.objects.filter(property=property_obj)
         if property_reviews.exists():
             property_rating = property_reviews.aggregate(avg=Avg('normalized_rating'))['avg']
             return ((property_rating - competitor_avg_rating) / competitor_avg_rating) * 100
         return 0
-    
-    def _estimate_market_share(self, property, competitors):
+
+    def _estimate_market_share(self, property_obj, competitors):
         """Estimate market share"""
         if not competitors.exists():
             return 15  # Default estimate
-        
+
         # Simplified market share calculation based on reviews and ratings
-        property_reviews = Review.objects.filter(property=property).count()
+        property_reviews = Review.objects.filter(property=property_obj).count()
         competitor_reviews = sum(comp.review_count for comp in competitors)
-        
+
         if competitor_reviews > 0:
             return (property_reviews / (property_reviews + competitor_reviews)) * 100
         return 10
-    
-    def _identify_competitive_strengths(self, property, competitors):
+
+    def _identify_competitive_strengths(self, property_obj, competitors):
         """Identify competitive strengths"""
         strengths = []
-        
+
         if competitors.exists():
             avg_competitor_rating = competitors.aggregate(avg=Avg('average_rating'))['avg'] or 0
-            property_reviews = Review.objects.filter(property=property)
-            
+            property_reviews = Review.objects.filter(property=property_obj)
+
             if property_reviews.exists():
                 property_rating = property_reviews.aggregate(avg=Avg('normalized_rating'))['avg']
                 if property_rating > avg_competitor_rating:
                     strengths.append("Superior guest satisfaction")
-            
+
             # Add more strength analysis based on amenities, location, etc.
-            if property.amenities.count() > 10:  # Assuming amenities relationship
+            if hasattr(property_obj, 'amenities') and property_obj.amenities.count() > 10:
                 strengths.append("Comprehensive amenities")
-        
+
         return strengths[:3]  # Limit to top 3
-    
-    def _identify_improvement_opportunities(self, property, competitors):
+
+    def _identify_improvement_opportunities(self, property_obj, competitors):
         """Identify improvement opportunities"""
         opportunities = []
-        
+
         if competitors.exists():
             # Analyze competitor amenities that property might be missing
             competitor_amenities = set()
             for comp in competitors:
                 competitor_amenities.update(comp.amenities)
-            
+
             # This would need actual amenity comparison logic
             opportunities.append("Consider adding popular amenities")
             opportunities.append("Optimize pricing strategy")
             opportunities.append("Enhance guest communication")
-        
+
         return opportunities[:3]  # Limit to top 3
-    
-    def _calculate_market_scores(self, property, competitors):
+
+    def _calculate_market_scores(self, property_obj, competitors):
         """Calculate market performance scores"""
         # Price Competitiveness
         price_score = random.randint(70, 95)
-        
+
         # Service Quality (based on reviews)
-        property_reviews = Review.objects.filter(property=property)
+        property_reviews = Review.objects.filter(property=property_obj)
         if property_reviews.exists():
             service_score = (property_reviews.aggregate(avg=Avg('normalized_rating'))['avg'] / 5) * 100
         else:
             service_score = random.randint(75, 90)
-        
+
         # Location Score (simplified)
         location_score = random.randint(80, 95)
-        
+
         # Amenities Score
-        amenity_count = getattr(property, 'amenities', [])
-        amenities_score = min(100, len(amenity_count) * 5) if hasattr(amenity_count, '__len__') else random.randint(70, 90)
-        
+        amenity_count = getattr(property_obj, 'amenities', [])
+        amenities_score = min(100, len(amenity_count) * 5) if hasattr(amenity_count, '__len__') else random.randint(70,
+                                                                                                                    90)
+
         # Guest Satisfaction
         satisfaction_score = service_score  # Same as service for now
-        
+
         # Market Presence
         presence_score = min(100, property_reviews.count() * 2) if property_reviews.exists() else random.randint(60, 80)
-        
+
         return [price_score, service_score, location_score, amenities_score, satisfaction_score, presence_score]
-    
-    # Continue with other comprehensive methods...
+
     def _generate_sophisticated_guest_intelligence(self, context, user, bookings, reviews):
         """Generate sophisticated guest intelligence insights"""
-        
+
         guest_insights = []
         guest_behavior_analysis = {}
         satisfaction_trends = {}
-        
+
         if reviews.exists():
             # Advanced sentiment analysis
             sentiment_breakdown = reviews.values('sentiment').annotate(count=Count('id'))
             total_reviews = reviews.count()
-            
+
             sentiment_distribution = {item['sentiment']: item['count'] for item in sentiment_breakdown}
-            
+
             # Guest satisfaction trends over time
             monthly_satisfaction = []
             for i in range(6):
-                month_start = timezone.now().replace(day=1) - timedelta(days=30*i)
+                month_start = timezone.now().replace(day=1) - timedelta(days=30 * i)
                 month_end = month_start + timedelta(days=30)
-                
+
                 month_reviews = reviews.filter(review_date__range=[month_start, month_end])
                 if month_reviews.exists():
                     avg_rating = month_reviews.aggregate(avg=Avg('normalized_rating'))['avg']
@@ -670,25 +679,25 @@ class BusinessIntelligenceView(TemplateView):
                         'rating': round(avg_rating, 2),
                         'count': month_reviews.count()
                     })
-            
+
             monthly_satisfaction.reverse()
-            
+
             # Platform performance analysis
             platform_performance = reviews.values('platform').annotate(
                 count=Count('id'),
                 avg_rating=Avg('normalized_rating')
             ).order_by('-avg_rating')
-            
+
             # Guest type analysis (based on booking patterns)
             guest_types = self._analyze_guest_types(bookings, reviews)
-            
+
             # Response analysis
             responded_reviews = reviews.filter(response_text__isnull=False)
             response_rate = (responded_reviews.count() / total_reviews * 100) if total_reviews > 0 else 0
-            
+
             # Generate insights based on data
             positive_percentage = (sentiment_distribution.get('positive', 0) / total_reviews * 100)
-            
+
             if positive_percentage > 85:
                 guest_insights.append({
                     'title': 'Exceptional Guest Experience',
@@ -716,7 +725,7 @@ class BusinessIntelligenceView(TemplateView):
                     'priority': 'High',
                     'recommendation': 'Analyze negative feedback patterns and implement fixes'
                 })
-            
+
             # Response rate insights
             if response_rate < 70:
                 guest_insights.append({
@@ -727,7 +736,7 @@ class BusinessIntelligenceView(TemplateView):
                     'priority': 'Medium',
                     'recommendation': 'Set up automated response templates and monitoring'
                 })
-            
+
             # Platform-specific insights
             best_platform = platform_performance.first() if platform_performance else None
             if best_platform:
@@ -739,7 +748,7 @@ class BusinessIntelligenceView(TemplateView):
                     'priority': 'Low',
                     'recommendation': 'Increase listing visibility and investment on top-performing platforms'
                 })
-        
+
         else:
             guest_insights.append({
                 'title': 'Build Guest Review Foundation',
@@ -749,7 +758,7 @@ class BusinessIntelligenceView(TemplateView):
                 'priority': 'High',
                 'recommendation': 'Set up automated post-stay review requests'
             })
-        
+
         # Guest behavior patterns
         if bookings.exists():
             # Booking lead time analysis
@@ -757,17 +766,17 @@ class BusinessIntelligenceView(TemplateView):
             for booking in bookings:
                 lead_time = (booking.check_in.date() - booking.created_at.date()).days
                 lead_times.append(lead_time)
-            
+
             avg_lead_time = statistics.mean(lead_times) if lead_times else 0
-            
+
             # Stay duration analysis
             stay_durations = []
             for booking in bookings:
                 duration = (booking.check_out - booking.check_in).days
                 stay_durations.append(duration)
-            
+
             avg_stay_duration = statistics.mean(stay_durations) if stay_durations else 0
-            
+
             guest_behavior_analysis = {
                 'avg_lead_time': round(avg_lead_time, 1),
                 'avg_stay_duration': round(avg_stay_duration, 1),
@@ -775,24 +784,24 @@ class BusinessIntelligenceView(TemplateView):
                 'seasonal_preferences': self._analyze_seasonal_preferences(bookings),
                 'guest_types': guest_types
             }
-        
+
         # Sentiment data for charts
         sentiment_data = [
-            sentiment_distribution.get('positive', 0),
-            sentiment_distribution.get('neutral', 0), 
-            sentiment_distribution.get('negative', 0)
+            sentiment_distribution.get('positive', 0) if reviews.exists() else 0,
+            sentiment_distribution.get('neutral', 0) if reviews.exists() else 0,
+            sentiment_distribution.get('negative', 0) if reviews.exists() else 0
         ]
-        
+
         context.update({
             'guest_insights': guest_insights,
             'sentiment_data': json.dumps(sentiment_data),
             'guest_behavior_analysis': guest_behavior_analysis,
-            'monthly_satisfaction': monthly_satisfaction,
-            'platform_performance': list(platform_performance),
-            'response_rate': round(response_rate, 1),
+            'monthly_satisfaction': monthly_satisfaction if reviews.exists() else [],
+            'platform_performance': list(platform_performance) if reviews.exists() else [],
+            'response_rate': round(response_rate, 1) if reviews.exists() else 0,
             'satisfaction_trends': satisfaction_trends,
         })
-    
+
     def _analyze_guest_types(self, bookings, reviews):
         """Analyze guest types based on booking and review patterns"""
         guest_types = {
@@ -802,22 +811,20 @@ class BusinessIntelligenceView(TemplateView):
             'couples': 0,
             'solo': 0
         }
-        
+
         for booking in bookings:
             # Analyze booking patterns to determine guest type
             stay_duration = (booking.check_out - booking.check_in).days
-            
+
             if stay_duration >= 7:
                 guest_types['business'] += 1
             elif stay_duration <= 2:
                 guest_types['business'] += 1
             else:
                 guest_types['leisure'] += 1
-            
-            # Additional analysis based on booking details would go here
-        
+
         return guest_types
-    
+
     def _analyze_booking_patterns(self, bookings):
         """Analyze booking patterns"""
         patterns = {
@@ -826,27 +833,27 @@ class BusinessIntelligenceView(TemplateView):
             'last_minute_bookings': 0,
             'early_bookings': 0
         }
-        
+
         for booking in bookings:
             # Weekend vs weekday
             if booking.check_in.weekday() >= 5:  # Saturday = 5, Sunday = 6
                 patterns['weekend_bookings'] += 1
             else:
                 patterns['weekday_bookings'] += 1
-            
+
             # Lead time analysis
             lead_time = (booking.check_in.date() - booking.created_at.date()).days
             if lead_time <= 7:
                 patterns['last_minute_bookings'] += 1
             elif lead_time >= 30:
                 patterns['early_bookings'] += 1
-        
+
         return patterns
-    
+
     def _analyze_seasonal_preferences(self, bookings):
         """Analyze seasonal booking preferences"""
         seasons = {'Winter': 0, 'Spring': 0, 'Summer': 0, 'Fall': 0}
-        
+
         for booking in bookings:
             month = booking.check_in.month
             if month in [12, 1, 2]:
@@ -857,7 +864,7 @@ class BusinessIntelligenceView(TemplateView):
                 seasons['Summer'] += 1
             else:
                 seasons['Fall'] += 1
-        
+
         return seasons
 
     def _calculate_comprehensive_operational_intelligence(self, context, user, properties, maintenance_tasks):
@@ -963,9 +970,9 @@ class BusinessIntelligenceView(TemplateView):
             }
 
         # Property efficiency analysis
-        for property in properties:
-            property_tasks = maintenance_tasks.filter(rental_property=property)
-            property_bookings = Booking.objects.filter(property=property)
+        for property_obj in properties:
+            property_tasks = maintenance_tasks.filter(rental_property=property_obj)
+            property_bookings = Booking.objects.filter(property=property_obj)
 
             if property_tasks.exists() and property_bookings.exists():
                 # Calculate maintenance per booking ratio
@@ -975,7 +982,7 @@ class BusinessIntelligenceView(TemplateView):
                 in_progress_tasks = property_tasks.filter(status='in_progress')
                 potential_downtime = sum(task.estimated_duration or 0 for task in in_progress_tasks)
 
-                efficiency_metrics[property.name] = {
+                efficiency_metrics[property_obj.name] = {
                     'maintenance_frequency': round(maintenance_frequency, 3),
                     'potential_downtime': potential_downtime,
                     'task_count': property_tasks.count(),
@@ -1350,7 +1357,7 @@ class BusinessIntelligenceView(TemplateView):
             }
 
         # Monthly heatmap data
-        monthly_heatmap = []
+        seasonal_heatmap = []
         for month in range(1, 13):
             month_bookings = bookings.filter(check_in__month=month).count()
             max_bookings = max(bookings.filter(check_in__month=m).count() for m in range(1, 13)) or 1
@@ -1358,7 +1365,7 @@ class BusinessIntelligenceView(TemplateView):
             intensity = month_bookings / max_bookings if max_bookings > 0 else 0
             demand_level = round((month_bookings / max_bookings) * 100) if max_bookings > 0 else 0
 
-            monthly_heatmap.append({
+            seasonal_heatmap.append({
                 'month': month,
                 'name': timezone.datetime(2024, month, 1).strftime('%b'),
                 'bookings': month_bookings,
@@ -1374,7 +1381,7 @@ class BusinessIntelligenceView(TemplateView):
             'seasonal_insights': seasonal_insights,
             'seasonal_performance': seasonal_performance,
             'demand_patterns': demand_patterns,
-            'monthly_heatmap': monthly_heatmap,
+            'seasonal_heatmap': seasonal_heatmap,
             'seasonal_labels': json.dumps(seasonal_labels),
             'seasonal_data': json.dumps(seasonal_data),
             'peak_season': peak_season,
@@ -1644,8 +1651,8 @@ class BusinessIntelligenceView(TemplateView):
         properties = Property.objects.filter(owner=user)
         if properties.exists() and bookings.exists():
             # Calculate current occupancy trends
-            for property in properties:
-                property_bookings = bookings.filter(property=property)
+            for property_obj in properties:
+                property_bookings = bookings.filter(property=property_obj)
 
                 if property_bookings.exists():
                     # Calculate occupancy for last 3 months
@@ -1672,8 +1679,8 @@ class BusinessIntelligenceView(TemplateView):
                         avg_occupancy = sum(monthly_occupancy.values()) / len(monthly_occupancy)
                         next_month = (timezone.now() + timedelta(days=30)).strftime('%Y-%m')
 
-                        predictions[f'occupancy_{property.id}'] = {
-                            'property': property.name,
+                        predictions[f'occupancy_{property_obj.id}'] = {
+                            'property': property_obj.name,
                             'month': next_month,
                             'occupancy': round(avg_occupancy, 1),
                             'confidence': 75,
@@ -1998,14 +2005,14 @@ class BusinessIntelligenceView(TemplateView):
         avg_competitor_rating = competitor_analyses.aggregate(avg=Avg('average_rating'))['avg'] or 0
 
         # Property-specific competitive analysis
-        for property in properties:
-            property_competitors = competitor_analyses.filter(property=property)
+        for property_obj in properties:
+            property_competitors = competitor_analyses.filter(property=property_obj)
 
             if property_competitors.exists():
-                property_reviews = Review.objects.filter(property=property)
+                property_reviews = Review.objects.filter(property=property_obj)
 
                 # Rate comparison
-                property_rate = getattr(property, 'base_price', 0)
+                property_rate = getattr(property_obj, 'base_price', 0)
                 competitor_rates = [comp.average_rate for comp in property_competitors if comp.average_rate]
 
                 if competitor_rates and property_rate > 0:
@@ -2014,18 +2021,18 @@ class BusinessIntelligenceView(TemplateView):
 
                     if rate_percentile > 75:
                         competitive_insights.append({
-                            'title': f'{property.name} - Premium Pricing Position',
+                            'title': f'{property_obj.name} - Premium Pricing Position',
                             'description': f'Priced higher than {rate_percentile:.0f}% of competitors. Justify with superior value.',
                             'impact': 'Medium',
-                            'property': property.name,
+                            'property': property_obj.name,
                             'type': 'pricing'
                         })
                     elif rate_percentile < 25:
                         competitive_insights.append({
-                            'title': f'{property.name} - Underpriced Opportunity',
+                            'title': f'{property_obj.name} - Underpriced Opportunity',
                             'description': f'Priced lower than {100 - rate_percentile:.0f}% of competitors. Consider rate increase.',
                             'impact': 'High',
-                            'property': property.name,
+                            'property': property_obj.name,
                             'type': 'pricing'
                         })
 
@@ -2040,18 +2047,18 @@ class BusinessIntelligenceView(TemplateView):
 
                         if rating_percentile > 80:
                             competitive_insights.append({
-                                'title': f'{property.name} - Service Excellence',
+                                'title': f'{property_obj.name} - Service Excellence',
                                 'description': f'Rated higher than {rating_percentile:.0f}% of competitors. Leverage for premium pricing.',
                                 'impact': 'High',
-                                'property': property.name,
+                                'property': property_obj.name,
                                 'type': 'service'
                             })
                         elif rating_percentile < 40:
                             competitive_insights.append({
-                                'title': f'{property.name} - Service Improvement Needed',
+                                'title': f'{property_obj.name} - Service Improvement Needed',
                                 'description': f'Rated lower than {100 - rating_percentile:.0f}% of competitors. Focus on quality improvements.',
                                 'impact': 'High',
-                                'property': property.name,
+                                'property': property_obj.name,
                                 'type': 'service'
                             })
 
@@ -2066,7 +2073,7 @@ class BusinessIntelligenceView(TemplateView):
 
                 if missing_amenities:
                     competitive_opportunities.append({
-                        'property': property.name,
+                        'property': property_obj.name,
                         'opportunity': 'Amenity Differentiation',
                         'description': f'Consider adding {", ".join(missing_amenities[:3])} to differentiate from competitors.',
                         'impact': 'Medium',
@@ -2107,12 +2114,12 @@ class BusinessIntelligenceView(TemplateView):
 
         # Competitive positioning matrix
         positioning_data = []
-        for property in properties:
-            property_competitors = competitor_analyses.filter(property=property)
+        for property_obj in properties:
+            property_competitors = competitor_analyses.filter(property=property_obj)
 
             if property_competitors.exists():
                 positioning_data.append({
-                    'property': property.name,
+                    'property': property_obj.name,
                     'price_score': random.randint(60, 95),
                     'quality_score': random.randint(70, 95),
                     'competitor_count': property_competitors.count(),
@@ -2211,12 +2218,12 @@ class BusinessIntelligenceView(TemplateView):
             }
 
         # Property positioning analysis
-        for property in properties:
-            property_reviews = Review.objects.filter(property=property)
+        for property_obj in properties:
+            property_reviews = Review.objects.filter(property=property_obj)
 
             if property_reviews.exists():
                 property_rating = property_reviews.aggregate(avg=Avg('normalized_rating'))['avg']
-                property_rate = getattr(property, 'base_price', 0)  # Would need actual rate data
+                property_rate = getattr(property_obj, 'base_price', 0)  # Would need actual rate data
 
                 # Compare against market averages
                 rate_vs_market = ((property_rate - float(latest_market_data.average_daily_rate)) / float(
@@ -2245,7 +2252,7 @@ class BusinessIntelligenceView(TemplateView):
                 elif review_count > 10:
                     positioning_score += 5
 
-                positioning_analysis[property.name] = {
+                positioning_analysis[property_obj.name] = {
                     'rating': round(property_rating, 2),
                     'rate_vs_market': round(rate_vs_market, 1),
                     'positioning_score': positioning_score,
@@ -3339,17 +3346,17 @@ class BusinessIntelligenceView(TemplateView):
             })
 
         # Corporate and extended stay opportunities
-        long_stays = bookings.filter(
+        long_stay_bookings = bookings.filter(
             check_out__gt=timezone.now() - timedelta(days=30)
         ).annotate(
             duration=Count('check_out') - Count('check_in')
         ).filter(duration__gte=7).count()
 
-        if long_stays > 0:
+        if long_stay_bookings > 0:
             growth_opportunities.append({
                 'type': 'Market Segment',
                 'title': 'Corporate Extended Stay Program',
-                'description': f'{long_stays} long-stay bookings indicate corporate demand potential.',
+                'description': f'{long_stay_bookings} long-stay bookings indicate corporate demand potential.',
                 'potential_revenue': float(current_revenue) * 0.25,  # 25% increase
                 'investment_required': 'Low',
                 'timeline': '2-3 months',
@@ -3590,8 +3597,8 @@ class BusinessIntelligenceView(TemplateView):
 
             # Property utilization
             property_utilization = {}
-            for property in properties:
-                property_bookings = bookings.filter(property=property)
+            for property_obj in properties:
+                property_bookings = bookings.filter(property=property_obj)
                 property_nights = sum(
                     (booking.check_out - booking.check_in).days
                     for booking in property_bookings
@@ -3601,7 +3608,7 @@ class BusinessIntelligenceView(TemplateView):
                 available_nights = 365  # Simplified annual calculation
                 utilization = (property_nights / available_nights) * 100
 
-                property_utilization[property.name] = {
+                property_utilization[property_obj.name] = {
                     'utilization': round(utilization, 1),
                     'bookings': property_bookings.count(),
                     'nights_booked': property_nights,
