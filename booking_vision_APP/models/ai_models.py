@@ -35,8 +35,7 @@ class PricingRule(models.Model):
     def __str__(self):
         return f"{self.rental_property.name if self.rental_property else 'Unknown'} - {self.name}"
 
-    @property
-    def property(self):
+    def get_property(self):
         """Backward compatibility property"""
         return self.rental_property
 
@@ -86,8 +85,7 @@ class MaintenanceTask(models.Model):
     def __str__(self):
         return f"{self.rental_property.name if self.rental_property else 'Unknown'} - {self.title}"
 
-    @property
-    def property(self):
+    def get_property(self):
         """Backward compatibility property"""
         return self.rental_property
 
@@ -182,7 +180,7 @@ class AIInsight(models.Model):
 
     # Core fields
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ai_insights')
-    property = models.ForeignKey(
+    related_property = models.ForeignKey(
         'booking_vision_APP.Property',
         on_delete=models.CASCADE,
         null=True,
@@ -241,7 +239,7 @@ class AIInsight(models.Model):
         ordering = ['-priority', '-confidence_score', '-created_at']
         indexes = [
             models.Index(fields=['user', 'insight_type']),
-            models.Index(fields=['property', 'insight_type']),
+            models.Index(fields=['related_property', 'insight_type']),
             models.Index(fields=['confidence_score']),
         ]
 
@@ -254,15 +252,19 @@ class AIInsight(models.Model):
         self.implemented_date = timezone.now()
         self.save(update_fields=['is_implemented', 'implemented_date'])
 
+    def get_property(self):
+        """Backward compatibility property"""
+        return self.related_property
+
     @classmethod
     def create_insight(cls, user, insight_type, title, description,
-                      confidence_score, priority='medium', property=None,
+                      confidence_score, priority='medium', related_property=None,
                       estimated_value=None, recommended_action='',
                       implementation_effort='medium', metadata=None):
         """Create a new AI insight"""
         return cls.objects.create(
             user=user,
-            property=property,
+            related_property=related_property,
             insight_type=insight_type,
             title=title,
             description=description,
@@ -330,12 +332,16 @@ class PredictiveModel(models.Model):
     def __str__(self):
         return f"{self.model_name} v{self.version} - {self.accuracy_score or 'N/A'}% accuracy"
 
-    @property
-    def success_rate(self):
+    def get_success_rate(self):
         """Calculate model success rate"""
         if self.prediction_count == 0:
             return 0
         return (self.success_count / self.prediction_count) * 100
+
+    # Use property-like access via method
+    @property
+    def success_rate(self):
+        return self.get_success_rate()
 
     def record_prediction(self, success=True):
         """Record a prediction and its outcome"""
@@ -373,7 +379,7 @@ class BusinessMetric(models.Model):
 
     # Core fields
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='business_metrics')
-    property = models.ForeignKey(
+    related_property = models.ForeignKey(
         'booking_vision_APP.Property',
         on_delete=models.CASCADE,
         null=True,
@@ -409,15 +415,19 @@ class BusinessMetric(models.Model):
 
     class Meta:
         ordering = ['-date', 'metric_type']
-        unique_together = ['user', 'property', 'metric_type', 'date', 'aggregation_period']
+        unique_together = ['user', 'related_property', 'metric_type', 'date', 'aggregation_period']
         indexes = [
             models.Index(fields=['user', 'metric_type', 'date']),
-            models.Index(fields=['property', 'metric_type', 'date']),
+            models.Index(fields=['related_property', 'metric_type', 'date']),
         ]
 
     def __str__(self):
-        property_name = self.property.name if self.property else "All Properties"
+        property_name = self.related_property.name if self.related_property else "All Properties"
         return f"{property_name} - {self.metric_type} - {self.date}"
+
+    def get_property(self):
+        """Backward compatibility property"""
+        return self.related_property
 
     def calculate_trend(self):
         """Calculate trend compared to previous period"""
@@ -426,7 +436,7 @@ class BusinessMetric(models.Model):
             self.save(update_fields=['change_percentage'])
 
     @classmethod
-    def get_metric_trend(cls, user, metric_type, property=None, days=30):
+    def get_metric_trend(cls, user, metric_type, related_property=None, days=30):
         """Get trend data for a specific metric"""
         queryset = cls.objects.filter(
             user=user,
@@ -434,8 +444,8 @@ class BusinessMetric(models.Model):
             date__gte=timezone.now().date() - timezone.timedelta(days=days)
         )
 
-        if property:
-            queryset = queryset.filter(property=property)
+        if related_property:
+            queryset = queryset.filter(related_property=related_property)
 
         return queryset.order_by('date')
 
@@ -490,8 +500,7 @@ class ReviewSentiment(models.Model):
     def __str__(self):
         return f"Sentiment: {self.sentiment} ({self.sentiment_score}) for Review #{self.review.id}"
 
-    @property
-    def sentiment_emoji(self):
+    def get_sentiment_emoji(self):
         """Get emoji representation of sentiment"""
         emoji_map = {
             'very_negative': '😡',
@@ -502,11 +511,17 @@ class ReviewSentiment(models.Model):
         }
         return emoji_map.get(self.sentiment, '😐')
 
+    # Use property-like access via method
+    @property
+    def sentiment_emoji(self):
+        return self.get_sentiment_emoji()
+
 
 class CompetitorAnalysis(models.Model):
     """Model for storing competitor analysis data"""
 
-    property = models.ForeignKey(
+    # Use related_property to avoid conflicts
+    related_property = models.ForeignKey(
         'booking_vision_APP.Property',
         on_delete=models.CASCADE,
         related_name='competitor_analyses'
@@ -525,7 +540,7 @@ class CompetitorAnalysis(models.Model):
 
     # Location and property details
     distance_km = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
-    property_type = models.CharField(max_length=100, blank=True)
+    competitor_property_type = models.CharField(max_length=100, blank=True)
     room_count = models.IntegerField(null=True, blank=True)
 
     # Pricing analysis
@@ -561,15 +576,28 @@ class CompetitorAnalysis(models.Model):
 
     class Meta:
         ordering = ['-competitive_score', 'distance_km']
-        unique_together = ['property', 'competitor_name']
+        unique_together = ['related_property', 'competitor_name']
 
     def __str__(self):
-        return f"{self.property.name} vs {self.competitor_name}"
+        return f"{self.related_property.name} vs {self.competitor_name}"
 
+    def get_property(self):
+        """Backward compatibility property"""
+        return self.related_property
+
+    def get_price_comparison(self):
+        """Compare pricing with the main property"""
+        if self.average_rate and hasattr(self.related_property, 'base_price'):
+            if self.related_property.base_price > 0:
+                return ((self.average_rate - self.related_property.base_price) / self.related_property.base_price) * 100
+        return None
+
+    # Use property-like access via method
     @property
     def price_comparison(self):
-        """Compare pricing with the main property"""
-        if self.average_rate and hasattr(self.property, 'base_price'):
-            if self.property.base_price > 0:
-                return ((self.average_rate - self.property.base_price) / self.property.base_price) * 100
-        return None
+        return self.get_price_comparison()
+
+    @property
+    def property(self):
+        """Backward compatibility property"""
+        return self.related_property
