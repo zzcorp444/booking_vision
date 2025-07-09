@@ -6,6 +6,37 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+
+class Amenity(models.Model):
+    """Model for property amenities"""
+    name = models.CharField(max_length=100)
+    icon = models.CharField(max_length=50, blank=True)  # Font Awesome icon class
+    category = models.CharField(
+        max_length=50,
+        choices=[
+            ('basic', 'Basic'),
+            ('kitchen', 'Kitchen'),
+            ('bathroom', 'Bathroom'),
+            ('entertainment', 'Entertainment'),
+            ('outdoor', 'Outdoor'),
+            ('safety', 'Safety'),
+            ('other', 'Other'),
+        ],
+        default='basic'
+    )
+    description = models.TextField(blank=True)
+    is_premium = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['category', 'name']
+        verbose_name_plural = 'Amenities'
+
+    def __str__(self):
+        return self.name
+
+
 class Property(models.Model):
     """Model representing a rental property"""
     PROPERTY_TYPES = [
@@ -30,6 +61,11 @@ class Property(models.Model):
     bathrooms = models.IntegerField(validators=[MinValueValidator(0)])
     max_guests = models.IntegerField(validators=[MinValueValidator(1)])
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    amenities = models.ManyToManyField(
+        Amenity,
+        related_name='properties',
+        blank=True
+    )
 
     # Coordinates for map display
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
@@ -54,6 +90,7 @@ class Property(models.Model):
     def __str__(self):
         return self.name
 
+
 class PropertyImage(models.Model):
     """Model for property images"""
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='images')
@@ -68,17 +105,6 @@ class PropertyImage(models.Model):
     def __str__(self):
         return f"{self.property.name} - Image {self.order}"
 
-class Amenity(models.Model):
-    """Model for property amenities"""
-    name = models.CharField(max_length=100, unique=True)
-    icon = models.CharField(max_length=50, blank=True)  # Font Awesome icon class
-    category = models.CharField(max_length=50)
-
-    class Meta:
-        verbose_name_plural = "Amenities"
-
-    def __str__(self):
-        return self.name
 
 class PropertyAmenity(models.Model):
     """Through model for property amenities"""

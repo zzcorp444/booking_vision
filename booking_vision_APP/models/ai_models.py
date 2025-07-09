@@ -8,10 +8,12 @@ from django.utils import timezone
 from decimal import Decimal
 import json
 
-# Your existing models (keeping them as-is)
+from .bookings import Guest
+
+
 class PricingRule(models.Model):
     """Model for dynamic pricing rules"""
-    rental_property = models.ForeignKey('booking_vision_APP.Property', on_delete=models.CASCADE, related_name='pricing_rules')
+    rental_property = models.ForeignKey('Property', on_delete=models.CASCADE, related_name='pricing_rules')
     name = models.CharField(max_length=100)
 
     # Rule conditions
@@ -39,6 +41,7 @@ class PricingRule(models.Model):
         """Backward compatibility property"""
         return self.rental_property
 
+
 class MaintenanceTask(models.Model):
     """Model for maintenance tasks and predictions"""
     PRIORITY_CHOICES = [
@@ -56,7 +59,7 @@ class MaintenanceTask(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
-    rental_property = models.ForeignKey('booking_vision_APP.Property', on_delete=models.CASCADE, related_name='maintenance_tasks')
+    rental_property = models.ForeignKey('Property', on_delete=models.CASCADE, related_name='maintenance_tasks')
     title = models.CharField(max_length=200)
     description = models.TextField()
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
@@ -91,7 +94,7 @@ class MaintenanceTask(models.Model):
 
 class GuestPreference(models.Model):
     """Model for storing guest preferences and AI insights"""
-    guest = models.OneToOneField('booking_vision_APP.Guest', on_delete=models.CASCADE, related_name='ai_preferences')
+    guest = models.OneToOneField(Guest, on_delete=models.CASCADE, related_name='ai_preferences')
 
     # Preference categories
     room_temperature = models.IntegerField(null=True, blank=True)
@@ -116,6 +119,7 @@ class GuestPreference(models.Model):
 
     def __str__(self):
         return f"Preferences for {self.guest.first_name if self.guest else 'Unknown'} {self.guest.last_name if self.guest else ''}"
+
 
 class MarketData(models.Model):
     """Model for storing market intelligence data"""

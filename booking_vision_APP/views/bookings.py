@@ -6,6 +6,7 @@ Location: booking_vision_APP/views/bookings.py
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView, TemplateView, CreateView
 from django.http import JsonResponse
 from django.db.models import Q, Count, Sum, Avg
@@ -292,3 +293,29 @@ class BookingCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('booking_vision_APP:booking_detail', kwargs={'pk': self.object.pk})
+
+
+@login_required
+def user_bookings_view(request):
+    """Show all bookings for the logged-in user, including those made as a guest"""
+    user = request.user
+
+    # Get bookings through the linked guest profile
+    if hasattr(user, 'guest_profile'):
+        guest = user.guest_profile
+        bookings = Booking.objects.filter(
+            Q(guest=guest) |  # Bookings linked to guest
+            Q(guest_email=guest.email)  # Bookings by email (for backward compatibility)
+        ).order_by('-check_in')
+    else:
+        # If no guest profile, just show bookings by email
+        bookings = Booking.objects.filter(
+            guest_email=user.email
+        ).order_by('-check_in')
+
+    context = {
+        'bookings': bookings,
+        'has_guest_profile': hasattr(user, 'guest_profile'),
+    }
+
+    return render(request, 'bookings/user_bookings.html', context)

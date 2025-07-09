@@ -5,6 +5,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from .properties import Property
 from .bookings import Booking
+from datetime import datetime, timedelta
 
 class Notification(models.Model):
     """
@@ -407,3 +408,155 @@ class NotificationPreference(models.Model):
         """Get or create notification preferences for user"""
         preferences, created = cls.objects.get_or_create(user=user)
         return preferences
+
+
+class NotificationRule(models.Model):
+    """Model for automated notification rules"""
+
+    TRIGGER_EVENTS = [
+        ('booking_created', 'When Booking is Created'),
+        ('booking_confirmed', 'When Booking is Confirmed'),
+        ('booking_cancelled', 'When Booking is Cancelled'),
+        ('check_in_approaching', 'X Days Before Check-in'),
+        ('check_out_approaching', 'X Days Before Check-out'),
+        ('payment_received', 'When Payment is Received'),
+        ('payment_overdue', 'When Payment is Overdue'),
+        ('review_received', 'When Review is Received'),
+        ('after_check_out', 'X Days After Check-out'),
+        ('custom', 'Custom Trigger'),
+    ]
+
+    RECIPIENT_TYPES = [
+        ('guest', 'Guest'),
+        ('host', 'Host'),
+        ('both', 'Both Guest and Host'),
+        ('admin', 'Admin'),
+    ]
+
+    # Rule identification
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+
+    # Trigger settings
+    trigger_event = models.CharField(max_length=30, choices=TRIGGER_EVENTS)
+    days_offset = models.IntegerField(
+        default=0,
+        help_text="Days before/after event (negative for before, positive for after)"
+    )
+
+    # Recipients
+    recipient_type = models.CharField(max_length=10, choices=RECIPIENT_TYPES, default='guest')
+
+    # Notification settings
+    notification_template = models.ForeignKey(
+        NotificationTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    # Conditions
+    property = models.ForeignKey(
+        'Property',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="Apply rule only to this property (leave empty for all)"
+    )
+
+    min_booking_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Only trigger for bookings above this amount"
+    )
+
+    # Rule status
+    is_active = models.BooleanField(default=True)
+
+    # Owner
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='notification_rules'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} - {self.get_trigger_event_display()}"
+
+    def should_trigger(self, event, booking=None):
+        """Check if this rule should trigger for given event and booking"""
+        if not self.is_active:
+            return False
+
+        if self.property and booking and booking.property != self.property:
+            return False
+
+        if self.min_booking_amount and booking:
+            if booking.total_amount < self.min_booking_amount:
+                return False
+
+        return True
+
+    def create_notification(self, booking):
+        """Create a notification based on this rule"""
+        if not self.notification_template:
+            return None
+
+        # Determine recipient
+        if self.recipient_type == 'guest':
+            recipient_email = booking.guest_email
+            recipient_name = booking.guest_name
+        elif self.recipient_type == 'host':
+            recipient_email = booking.property.owner.email
+            recipient_name = booking.property.owner.get_full_name()
+        else:
+            # Handle 'both' or 'admin' cases
+            recipient_email = booking.guest_email
+            recipient_name = booking.guest_name
+
+        # Calculate scheduled time
+        scheduled_time = timezone.now()
+
+        if self.trigger_event == 'check_in_approaching':
+            scheduled_time = booking.check_in + timedelta(days=self.days_offset)
+        elif self.trigger_event == 'check_out_approaching':
+            scheduled_time = booking.check_out + timedelta(days=self.days_offset)
+        elif self.trigger_event == 'after_check_out':
+            scheduled_time = booking.check_out + timedelta(days=self.days_offset)
+
+        # Render template with context
+        context = {
+            'guest_name': booking.guest_name,
+            'property_name': booking.property.name,
+            'check_in': booking.check_in,
+            'check_out': booking.check_out,
+            'booking': booking,
+        }
+
+        rendered = self.notification_template.render(context)
+
+        # Create notification
+        notification = Notification.objects.create(
+            booking=booking,
+            property=booking.property,
+            guest_name=recipient_name,
+            guest_email=recipient_email,
+            notification_type=self.notification_template.template_type,
+            subject=rendered['subject'],
+            message=rendered['message'],
+            html_message=rendered.get('html_message', ''),
+            scheduled_for=scheduled_time,
+            trigger_type='event_based',
+            is_automated=True,
+            template_name=self.notification_template.name
+        )
+
+        return notification
